@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Dashboard · iTRUSH</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#060D0A;--surface:#0D1812;--surface2:#132318;--surface3:#192e1e;
+    --border:rgba(74,200,120,0.1);--border2:rgba(74,200,120,0.22);
+    --green:#2ECC71;--green-dim:#1a7a44;--amber:#F0A500;--red:#E55353;--blue:#60A5FA;--purple:#A78BFA;
+    --text:#EDF5F0;--muted:#7A9E88;--dim:#3D5A48;
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+  .sb-logo{display:flex;align-items:center;gap:8px;padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+  .sb-logo-icon{width:28px;height:28px;background:var(--amber);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sb-logo-text{font-weight:700;font-size:15px;color:var(--text);letter-spacing:-0.3px;}
+  .sb-logo-text span{color:var(--amber);}
+  .sb-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(240,165,0,0.15);color:var(--amber);padding:2px 7px;border-radius:4px;margin-left:4px;}
+  .sb-user{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .sb-avatar{width:34px;height:34px;border-radius:50%;background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--amber);flex-shrink:0;}
+  .sb-name{font-size:13px;font-weight:600;color:var(--text);}
+  .sb-role{font-size:11px;color:var(--muted);}
+  .sb-nav{padding:10px 8px;flex:1;}
+  .sb-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);padding:12px 10px 6px;}
+  .ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all 0.15s;color:var(--muted);font-size:13px;margin-bottom:2px;}
+  .ni:hover{background:var(--surface2);color:var(--text);}
+  .ni.active{background:rgba(240,165,0,0.1);color:var(--amber);}
+  .ni svg{flex-shrink:0;opacity:0.8;}
+  .ni.active svg{opacity:1;}
+  .nb{margin-left:auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+  .nb-red{background:rgba(229,83,83,0.2);color:var(--red);}
+  .nb-amber{background:rgba(240,165,0,0.15);color:var(--amber);}
+  .sb-bottom{padding:14px 18px;border-top:1px solid var(--border);}
+  .sb-out{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;cursor:pointer;transition:color 0.15s;}
+  .sb-out:hover{color:var(--text);}
+
+  /* MAIN */
+  .main{background:var(--bg);display:flex;flex-direction:column;min-width:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-bottom:1px solid var(--border);background:var(--surface);}
+  .tb-left{display:flex;align-items:center;gap:12px;}
+  .tb-title{font-family:'Instrument Serif',serif;font-size:19px;font-weight:400;color:var(--text);}
+  .tb-title em{font-style:italic;color:var(--amber);}
+  .live-pill{display:flex;align-items:center;gap:5px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:var(--green);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:100px;}
+  .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .tb-right{display:flex;align-items:center;gap:10px;}
+  .tb-date{font-size:12px;color:var(--muted);}
+  .icon-btn{width:32px;height:32px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color 0.15s;}
+  .icon-btn:hover{border-color:var(--border2);}
+  .alert-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;background:var(--red);border-radius:50%;border:1.5px solid var(--surface);}
+  .content{padding:20px 26px;flex:1;}
+
+  /* VIEWS */
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;}
+  .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+  .kpi-val{font-family:'Instrument Serif',serif;font-size:30px;color:var(--text);line-height:1;}
+  .kpi-val.green{color:var(--green);}
+  .kpi-val.amber{color:var(--amber);}
+  .kpi-val.red{color:var(--red);}
+  .kpi-sub{font-size:11px;color:var(--dim);margin-top:5px;}
+  .kpi-trend{font-size:11px;margin-top:4px;}
+  .up{color:var(--green);}
+  .dn{color:var(--red);}
+
+  /* THREE COL */
+  .three-col{display:grid;grid-template-columns:1fr 1fr 320px;gap:14px;margin-bottom:20px;}
+  .two-col{display:grid;grid-template-columns:1fr 340px;gap:14px;margin-bottom:20px;}
+
+  /* PANEL */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .pt{font-size:13px;font-weight:600;color:var(--text);}
+  .pa{font-size:11px;color:var(--amber);cursor:pointer;font-weight:500;}
+  .pa-muted{font-size:11px;color:var(--muted);cursor:pointer;}
+
+  /* MAP */
+  .map-wrap{margin:16px 18px 18px;border-radius:8px;overflow:hidden;height:240px;background:#0A1610;border:1px solid var(--border);}
+  .map-wrap svg{width:100%;height:100%;}
+  .map-legend{display:flex;align-items:center;gap:16px;padding:0 18px 14px;flex-wrap:wrap;}
+  .ml-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+  .ml-dot{width:8px;height:8px;border-radius:50%;}
+
+  /* MUNICIPALITY TABLE */
+  .muni-table{width:100%;border-collapse:collapse;}
+  .muni-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .muni-table td{font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+  .muni-table tr:last-child td{border-bottom:none;}
+  .muni-table td:first-child{color:var(--text);font-weight:500;}
+  .muni-table tr:hover td{background:rgba(255,255,255,0.01);cursor:pointer;}
+  .prog-bar{width:80px;height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:6px;}
+  .prog-fill{height:100%;border-radius:3px;}
+  .pf-green{background:var(--green);}
+  .pf-amber{background:var(--amber);}
+  .pf-red{background:var(--red);}
+  .st-pill{font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;text-transform:uppercase;letter-spacing:0.5px;}
+  .stp-g{background:rgba(46,204,113,0.12);color:var(--green);}
+  .stp-a{background:rgba(240,165,0,0.12);color:var(--amber);}
+  .stp-r{background:rgba(229,83,83,0.12);color:var(--red);}
+
+  /* FLEET LIST */
+  .fleet-list{padding:6px 0;}
+  .fl-item{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+  .fl-item:hover{background:var(--surface2);}
+  .fl-item:last-child{border-bottom:none;}
+  .fl-icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .fli-green{background:rgba(46,204,113,0.12);}
+  .fli-amber{background:rgba(240,165,0,0.12);}
+  .fli-dim{background:var(--surface2);}
+  .fl-info{flex:1;min-width:0;}
+  .fl-name{font-size:12px;font-weight:600;color:var(--text);}
+  .fl-meta{font-size:11px;color:var(--muted);}
+  .fl-right{text-align:right;}
+  .fl-dist{font-size:12px;font-weight:600;color:var(--text);}
+  .fl-stops{font-size:11px;color:var(--muted);}
+
+  /* ALERTS */
+  .alert-list{padding:4px 0;}
+  .al-item{display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+  .al-item:hover{background:var(--surface2);}
+  .al-item:last-child{border-bottom:none;}
+  .al-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+  .ali-red{background:rgba(229,83,83,0.12);}
+  .ali-amber{background:rgba(240,165,0,0.12);}
+  .ali-blue{background:rgba(96,165,250,0.1);}
+  .al-body{flex:1;}
+  .al-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+  .al-meta{font-size:11px;color:var(--muted);}
+  .al-time{font-size:11px;color:var(--dim);white-space:nowrap;margin-top:2px;}
+
+  /* CHART BAR MOCK */
+  .bar-chart{padding:16px 18px 14px;}
+  .bc-bars{display:flex;align-items:flex-end;gap:6px;height:100px;margin-bottom:8px;}
+  .bc-bar{flex:1;border-radius:4px 4px 0 0;min-height:4px;transition:opacity 0.2s;cursor:pointer;}
+  .bc-bar:hover{opacity:0.75;}
+  .bc-labels{display:flex;gap:6px;}
+  .bc-lbl{flex:1;text-align:center;font-size:10px;color:var(--dim);}
+  .bc-legend{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
+  .bcl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
+  .bcl-dot{width:8px;height:8px;border-radius:2px;}
+
+  /* REPORTS TABLE */
+  .rep-table{width:100%;border-collapse:collapse;}
+  .rep-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .rep-table td{font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+  .rep-table tr:last-child td{border-bottom:none;}
+  .rep-table td:first-child{color:var(--text);font-weight:500;}
+
+  /* COLLECTOR PERF */
+  .coll-list{padding:6px 0;}
+  .coll-item{display:flex;align-items:center;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);}
+  .coll-item:last-child{border-bottom:none;}
+  .coll-rank{font-size:13px;font-weight:700;color:var(--dim);width:18px;text-align:center;flex-shrink:0;}
+  .coll-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;}
+  .ca-g{background:rgba(46,204,113,0.12);color:var(--green);}
+  .ca-b{background:rgba(96,165,250,0.1);color:var(--blue);}
+  .ca-a{background:rgba(240,165,0,0.1);color:var(--amber);}
+  .coll-info{flex:1;}
+  .coll-name{font-size:12px;font-weight:600;color:var(--text);}
+  .coll-zone{font-size:11px;color:var(--muted);}
+  .coll-score{text-align:right;}
+  .coll-pct{font-size:14px;font-weight:700;color:var(--green);}
+  .coll-trips{font-size:11px;color:var(--muted);}
+
+  /* FLEET PAGE */
+  .fleet-full-table{width:100%;border-collapse:collapse;}
+  .fleet-full-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .fleet-full-table td{font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+  .fleet-full-table tr:last-child td{border-bottom:none;}
+  .fleet-full-table td:first-child{color:var(--text);font-weight:500;}
+
+  /* REPORTS PAGE */
+  .rep-filters{display:flex;gap:8px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;}
+  .rf-btn{font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Space Grotesk',sans-serif;transition:all 0.15s;}
+  .rf-btn:hover{border-color:var(--border2);color:var(--text);}
+  .rf-btn.active{background:rgba(240,165,0,0.1);border-color:rgba(240,165,0,0.3);color:var(--amber);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 2L3 6v6l6 4 6-4V6L9 2z" stroke="#060D0A" stroke-width="1.2" fill="none"/><circle cx="9" cy="9" r="2.5" fill="#060D0A"/></svg>
+      </div>
+      <span class="sb-logo-text">Clean<span>GKMA</span></span>
+      <span class="sb-badge">KCCA</span>
+    </div>
+    <div class="sb-user">
+      <div class="sb-avatar" id="sb-avatar">DO</div>
+      <div>
+        <div class="sb-name" id="sb-name">David Ochieng</div>
+        <div class="sb-role" id="sb-role">Solid Waste — Nakawa</div>
+      </div>
+    </div>
+    <div class="sb-nav">
+      <div class="sb-sec">Operations</div>
+      <div class="ni active" onclick="setView('overview')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        Overview
+      </div>
+      <div class="ni" onclick="setView('assign')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 3h9v9H3V3z" stroke="currentColor" stroke-width="1.3"/><path d="M5 5h5M5 7.5h5M5 10h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Assignments
+        <span class="nb nb-amber" id="nb-assign">0</span>
+      </div>
+      <div class="ni" onclick="setView('map')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.567 1.5 4 3.067 4 5c0 2.625 3.5 8.5 3.5 8.5S11 7.625 11 5c0-1.933-1.567-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="5" r="1.3" stroke="currentColor" stroke-width="1.2"/></svg>
+        Live Map
+      </div>
+      <div class="ni" onclick="setView('fleet')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="8" width="13" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 10h2V8l1.5-3h6L12 8v2h2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="4.5" cy="13" r="1.2" stroke="currentColor" stroke-width="1.1"/><circle cx="10.5" cy="13" r="1.2" stroke="currentColor" stroke-width="1.1"/></svg>
+        Fleet Management
+        <span class="nb nb-amber">38</span>
+      </div>
+      <div class="ni" onclick="setView('reports')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2v7M4.5 6l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Overflow Reports
+        <span class="nb nb-red">7</span>
+      </div>
+      <div class="ni" onclick="setView('performance')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 11l3-3.5 3 2 3-4 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>
+        Performance
+      </div>
+      <div class="sb-sec">Settings</div>
+      <div class="ni">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3.05 3.05l1.06 1.06M10.9 10.9l1.05 1.05M3.05 11.95l1.06-1.06M10.9 4.1l1.05-1.05" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Settings
+      </div>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-out" onclick="signOut()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 7h7M9 4.5L11.5 7 9 9.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 2H3a1 1 0 00-1 1v8a1 1 0 001 1h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Sign out
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-title" id="tb-title">GKMA <em>Operations Overview</em></div>
+        <div class="live-pill"><span class="live-dot"></span>Live</div>
+      </div>
+      <div class="tb-right">
+        <span class="tb-date" id="tb-date">Sun, 15 Mar 2026 · 08:34 AM</span>
+        <div class="icon-btn" onclick="setView('assign')">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5a4.5 4.5 0 014.5 4.5v2.2l.8 1.8H1.7l.8-1.8V6A4.5 4.5 0 017 1.5z" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 11a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.2"/></svg>
+          <div class="alert-dot" id="admin-alert-dot" style="display:none;"></div>
+        </div>
+        <div class="icon-btn">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 12.5c0-2.2 2.24-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== OVERVIEW ===== -->
+      <div class="view active" id="view-overview">
+
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi-label">Requests today</div>
+            <div class="kpi-val green">1,247</div>
+            <div class="kpi-trend up">↑ 8% vs yesterday</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Collections done</div>
+            <div class="kpi-val">894</div>
+            <div class="kpi-sub">71.7% completion rate</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Active trucks</div>
+            <div class="kpi-val amber">32</div>
+            <div class="kpi-sub">6 idle · 0 breakdown</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Open reports</div>
+            <div class="kpi-val red">7</div>
+            <div class="kpi-trend dn">↑ 3 since yesterday</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Tonnes collected</div>
+            <div class="kpi-val">643</div>
+            <div class="kpi-sub">of ~1,300 daily est.</div>
+          </div>
+        </div>
+
+        <div class="three-col">
+
+          <!-- MAP PANEL -->
+          <div class="panel" style="grid-column:span 2;">
+            <div class="ph">
+              <span class="pt">Live fleet map · GKMA</span>
+              <span class="pa" onclick="setView('map')">Full map →</span>
+            </div>
+            <div class="map-wrap">
+              <svg viewBox="0 0 560 240" preserveAspectRatio="xMidYMid slice">
+                <rect width="560" height="240" fill="#0A1610"/>
+                <line x1="0" y1="60" x2="560" y2="60" stroke="#1A3020" stroke-width="1"/>
+                <line x1="0" y1="120" x2="560" y2="120" stroke="#1A3020" stroke-width="1.5"/>
+                <line x1="0" y1="180" x2="560" y2="180" stroke="#1A3020" stroke-width="1"/>
+                <line x1="80" y1="0" x2="80" y2="240" stroke="#1A3020" stroke-width="1"/>
+                <line x1="180" y1="0" x2="180" y2="240" stroke="#1A3020" stroke-width="1"/>
+                <line x1="300" y1="0" x2="300" y2="240" stroke="#1A3020" stroke-width="1.5"/>
+                <line x1="420" y1="0" x2="420" y2="240" stroke="#1A3020" stroke-width="1"/>
+                <line x1="500" y1="0" x2="500" y2="240" stroke="#1A3020" stroke-width="1"/>
+                <!-- Zone labels -->
+                <text x="30" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Rubaga</text>
+                <text x="110" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Kawempe</text>
+                <text x="215" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Central</text>
+                <text x="318" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Nakawa</text>
+                <text x="425" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Makindye</text>
+                <!-- Routes -->
+                <path d="M40 160 Q100 120 180 100 Q240 85 300 90" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
+                <path d="M300 90 Q370 75 420 100 Q470 120 510 110" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
+                <path d="M80 180 Q130 150 180 160 Q230 170 300 155" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
+                <path d="M180 60 Q240 80 300 70 Q360 60 420 65" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.35"/>
+                <!-- Active trucks (green) -->
+                <circle cx="150" cy="108" r="6" fill="#2ECC71" opacity="0.9"/>
+                <circle cx="150" cy="108" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
+                <circle cx="260" cy="92" r="6" fill="#2ECC71" opacity="0.9"/>
+                <circle cx="260" cy="92" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
+                <circle cx="380" cy="95" r="6" fill="#2ECC71" opacity="0.9"/>
+                <circle cx="380" cy="95" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
+                <circle cx="470" cy="115" r="6" fill="#2ECC71" opacity="0.9"/>
+                <!-- Idle truck (amber) -->
+                <circle cx="80" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
+                <circle cx="340" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
+                <!-- Overflow reports (red) -->
+                <circle cx="120" cy="75" r="5" fill="#E55353" opacity="0.8"/>
+                <circle cx="120" cy="75" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
+                <circle cx="430" cy="140" r="5" fill="#E55353" opacity="0.8"/>
+                <circle cx="430" cy="140" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
+                <text x="126" y="68" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
+                <text x="436" y="133" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
+              </svg>
+            </div>
+            <div class="map-legend">
+              <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
+              <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
+              <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow report (7)</div>
+            </div>
+          </div>
+
+          <!-- ALERTS -->
+          <div class="panel">
+            <div class="ph">
+              <span class="pt">Active alerts</span>
+              <span class="pa" onclick="setView('reports')">View all →</span>
+            </div>
+            <div class="alert-list">
+              <div class="al-item">
+                <div class="al-icon ali-red">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v5M7 9.5v.5" stroke="#E55353" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="5.5" stroke="#E55353" stroke-width="1.2"/></svg>
+                </div>
+                <div class="al-body">
+                  <div class="al-title">Overflow — Kawempe Mkt</div>
+                  <div class="al-meta">Severity: High · Nakawa zone</div>
+                </div>
+                <div class="al-time">12m ago</div>
+              </div>
+              <div class="al-item">
+                <div class="al-icon ali-red">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v5M7 9.5v.5" stroke="#E55353" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="5.5" stroke="#E55353" stroke-width="1.2"/></svg>
+                </div>
+                <div class="al-body">
+                  <div class="al-title">Illegal dump — Makindye</div>
+                  <div class="al-meta">Severity: Critical · Near wetland</div>
+                </div>
+                <div class="al-time">38m ago</div>
+              </div>
+              <div class="al-item">
+                <div class="al-icon ali-amber">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v4M7 9.5v.5" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/><path d="M1.5 12L7 2l5.5 10H1.5z" stroke="#F0A500" stroke-width="1.2"/></svg>
+                </div>
+                <div class="al-body">
+                  <div class="al-title">Truck #14 — idle 90 min</div>
+                  <div class="al-meta">Rubaga Division · UAX 099C</div>
+                </div>
+                <div class="al-time">1h ago</div>
+              </div>
+              <div class="al-item">
+                <div class="al-icon ali-amber">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v4M7 9.5v.5" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/><path d="M1.5 12L7 2l5.5 10H1.5z" stroke="#F0A500" stroke-width="1.2"/></svg>
+                </div>
+                <div class="al-body">
+                  <div class="al-title">Missed pickup · 14 requests</div>
+                  <div class="al-meta">Kawempe · Unassigned zone</div>
+                </div>
+                <div class="al-time">2h ago</div>
+              </div>
+              <div class="al-item">
+                <div class="al-icon ali-blue">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#60A5FA" stroke-width="1.2"/><path d="M7 5v3M7 9.5v.5" stroke="#60A5FA" stroke-width="1.4" stroke-linecap="round"/></svg>
+                </div>
+                <div class="al-body">
+                  <div class="al-title">New collector registered</div>
+                  <div class="al-meta">Pending approval · Wakiso</div>
+                </div>
+                <div class="al-time">3h ago</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTTOM: MUNICIPALITY TABLE + COLLECTION CHART + TOP COLLECTORS -->
+        <div class="three-col">
+          <div class="panel" style="grid-column:span 2;">
+            <div class="ph">
+              <span class="pt">Collection rate by municipality</span>
+              <span class="pa-muted">Today · All zones</span>
+            </div>
+            <table class="muni-table">
+              <thead><tr><th>Municipality</th><th>Requests</th><th>Completed</th><th>Rate</th><th>Trucks</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>Kampala Central</td><td>312</td><td>268</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:86%"></div></div>86%</td><td>9</td><td><span class="st-pill stp-g">On track</span></td></tr>
+                <tr><td>Nakawa Division</td><td>247</td><td>183</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:74%"></div></div>74%</td><td>7</td><td><span class="st-pill stp-g">On track</span></td></tr>
+                <tr><td>Kawempe Division</td><td>198</td><td>118</td><td><div class="prog-bar"><div class="prog-fill pf-amber" style="width:60%"></div></div>60%</td><td>5</td><td><span class="st-pill stp-a">Behind</span></td></tr>
+                <tr><td>Makindye Division</td><td>287</td><td>196</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:68%"></div></div>68%</td><td>7</td><td><span class="st-pill stp-g">On track</span></td></tr>
+                <tr><td>Rubaga Division</td><td>203</td><td>129</td><td><div class="prog-bar"><div class="prog-fill pf-amber" style="width:64%"></div></div>64%</td><td>4</td><td><span class="st-pill stp-a">Behind</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="panel">
+            <div class="ph"><span class="pt">Top collectors</span><span class="pa" onclick="setView('performance')">All →</span></div>
+            <div class="coll-list">
+              <div class="coll-item">
+                <div class="coll-rank">1</div>
+                <div class="coll-avatar ca-g">JM</div>
+                <div class="coll-info"><div class="coll-name">James Mukasa</div><div class="coll-zone">Nakawa · Truck #07</div></div>
+                <div class="coll-score"><div class="coll-pct">97%</div><div class="coll-trips">18 trips</div></div>
+              </div>
+              <div class="coll-item">
+                <div class="coll-rank">2</div>
+                <div class="coll-avatar ca-b">GA</div>
+                <div class="coll-info"><div class="coll-name">Grace Atim</div><div class="coll-zone">Kampala Central · #03</div></div>
+                <div class="coll-score"><div class="coll-pct">94%</div><div class="coll-trips">16 trips</div></div>
+              </div>
+              <div class="coll-item">
+                <div class="coll-rank">3</div>
+                <div class="coll-avatar ca-a">PS</div>
+                <div class="coll-info"><div class="coll-name">Peter Ssempa</div><div class="coll-zone">Makindye · Truck #11</div></div>
+                <div class="coll-score"><div class="coll-pct">91%</div><div class="coll-trips">15 trips</div></div>
+              </div>
+              <div class="coll-item">
+                <div class="coll-rank">4</div>
+                <div class="coll-avatar ca-g">RA</div>
+                <div class="coll-info"><div class="coll-name">Rose Akullo</div><div class="coll-zone">Kawempe · Truck #19</div></div>
+                <div class="coll-score"><div class="coll-pct">88%</div><div class="coll-trips">14 trips</div></div>
+              </div>
+              <div class="coll-item">
+                <div class="coll-rank">5</div>
+                <div class="coll-avatar ca-b">BK</div>
+                <div class="coll-info"><div class="coll-name">Brian Kato</div><div class="coll-zone">Rubaga · Truck #22</div></div>
+                <div class="coll-score"><div class="coll-pct">85%</div><div class="coll-trips">13 trips</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ASSIGNMENTS ===== -->
+      <div class="view" id="view-assign">
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="ph">
+            <span class="pt">Bookings awaiting assignment</span>
+            <span class="pa-muted" onclick="refreshAssignments()">Refresh</span>
+          </div>
+          <div style="padding:14px 18px;">
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+              Assign a paid booking to a registered driver. The driver will see it in the Driver App and can confirm.
+            </div>
+            <div id="assign-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph">
+            <span class="pt">Notifications</span>
+            <span class="pa-muted" onclick="markAllNotificationsRead()">Mark all read</span>
+          </div>
+          <div style="padding:8px 0;" id="admin-notif-list"></div>
+        </div>
+      </div>
+
+      <!-- ===== LIVE MAP ===== -->
+      <div class="view" id="view-map">
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="ph">
+            <span class="pt">Live fleet map · All GKMA municipalities</span>
+            <span class="pa-muted" onclick="setView('overview')">← Back to overview</span>
+          </div>
+          <div class="map-wrap" style="height:360px;margin:16px 18px 14px;">
+            <svg viewBox="0 0 700 360" preserveAspectRatio="xMidYMid slice">
+              <rect width="700" height="360" fill="#0A1610"/>
+              <line x1="0" y1="90" x2="700" y2="90" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="180" x2="700" y2="180" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="270" x2="700" y2="270" stroke="#1A3020" stroke-width="1"/>
+              <line x1="100" y1="0" x2="100" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="220" y1="0" x2="220" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="360" y1="0" x2="360" y2="360" stroke="#1A3020" stroke-width="1.5"/><line x1="500" y1="0" x2="500" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="620" y1="0" x2="620" y2="360" stroke="#1A3020" stroke-width="1"/>
+              <path d="M40 240 Q120 180 220 160 Q300 145 360 150 Q420 155 500 140 Q560 130 640 145" stroke="#2ECC71" stroke-width="2" fill="none" stroke-dasharray="7 4" opacity="0.6"/>
+              <path d="M100 270 Q170 240 220 250 Q290 265 360 245 Q430 225 500 235" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
+              <path d="M220 90 Q290 110 360 100 Q430 90 500 100 Q570 110 630 95" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.3"/>
+              <circle cx="180" cy="165" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="180" cy="165" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
+              <circle cx="290" cy="148" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="290" cy="148" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
+              <circle cx="420" cy="143" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="420" cy="143" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
+              <circle cx="560" cy="138" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="560" cy="138" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
+              <circle cx="630" cy="148" r="8" fill="#2ECC71" opacity="0.9"/>
+              <circle cx="100" cy="248" r="7" fill="#F0A500" opacity="0.85"/>
+              <circle cx="360" cy="242" r="7" fill="#F0A500" opacity="0.85"/>
+              <circle cx="140" cy="110" r="7" fill="#E55353" opacity="0.8"/><circle cx="140" cy="110" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
+              <circle cx="510" cy="200" r="7" fill="#E55353" opacity="0.8"/><circle cx="510" cy="200" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
+              <text x="20" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Rubaga</text>
+              <text x="155" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Kawempe</text>
+              <text x="295" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Central</text>
+              <text x="415" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Nakawa</text>
+              <text x="520" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Makindye</text>
+            </svg>
+          </div>
+          <div class="map-legend" style="padding:0 18px 16px;">
+            <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
+            <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
+            <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow / alert (7)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FLEET MANAGEMENT ===== -->
+      <div class="view" id="view-fleet">
+        <div class="panel">
+          <div class="ph">
+            <span class="pt">Fleet management · 38 vehicles</span>
+            <span class="pa-muted" onclick="setView('overview')">← Back</span>
+          </div>
+          <table class="fleet-full-table">
+            <thead><tr><th>Truck ID</th><th>Plate</th><th>Driver</th><th>Zone</th><th>Status</th><th>Trips today</th><th>Last ping</th></tr></thead>
+            <tbody>
+              <tr><td>Truck #03</td><td>UAX 088A</td><td>Grace Atim</td><td>Kampala Central</td><td><span class="st-pill stp-g">Active</span></td><td>16</td><td>1 min ago</td></tr>
+              <tr><td>Truck #07</td><td>UAX 312B</td><td>James Mukasa</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>18</td><td>Just now</td></tr>
+              <tr><td>Truck #11</td><td>UAX 201C</td><td>Peter Ssempa</td><td>Makindye Division</td><td><span class="st-pill stp-g">Active</span></td><td>15</td><td>3 min ago</td></tr>
+              <tr><td>Truck #14</td><td>UAX 099C</td><td>Moses Lwanga</td><td>Rubaga Division</td><td><span class="st-pill stp-a">Idle</span></td><td>6</td><td>94 min ago</td></tr>
+              <tr><td>Truck #19</td><td>UAX 445D</td><td>Rose Akullo</td><td>Kawempe Division</td><td><span class="st-pill stp-g">Active</span></td><td>14</td><td>2 min ago</td></tr>
+              <tr><td>Truck #22</td><td>UAX 567E</td><td>Brian Kato</td><td>Rubaga Division</td><td><span class="st-pill stp-g">Active</span></td><td>13</td><td>5 min ago</td></tr>
+              <tr><td>Truck #27</td><td>UAX 712F</td><td>Unassigned</td><td>Kawempe Division</td><td><span class="st-pill stp-r">Idle</span></td><td>0</td><td>3h ago</td></tr>
+              <tr><td>Truck #31</td><td>UAX 834G</td><td>Alice Nambi</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>11</td><td>7 min ago</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== OVERFLOW REPORTS ===== -->
+      <div class="view" id="view-reports">
+        <div class="panel">
+          <div class="ph">
+            <span class="pt">Overflow & incident reports · 7 open</span>
+            <span class="pa-muted" onclick="setView('overview')">← Back</span>
+          </div>
+          <div class="rep-filters">
+            <button class="rf-btn active">All (7)</button>
+            <button class="rf-btn" onclick="filterRep(this)">Critical (1)</button>
+            <button class="rf-btn" onclick="filterRep(this)">High (3)</button>
+            <button class="rf-btn" onclick="filterRep(this)">Medium (2)</button>
+            <button class="rf-btn" onclick="filterRep(this)">Resolved (12)</button>
+          </div>
+          <table class="rep-table">
+            <thead><tr><th>Report ID</th><th>Type</th><th>Location</th><th>Zone</th><th>Severity</th><th>Reported by</th><th>Time</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>#RPT-031</td><td>Illegal dump</td><td>Near Lubigi wetland</td><td>Kawempe</td><td><span class="st-pill stp-r">Critical</span></td><td>Anon resident</td><td>38m ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
+              <tr><td>#RPT-030</td><td>Overflow</td><td>Kawempe Market Rd</td><td>Kawempe</td><td><span class="st-pill stp-r">High</span></td><td>Sarah N.</td><td>12m ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
+              <tr><td>#RPT-029</td><td>Overflow</td><td>Ntinda Rd junction</td><td>Nakawa</td><td><span class="st-pill stp-r">High</span></td><td>Resident app</td><td>1h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
+              <tr><td>#RPT-028</td><td>Missed pickup</td><td>Makindye Stage II</td><td>Makindye</td><td><span class="st-pill stp-a">Medium</span></td><td>David K.</td><td>2h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
+              <tr><td>#RPT-027</td><td>Overflow</td><td>Rubaga Hospital Rd</td><td>Rubaga</td><td><span class="st-pill stp-r">High</span></td><td>Anon resident</td><td>3h ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
+              <tr><td>#RPT-026</td><td>Missed pickup</td><td>Naguru Estate</td><td>Nakawa</td><td><span class="st-pill stp-a">Medium</span></td><td>Resident app</td><td>4h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
+              <tr><td>#RPT-025</td><td>Illegal dump</td><td>Bwaise drainage</td><td>Kawempe</td><td><span class="st-pill stp-r">High</span></td><td>KCCA patrol</td><td>5h ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PERFORMANCE ===== -->
+      <div class="view" id="view-performance">
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><span class="pt">Weekly collection rate · Mar 2026</span><span class="pa-muted" onclick="setView('overview')">← Back</span></div>
+            <div class="bar-chart">
+              <div class="bc-bars">
+                <div class="bc-bar" style="height:68%;background:rgba(46,204,113,0.5);"></div>
+                <div class="bc-bar" style="height:72%;background:rgba(46,204,113,0.5);"></div>
+                <div class="bc-bar" style="height:65%;background:rgba(46,204,113,0.5);"></div>
+                <div class="bc-bar" style="height:78%;background:rgba(46,204,113,0.7);"></div>
+                <div class="bc-bar" style="height:74%;background:rgba(46,204,113,0.7);"></div>
+                <div class="bc-bar" style="height:80%;background:rgba(46,204,113,0.9);"></div>
+                <div class="bc-bar" style="height:72%;background:rgba(240,165,0,0.7);"></div>
+              </div>
+              <div class="bc-labels">
+                <div class="bc-lbl">Mon</div><div class="bc-lbl">Tue</div><div class="bc-lbl">Wed</div><div class="bc-lbl">Thu</div><div class="bc-lbl">Fri</div><div class="bc-lbl">Sat</div><div class="bc-lbl">Sun</div>
+              </div>
+              <div class="bc-legend">
+                <div class="bcl-item"><div class="bcl-dot" style="background:var(--green)"></div>Collection rate (%)</div>
+                <div class="bcl-item"><div class="bcl-dot" style="background:var(--amber)"></div>Today (in progress)</div>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border);">
+              <table class="muni-table">
+                <thead><tr><th>Municipality</th><th>Avg rate this week</th><th>vs last week</th><th>Target</th></tr></thead>
+                <tbody>
+                  <tr><td>Kampala Central</td><td>84%</td><td class="up">↑ 4%</td><td>80%</td></tr>
+                  <tr><td>Nakawa Division</td><td>76%</td><td class="up">↑ 2%</td><td>75%</td></tr>
+                  <tr><td>Makindye Division</td><td>71%</td><td class="up">↑ 1%</td><td>70%</td></tr>
+                  <tr><td>Kawempe Division</td><td>59%</td><td class="dn">↓ 3%</td><td>70%</td></tr>
+                  <tr><td>Rubaga Division</td><td>62%</td><td class="dn">↓ 1%</td><td>70%</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ph"><span class="pt">Collector performance</span><span class="pa-muted">This week</span></div>
+            <div class="coll-list">
+              <div class="coll-item"><div class="coll-rank">1</div><div class="coll-avatar ca-g">JM</div><div class="coll-info"><div class="coll-name">James Mukasa</div><div class="coll-zone">Nakawa · Truck #07</div></div><div class="coll-score"><div class="coll-pct">97%</div><div class="coll-trips">18 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">2</div><div class="coll-avatar ca-b">GA</div><div class="coll-info"><div class="coll-name">Grace Atim</div><div class="coll-zone">Central · Truck #03</div></div><div class="coll-score"><div class="coll-pct">94%</div><div class="coll-trips">16 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">3</div><div class="coll-avatar ca-a">PS</div><div class="coll-info"><div class="coll-name">Peter Ssempa</div><div class="coll-zone">Makindye · Truck #11</div></div><div class="coll-score"><div class="coll-pct">91%</div><div class="coll-trips">15 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">4</div><div class="coll-avatar ca-g">RA</div><div class="coll-info"><div class="coll-name">Rose Akullo</div><div class="coll-zone">Kawempe · Truck #19</div></div><div class="coll-score"><div class="coll-pct">88%</div><div class="coll-trips">14 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">5</div><div class="coll-avatar ca-b">BK</div><div class="coll-info"><div class="coll-name">Brian Kato</div><div class="coll-zone">Rubaga · Truck #22</div></div><div class="coll-score"><div class="coll-pct">85%</div><div class="coll-trips">13 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">6</div><div class="coll-avatar ca-g">AN</div><div class="coll-info"><div class="coll-name">Alice Nambi</div><div class="coll-zone">Nakawa · Truck #31</div></div><div class="coll-score"><div class="coll-pct">82%</div><div class="coll-trips">11 trips today</div></div></div>
+              <div class="coll-item"><div class="coll-rank">7</div><div class="coll-avatar" style="background:rgba(229,83,83,0.1);color:var(--red);">ML</div><div class="coll-info"><div class="coll-name">Moses Lwanga</div><div class="coll-zone">Rubaga · Truck #14</div></div><div class="coll-score"><div class="coll-pct" style="color:var(--amber);">48%</div><div class="coll-trips">6 trips · idle 90m</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const USE_FIREBASE = window.ITRUSH_FIREBASE_CONFIG && window.ITRUSH_FIREBASE_CONFIG.apiKey && window.ITRUSH_FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+  let firebaseAuth = null;
+  let firebaseDb = null;
+  let currentUser = null;
+  let collectorsCache = [];
+  let pendingAssignments = [];
+  let adminNotifUnsub = null;
+  let adminNotifDocs = [];
+
+  function formatAdminDate(d){
+    try {
+      const date = new Intl.DateTimeFormat(undefined, { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).format(d);
+      const time = new Intl.DateTimeFormat(undefined, { hour:'2-digit', minute:'2-digit' }).format(d);
+      return `${date} · ${time}`;
+    } catch (_) {
+      return d.toLocaleString();
+    }
+  }
+
+  function setTopDateNow(){
+    const el = document.getElementById('tb-date');
+    if (el) el.textContent = formatAdminDate(new Date());
+  }
+
+  async function signOut(){
+    try {
+      localStorage.removeItem('itrush_token');
+      if (firebaseAuth) await firebaseAuth.signOut();
+    } finally {
+      window.location.href = 'signin.html';
+    }
+  }
+
+  async function hydrateAdminFromFirebase(user){
+    const doc = await firebaseDb.collection('users').doc(user.uid).get();
+    const data = (doc && doc.exists && doc.data()) ? doc.data() : {};
+    const first = (data.first_name || '').trim();
+    const last = (data.last_name || '').trim();
+    const full = (first || last) ? `${first} ${last}`.trim() : (user.email || 'KCCA Officer');
+    const initials = full.split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join('') || 'U';
+    const dept = (data.department || '').trim();
+    const juris = (data.jurisdiction || '').trim();
+    const roleLine = [dept || 'KCCA', juris].filter(Boolean).join(' — ') || 'KCCA Officer';
+
+    const sbAvatar = document.getElementById('sb-avatar');
+    const sbName = document.getElementById('sb-name');
+    const sbRole = document.getElementById('sb-role');
+    if (sbAvatar) sbAvatar.textContent = initials;
+    if (sbName) sbName.textContent = full;
+    if (sbRole) sbRole.textContent = roleLine;
+  }
+
+  const titles = {
+    overview:'GKMA <em>Operations Overview</em>',
+    assign:'Booking <em>Assignments</em>',
+    map:'Live <em>Fleet Map</em>',
+    fleet:'Fleet <em>Management</em>',
+    reports:'Overflow <em>Reports</em>',
+    performance:'Performance <em>Analytics</em>'
+  };
+  const navIdx = {overview:0,assign:1,map:2,fleet:3,reports:4,performance:5};
+
+  function setView(v){
+    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+    const items=document.querySelectorAll('.ni');
+    if(navIdx[v]!==undefined) items[navIdx[v]].classList.add('active');
+    document.getElementById('tb-title').innerHTML=titles[v]||titles.overview;
+  }
+
+  function filterRep(btn){
+    btn.closest('.rep-filters').querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  async function createNotification(payload){
+    if (!firebaseDb) return;
+    try {
+      await firebaseDb.collection('notifications').add({ ...payload, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } catch (e) {
+      console.error('Failed to create notification:', e);
+    }
+  }
+
+  function timeAgo(ts){
+    const d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+    if (!d) return 'now';
+    const diff = Date.now() - d.getTime();
+    const mins = Math.floor(diff/60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins/60);
+    if (hrs < 24) return `${hrs} hr${hrs===1?'':'s'} ago`;
+    const days = Math.floor(hrs/24);
+    return `${days} day${days===1?'':'s'} ago`;
+  }
+
+  function renderAdminNotifications(){
+    const list = document.getElementById('admin-notif-list');
+    const dot = document.getElementById('admin-alert-dot');
+    if (dot) dot.style.display = adminNotifDocs.some(n => !n.readAt) ? '' : 'none';
+    if (!list) return;
+    if (!adminNotifDocs.length) {
+      list.innerHTML = `<div style="padding:12px 18px;color:var(--muted);font-size:12px;">No notifications yet.</div>`;
+      return;
+    }
+    list.innerHTML = adminNotifDocs.slice(0, 20).map(n => {
+      const unread = !n.readAt;
+      const color = n.type === 'payment_completed' ? 'var(--green)' : (n.type === 'driver_confirmed' ? 'var(--blue)' : 'var(--amber)');
+      return `
+        <div style="display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);${unread ? 'background:rgba(240,165,0,0.04);' : ''}">
+          <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;background:${color};opacity:${unread ? '1' : '0.5'};"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="color:var(--text);font-size:12px;line-height:1.5;">${(n.message||'Notification')}</div>
+            <div style="color:var(--muted);font-size:11px;margin-top:4px;">${timeAgo(n.createdAt)}${n.requestId ? ` · #${String(n.requestId).slice(0,8).toUpperCase()}` : ''}</div>
+          </div>
+          ${unread ? `<button class="rf-btn" style="padding:4px 10px;" onclick="markNotificationRead('${n.id}')">Read</button>` : ``}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function startAdminNotificationListener(){
+    if (!firebaseDb) return;
+    if (adminNotifUnsub) { adminNotifUnsub(); adminNotifUnsub = null; }
+    adminNotifUnsub = firebaseDb.collection('notifications')
+      .where('toRole','==','kcca_officer')
+      .orderBy('createdAt','desc')
+      .limit(50)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        adminNotifDocs = rows;
+        renderAdminNotifications();
+      }, (err) => {
+        console.error('Notification listener failed:', err);
+      });
+  }
+
+  async function markNotificationRead(id){
+    if (!firebaseDb || !id) return;
+    try {
+      await firebaseDb.collection('notifications').doc(id).update({ readAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } catch (e) {
+      console.error('Mark read failed:', e);
+    }
+  }
+
+  async function markAllNotificationsRead(){
+    if (!firebaseDb) return;
+    const unread = adminNotifDocs.filter(n => !n.readAt).slice(0, 50);
+    if (!unread.length) return;
+    try {
+      const batch = firebaseDb.batch();
+      unread.forEach(n => batch.update(firebaseDb.collection('notifications').doc(n.id), { readAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      await batch.commit();
+    } catch (e) {
+      console.error('Mark all read failed:', e);
+    }
+  }
+
+  async function fetchCollectors(){
+    if (!firebaseDb) return [];
+    const snap = await firebaseDb.collection('users').where('role','==','collector').limit(200).get();
+    const out = [];
+    snap.forEach(d => out.push({ uid: d.id, ...d.data() }));
+    return out;
+  }
+
+  function fmtReqLine(r){
+    const zone = r.zone || '—';
+    const type = r.type || '—';
+    const vol = r.volume || '—';
+    const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
+    return `${zone} · ${type} · ${vol} · ${sched}`;
+  }
+
+  function renderAssignments(){
+    const list = document.getElementById('assign-list');
+    const badge = document.getElementById('nb-assign');
+    if (badge) badge.textContent = String(pendingAssignments.length);
+    if (!list) return;
+    if (!pendingAssignments.length) {
+      list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No bookings waiting for assignment.</div>`;
+      return;
+    }
+    const driverOpts = collectorsCache.map(c => {
+      const name = (c.full_name || `${(c.first_name||'').trim()} ${(c.last_name||'').trim()}`.trim() || c.email || c.uid).toString();
+      return `<option value="${c.uid}">${name}</option>`;
+    }).join('');
+
+    list.innerHTML = pendingAssignments.map(r => {
+      const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+      return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="min-width:240px;flex:1;">
+              <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · UGX ${(Number(r.amountUGX||0)).toLocaleString()}</div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${fmtReqLine(r)}</div>
+              <div style="color:var(--dim);font-size:11px;margin-top:6px;">Status: ${r.status || '—'} · Payment: ${r.paymentStatus || '—'}</div>
+            </div>
+            <div style="min-width:240px;display:flex;gap:8px;flex-direction:column;">
+              <select id="assign-select-${r.id}" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;">
+                <option value="" selected disabled>Select driver…</option>
+                ${driverOpts}
+              </select>
+              <button class="rf-btn active" style="width:100%;border-radius:8px;" onclick="assignRequest('${r.id}')">Assign to driver</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function refreshAssignments(){
+    if (!firebaseDb) return;
+    try {
+      collectorsCache = await fetchCollectors();
+    } catch (e) {
+      console.error('Failed to load collectors:', e);
+      collectorsCache = [];
+    }
+    try {
+      const snap = await firebaseDb.collection('collection_requests')
+        .where('paymentStatus','==','paid')
+        .limit(50)
+        .get();
+      const rows = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (!data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment' || !data.status)) {
+          rows.push({ id: d.id, ...data });
+        }
+      });
+      pendingAssignments = rows;
+    } catch (e) {
+      console.error('Failed to load assignments:', e);
+      pendingAssignments = [];
+    }
+    renderAssignments();
+  }
+
+  async function assignRequest(requestId){
+    if (!firebaseDb || !currentUser) return;
+    const sel = document.getElementById(`assign-select-${requestId}`);
+    const driverUid = sel ? sel.value : '';
+    if (!driverUid) { alert('Select a driver first.'); return; }
+    try {
+      await firebaseDb.collection('collection_requests').doc(requestId).update({
+        collectorUid: driverUid,
+        assignedByUid: currentUser.uid,
+        assignedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        status: 'assigned'
+      });
+      await createNotification({
+        toUid: driverUid,
+        type: 'assigned_job',
+        requestId,
+        message: 'You have been assigned a new collection job. Please confirm in Driver App.'
+      });
+      await createNotification({
+        toRole: 'kcca_officer',
+        type: 'assigned_job',
+        requestId,
+        message: 'A booking was assigned to a driver.'
+      });
+      alert('Assigned to driver.');
+      await refreshAssignments();
+    } catch (e) {
+      console.error('Assign failed:', e);
+      alert(e.message || 'Assign failed.');
+    }
+  }
+
+  (function init(){
+    setTopDateNow();
+    setInterval(setTopDateNow, 60 * 1000);
+    if (!USE_FIREBASE || typeof firebase === 'undefined') return;
+    try {
+      firebase.initializeApp(window.ITRUSH_FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      firebaseDb = firebase.firestore();
+    } catch (e) {
+      console.error('Firebase init failed:', e);
+      return;
+    }
+    firebaseAuth.onAuthStateChanged(async (user) => {
+      if (!user) { window.location.href = 'signin.html'; return; }
+      currentUser = user;
+      try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) {}
+      try { await hydrateAdminFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
+      try { await refreshAssignments(); } catch (_) {}
+      try { startAdminNotificationListener(); } catch (_) {}
+    });
+  })();
+</script>
+</body>
+</html>

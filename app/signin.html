@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #060D0A;
+    --surface: #0D1812;
+    --surface2: #132318;
+    --border: rgba(74,200,120,0.1);
+    --border2: rgba(74,200,120,0.2);
+    --green: #2ECC71;
+    --green-dark: #25a85c;
+    --amber: #F0A500;
+    --blue: #60A5FA;
+    --purple: #A78BFA;
+    --text: #EDF5F0;
+    --muted: #7A9E88;
+    --dim: #3D5A48;
+    --input-bg: #0A1410;
+    --input-border: rgba(74,200,120,0.15);
+    --input-focus: rgba(46,204,113,0.35);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(6,13,10,0.95);
+    backdrop-filter: blur(12px);
+  }
+  .logo {
+    display: flex; align-items: center; gap: 9px;
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 30px; height: 30px;
+    background: var(--green);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 16px;
+    color: var(--text); letter-spacing: -0.3px;
+  }
+  .logo-text span { color: var(--green); }
+  .nav-back {
+    font-size: 13px; color: var(--muted);
+    text-decoration: none;
+    display: flex; align-items: center; gap: 6px;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--text); }
+
+  /* LAYOUT */
+  .auth-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: calc(100vh - 61px);
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 60px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    top: -120px; left: -80px;
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(46,204,113,0.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .left-eyebrow {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 2px;
+    color: var(--green); margin-bottom: 18px;
+  }
+  .left-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 38px; font-weight: 400;
+    line-height: 1.1; letter-spacing: -0.5px;
+    color: var(--text); margin-bottom: 16px;
+  }
+  .left-title em { font-style: italic; color: var(--green); }
+  .left-sub {
+    font-size: 14px; color: var(--muted);
+    font-weight: 300; line-height: 1.85;
+    margin-bottom: 48px; max-width: 360px;
+  }
+
+  /* ROLE CARDS */
+  .roles-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--dim); margin-bottom: 14px;
+  }
+  .roles-list { display: flex; flex-direction: column; gap: 10px; }
+  .role-card {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .role-card:hover { border-color: var(--border2); }
+  .role-card.active {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.06);
+  }
+  .role-icon {
+    width: 38px; height: 38px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ri-green  { background: rgba(46,204,113,0.12); }
+  .ri-amber  { background: rgba(240,165,0,0.12); }
+  .ri-blue   { background: rgba(96,165,250,0.1); }
+  .role-info { flex: 1; }
+  .role-name {
+    font-size: 13px; font-weight: 600;
+    color: var(--text); margin-bottom: 2px;
+  }
+  .role-desc { font-size: 11px; color: var(--muted); }
+  .role-check {
+    width: 18px; height: 18px; border-radius: 50%;
+    border: 1.5px solid var(--dim);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .role-card.active .role-check {
+    background: var(--green); border-color: var(--green);
+  }
+  .role-badge {
+    position: absolute; top: -1px; right: 12px;
+    font-size: 9px; font-weight: 600;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    background: rgba(240,165,0,0.15); color: var(--amber);
+    padding: 2px 7px; border-radius: 0 0 5px 5px;
+  }
+
+  /* STATS MINI */
+  .left-stats {
+    display: flex; gap: 24px; margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .ls { flex: 1; }
+  .ls-n {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px; color: var(--green); line-height: 1;
+    margin-bottom: 4px;
+  }
+  .ls-l { font-size: 11px; color: var(--muted); }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    padding: 60px 56px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* TAB TOGGLE */
+  .auth-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 36px;
+    width: 100%;
+  }
+  .toggle-btn {
+    flex: 1; padding: 10px;
+    font-size: 14px; font-weight: 500;
+    color: var(--muted);
+    background: transparent; border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+  }
+  .toggle-btn.active {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border2);
+  }
+
+  /* FORM HEADER */
+  .form-greeting {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; font-weight: 400;
+    color: var(--text); letter-spacing: -0.3px;
+    margin-bottom: 6px; line-height: 1.2;
+  }
+  .form-greeting em { font-style: italic; color: var(--green); }
+  .form-sub {
+    font-size: 13px; color: var(--muted);
+    font-weight: 300; margin-bottom: 32px;
+    line-height: 1.7;
+  }
+
+  /* ROLE MINI SELECTOR */
+  .mini-roles {
+    display: flex; gap: 8px; margin-bottom: 28px;
+  }
+  .mini-role {
+    flex: 1; padding: 9px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+  .mini-role:hover { border-color: var(--border2); }
+  .mini-role.active {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.07);
+  }
+  .mini-role-icon { font-size: 16px; margin-bottom: 4px; }
+  .mini-role-label {
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted);
+  }
+  .mini-role.active .mini-role-label { color: var(--green); }
+
+  /* INPUTS */
+  .form-group { margin-bottom: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  label {
+    display: block;
+    font-size: 12px; font-weight: 500;
+    color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.8px; margin-bottom: 7px;
+  }
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  select {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  input::placeholder { color: var(--dim); }
+  input:focus, select:focus {
+    border-color: rgba(46,204,113,0.4);
+    box-shadow: 0 0 0 3px rgba(46,204,113,0.08);
+  }
+  select { color: var(--muted); cursor: pointer; }
+  select option { background: #0D1812; color: var(--text); }
+  .input-hint {
+    font-size: 11px; color: var(--dim);
+    margin-top: 5px; line-height: 1.5;
+  }
+
+  /* PASSWORD EYE */
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-right: 42px; }
+  .eye-btn {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--dim); cursor: pointer;
+    padding: 2px; display: flex; align-items: center;
+    transition: color 0.2s;
+  }
+  .eye-btn:hover { color: var(--muted); }
+
+  /* DIVIDER */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 22px 0; color: var(--dim); font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+
+  /* SUBMIT */
+  .btn-submit {
+    width: 100%; padding: 13px;
+    background: var(--green); color: #060D0A;
+    border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: all 0.2s;
+    display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+    margin-top: 6px;
+  }
+  .btn-submit:hover {
+    background: #39D97E;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(46,204,113,0.2);
+  }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* GOOGLE */
+  .btn-google {
+    width: 100%; padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--muted); font-size: 14px;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    display: flex; align-items: center;
+    justify-content: center; gap: 10px;
+    transition: all 0.2s;
+  }
+  .btn-google:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+  /* TERMS */
+  .terms-note {
+    font-size: 11px; color: var(--dim);
+    text-align: center; margin-top: 16px;
+    line-height: 1.7;
+  }
+  .terms-note a { color: var(--muted); text-decoration: underline; }
+
+  /* FORGOT */
+  .forgot-row {
+    display: flex; justify-content: flex-end;
+    margin-top: 4px;
+  }
+  .forgot-link {
+    font-size: 12px; color: var(--muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .forgot-link:hover { color: var(--green); }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+
+  /* FORM PANELS */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  @media (max-width: 800px) {
+    .auth-layout { grid-template-columns: 1fr; }
+    .left-panel { display: none; }
+    .right-panel { padding: 40px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="#">
+    <div class="logo-icon">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3.5" fill="#060D0A"/><path d="M9 2L3 6v6l6 4 6-4V6L9 2z" stroke="#060D0A" stroke-width="1" fill="none"/></svg>
+    </div>
+    <span class="logo-text">Clean<span>GKMA</span></span>
+  </a>
+  <a class="nav-back" href="#">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    Back to home
+  </a>
+</nav>
+
+<div class="auth-layout">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="left-eyebrow">Greater Kampala Metropolitan Area</div>
+    <h2 class="left-title">Waste management,<br><em>finally connected.</em></h2>
+    <p class="left-sub">Join the platform that links residents, private collectors, and KCCA authorities into one seamless, real-time waste management system.</p>
+
+    <div class="roles-label">Choose your role to get started</div>
+    <div class="roles-list">
+
+      <div class="role-card active" id="lp-resident" onclick="selectRole('resident')">
+        <div class="role-icon ri-green">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L2 7v9h5v-5h4v5h5V7L9 2z" stroke="#2ECC71" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">Resident / Household</div>
+          <div class="role-desc">Request pickups, track trucks, report overflow</div>
+        </div>
+        <div class="role-check">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <div class="role-card" id="lp-kcca" onclick="selectRole('kcca')">
+        <div class="role-badge">Authority</div>
+        <div class="role-icon ri-amber">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="8" width="14" height="8" rx="2" stroke="#F0A500" stroke-width="1.4"/><path d="M5 8V6a4 4 0 018 0v2" stroke="#F0A500" stroke-width="1.4" stroke-linecap="round"/><circle cx="9" cy="13" r="1.5" fill="#F0A500"/></svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">KCCA / Municipal Authority</div>
+          <div class="role-desc">Oversee operations, monitor service delivery</div>
+        </div>
+        <div class="role-check">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+      <div class="role-card" id="lp-collector" onclick="selectRole('collector')">
+        <div class="role-icon ri-blue">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="16" height="6" rx="2" stroke="#60A5FA" stroke-width="1.4"/><path d="M1 11h2V9l2-4h7l2 4v2h2" stroke="#60A5FA" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/><circle cx="13" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/></svg>
+        </div>
+        <div class="role-info">
+          <div class="role-name">Collector / Driver</div>
+          <div class="role-desc">Manage routes, confirm pickups, log trips</div>
+        </div>
+        <div class="role-check">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="left-stats">
+      <div class="ls"><div class="ls-n">1,300+</div><div class="ls-l">Tonnes collected daily</div></div>
+      <div class="ls"><div class="ls-n">5</div><div class="ls-l">Municipalities covered</div></div>
+      <div class="ls"><div class="ls-n">3</div><div class="ls-l">Stakeholder groups</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- TOGGLE -->
+    <div class="auth-toggle">
+      <button class="toggle-btn active" id="tab-login" onclick="switchTab('login')">Sign in</button>
+      <button class="toggle-btn" id="tab-signup" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <!-- ===== LOGIN PANEL ===== -->
+    <div class="form-panel active" id="panel-login">
+
+      <div class="form-greeting" id="login-greeting">Welcome back, <em>Resident</em></div>
+      <p class="form-sub">Sign in to manage your waste collection requests and track service delivery.</p>
+
+      <!-- MINI ROLE SELECTOR -->
+      <div class="mini-roles">
+        <div class="mini-role active" id="mr-login-resident" onclick="selectRole('resident')">
+          <div class="mini-role-icon">🏠</div>
+          <div class="mini-role-label">Resident</div>
+        </div>
+        <div class="mini-role" id="mr-login-kcca" onclick="selectRole('kcca')">
+          <div class="mini-role-icon">🏛️</div>
+          <div class="mini-role-label">KCCA</div>
+        </div>
+        <div class="mini-role" id="mr-login-collector" onclick="selectRole('collector')">
+          <div class="mini-role-icon">🚛</div>
+          <div class="mini-role-label">Collector</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Email address</label>
+        <input type="email" id="login-email" name="email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+
+      <div class="form-group">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="login-pass" name="password" placeholder="Enter your password" autocomplete="current-password"/>
+          <button class="eye-btn" onclick="togglePass('login-pass', this)" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+        <div class="forgot-row"><a class="forgot-link" href="#">Forgot password?</a></div>
+      </div>
+
+      <button type="button" class="btn-submit" id="btn-login">
+        Sign in
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8 3.5l4 4-4 4" stroke="#060D0A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="divider">or continue with</div>
+      <button class="btn-google">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
+        Sign in with Google
+      </button>
+
+      <p class="terms-note">Don't have an account? <a href="#" onclick="switchTab('signup');return false;">Create one here</a></p>
+    </div>
+
+    <!-- ===== SIGNUP PANEL ===== -->
+    <div class="form-panel" id="panel-signup">
+
+      <div class="form-greeting" id="signup-greeting">Join as a <em>Resident</em></div>
+      <p class="form-sub">Create your CleanGKMA account to start requesting waste collection in your area.</p>
+
+      <!-- MINI ROLE SELECTOR -->
+      <div class="mini-roles">
+        <div class="mini-role active" id="mr-signup-resident" onclick="selectRole('resident')">
+          <div class="mini-role-icon">🏠</div>
+          <div class="mini-role-label">Resident</div>
+        </div>
+        <div class="mini-role" id="mr-signup-kcca" onclick="selectRole('kcca')">
+          <div class="mini-role-icon">🏛️</div>
+          <div class="mini-role-label">KCCA</div>
+        </div>
+        <div class="mini-role" id="mr-signup-collector" onclick="selectRole('collector')">
+          <div class="mini-role-icon">🚛</div>
+          <div class="mini-role-label">Collector</div>
+        </div>
+      </div>
+
+      <!-- RESIDENT FIELDS -->
+      <div id="signup-resident-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First name</label>
+            <input type="text" name="first_name" placeholder="e.g. Sarah"/>
+          </div>
+          <div class="form-group">
+            <label>Last name</label>
+            <input type="text" name="last_name" placeholder="e.g. Namukasa"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" name="email" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>Phone number</label>
+          <input type="tel" name="phone" placeholder="+256 7XX XXX XXX"/>
+        </div>
+        <div class="form-group">
+          <label>Zone / Division</label>
+          <select name="zone">
+            <option value="" disabled selected>Select your zone</option>
+            <option>Kampala Central</option>
+            <option>Kawempe Division</option>
+            <option>Makindye Division</option>
+            <option>Nakawa Division</option>
+            <option>Rubaga Division</option>
+            <option>Wakiso Municipality</option>
+            <option>Mukono Municipality</option>
+            <option>Kira Municipality</option>
+            <option>Entebbe Municipality</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KCCA FIELDS -->
+      <div id="signup-kcca-fields" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First name</label>
+            <input type="text" name="first_name" placeholder="e.g. David"/>
+          </div>
+          <div class="form-group">
+            <label>Last name</label>
+            <input type="text" name="last_name" placeholder="e.g. Ochieng"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Official email</label>
+          <input type="email" name="email" placeholder="name@kcca.go.ug"/>
+          <div class="input-hint">Use your KCCA or municipal authority email address.</div>
+        </div>
+        <div class="form-group">
+          <label>Department</label>
+          <select name="department">
+            <option value="" disabled selected>Select department</option>
+            <option>Solid Waste Management</option>
+            <option>Environment & Natural Resources</option>
+            <option>Public Health</option>
+            <option>Infrastructure & Transport</option>
+            <option>Enforcement</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Municipality / Division</label>
+          <select name="jurisdiction">
+            <option value="" disabled selected>Select jurisdiction</option>
+            <option>KCCA Central</option>
+            <option>Kawempe Division</option>
+            <option>Makindye Division</option>
+            <option>Nakawa Division</option>
+            <option>Rubaga Division</option>
+            <option>Wakiso Municipality</option>
+            <option>Mukono Municipality</option>
+            <option>Kira Municipality</option>
+            <option>Entebbe Municipality</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Staff ID</label>
+          <input type="text" name="staff_id" placeholder="e.g. KCCA-2024-0041"/>
+          <div class="input-hint">Your account will be reviewed and approved within 24 hours.</div>
+        </div>
+      </div>
+
+      <!-- COLLECTOR FIELDS -->
+      <div id="signup-collector-fields" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Full name</label>
+            <input type="text" name="full_name" placeholder="e.g. James Mukasa"/>
+          </div>
+          <div class="form-group">
+            <label>Phone number</label>
+            <input type="tel" name="phone" placeholder="+256 7XX XXX XXX"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email address</label>
+          <input type="email" name="email" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>Company / Organisation</label>
+          <input type="text" name="company" placeholder="e.g. Kampala Waste Solutions Ltd."/>
+        </div>
+        <div class="form-group">
+          <label>Truck / Vehicle plate</label>
+          <input type="text" name="truck_plate" placeholder="e.g. UAX 123B"/>
+          <div class="input-hint">Enter the registration plate of your primary collection vehicle.</div>
+        </div>
+        <div class="form-group">
+          <label>Operating zone</label>
+          <select name="primary_zone">
+            <option value="" disabled selected>Select primary zone</option>
+            <option>Kampala Central</option>
+            <option>Kawempe Division</option>
+            <option>Makindye Division</option>
+            <option>Nakawa Division</option>
+            <option>Rubaga Division</option>
+            <option>Wakiso Municipality</option>
+            <option>Mukono Municipality</option>
+            <option>Kira Municipality</option>
+            <option>Entebbe Municipality</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- SHARED PASSWORD -->
+      <div class="form-group" style="margin-top:4px">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" id="signup-pass" name="password" placeholder="Create a strong password" autocomplete="new-password"/>
+          <button class="eye-btn" onclick="togglePass('signup-pass', this)" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" stroke-width="1.3"/></svg>
+          </button>
+        </div>
+        <div class="input-hint">Minimum 8 characters, one number, one uppercase letter.</div>
+      </div>
+
+      <button type="button" class="btn-submit" id="signup-btn">
+        Create account
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8 3.5l4 4-4 4" stroke="#060D0A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="divider">or</div>
+      <button class="btn-google">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
+        Sign up with Google
+      </button>
+
+      <p class="terms-note">By creating an account you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.<br>Already have an account? <a href="#" onclick="switchTab('login');return false;">Sign in here</a></p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let currentRole = 'resident';
+  let currentTab  = 'login';
+
+  const roleData = {
+    resident: {
+      loginGreeting: 'Welcome back, <em>Resident</em>',
+      loginSub: 'Sign in to manage your waste collection requests and track service delivery.',
+      signupGreeting: 'Join as a <em>Resident</em>',
+      signupSub: 'Create your CleanGKMA account to start requesting waste collection in your area.',
+      signupBtn: 'Create resident account'
+    },
+    kcca: {
+      loginGreeting: 'Welcome back, <em>Authority</em>',
+      loginSub: 'Sign in to access the KCCA operations dashboard and monitoring tools.',
+      signupGreeting: 'Register as <em>KCCA / Authority</em>',
+      signupSub: 'Create an official account to oversee waste collection operations across the GKMA.',
+      signupBtn: 'Submit for approval'
+    },
+    collector: {
+      loginGreeting: 'Welcome back, <em>Collector</em>',
+      loginSub: 'Sign in to view your assigned routes, jobs, and GPS tracking tools.',
+      signupGreeting: 'Join as a <em>Collector</em>',
+      signupSub: 'Register your vehicle and company to start receiving collection assignments across the GKMA.',
+      signupBtn: 'Register as collector'
+    }
+  };
+
+  function selectRole(role) {
+    currentRole = role;
+    // Left panel cards
+    ['resident','kcca','collector'].forEach(r => {
+      document.getElementById('lp-'+r).classList.toggle('active', r === role);
+    });
+    // Mini role pills (login & signup)
+    ['login','signup'].forEach(tab => {
+      ['resident','kcca','collector'].forEach(r => {
+        const el = document.getElementById('mr-'+tab+'-'+r);
+        if (el) el.classList.toggle('active', r === role);
+      });
+    });
+    // Signup fields
+    ['resident','kcca','collector'].forEach(r => {
+      const f = document.getElementById('signup-'+r+'-fields');
+      if (f) f.classList.toggle('hidden', r !== role);
+    });
+    // Update greetings & subtitles
+    const d = roleData[role];
+    document.getElementById('login-greeting').innerHTML  = d.loginGreeting;
+    document.getElementById('signup-greeting').innerHTML = d.signupGreeting;
+    const loginSubEl  = document.querySelector('#panel-login .form-sub');
+    const signupSubEl = document.querySelector('#panel-signup .form-sub');
+    if (loginSubEl)  loginSubEl.textContent  = d.loginSub;
+    if (signupSubEl) signupSubEl.textContent = d.signupSub;
+    const btn = document.getElementById('signup-btn');
+    if (btn) {
+      btn.innerHTML = d.signupBtn + `<svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8 3.5l4 4-4 4" stroke="#060D0A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('tab-signup').classList.toggle('active', tab === 'signup');
+    document.getElementById('panel-login').classList.toggle('active',  tab === 'login');
+    document.getElementById('panel-signup').classList.toggle('active', tab === 'signup');
+    selectRole(currentRole);
+  }
+
+  function togglePass(id, btn) {
+    const inp = document.getElementById(id);
+    const isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    btn.style.color = isText ? 'var(--dim)' : 'var(--green)';
+  }
+
+  // ——— Auth: Firebase (default) or API Gateway
+  const USE_FIREBASE = window.ITRUSH_FIREBASE_CONFIG && window.ITRUSH_FIREBASE_CONFIG.apiKey && window.ITRUSH_FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+  const API_BASE = window.ITRUSH_API_URL || 'http://localhost:3000';
+
+  let firebaseApp = null;
+  let firebaseAuth = null;
+  let firebaseDb = null;
+  if (USE_FIREBASE && typeof firebase !== 'undefined') {
+    try {
+      firebaseApp = firebase.initializeApp(window.ITRUSH_FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      firebaseDb = firebase.firestore();
+    } catch (e) {
+      console.error('Firebase init failed:', e);
+    }
+  }
+
+  function redirectByRole(role) {
+    const pages = { resident: 'resident_dashboard.html', kcca_officer: 'admin_dashboard.html', collector: 'driver_app.html' };
+    const url = pages[role] || 'index.html';
+    window.location.href = url;
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    if (el) { el.textContent = msg; el.classList.remove('hidden'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    const panel = currentTab === 'login' ? document.getElementById('panel-login') : document.getElementById('panel-signup');
+    if (!panel) return;
+    const errDiv = document.createElement('div');
+    errDiv.id = 'auth-error';
+    errDiv.className = 'auth-error-msg';
+    errDiv.style.cssText = 'color:#E55353;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(229,83,83,0.1);border-radius:8px;';
+    errDiv.textContent = msg;
+    panel.insertBefore(errDiv, panel.firstChild);
+    errDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function clearAuthError() {
+    const el = document.getElementById('auth-error');
+    if (el) el.classList.add('hidden');
+  }
+
+  document.getElementById('btn-login').addEventListener('click', async function() {
+    clearAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-pass').value;
+    if (!email || !password) { showAuthError('Please enter email and password.'); return; }
+    this.disabled = true;
+    try {
+      if (USE_FIREBASE && firebaseAuth) {
+        const cred = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        const token = await cred.user.getIdToken();
+        localStorage.setItem('itrush_token', token);
+        const snap = await firebaseDb.collection('users').doc(cred.user.uid).get();
+        const role = (snap && snap.data() && snap.data().role) || 'resident';
+        redirectByRole(role === 'kcca' ? 'kcca_officer' : role);
+        return;
+      }
+      const res = await fetch(API_BASE + '/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showAuthError(data.error || 'Sign in failed.'); return; }
+      if (data.token) localStorage.setItem('itrush_token', data.token);
+      if (data.user) redirectByRole(data.user.role);
+      else redirectByRole('resident');
+    } catch (e) {
+      if (USE_FIREBASE && e.code) {
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') showAuthError('Invalid email or password.');
+        else if (e.code === 'auth/invalid-email') showAuthError('Invalid email address.');
+        else showAuthError(e.message || 'Sign in failed.');
+      } else if (!USE_FIREBASE) showAuthError('Cannot reach server. Is the API running at ' + API_BASE + '?');
+      else showAuthError(e.message || 'Sign in failed.');
+    } finally {
+      this.disabled = false;
+    }
+  });
+
+  document.getElementById('signup-btn').addEventListener('click', async function() {
+    clearAuthError();
+    const role = currentRole === 'kcca' ? 'kcca_officer' : currentRole;
+    const password = document.getElementById('signup-pass').value;
+    if (!password || password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Creating…';
+    btn.disabled = true;
+
+    let email = '';
+    const payload = { role: currentRole, email: '', password };
+
+    if (currentRole === 'resident') {
+      const panel = document.getElementById('signup-resident-fields');
+      payload.first_name = (panel.querySelector('[name="first_name"]')?.value || '').trim();
+      payload.last_name = (panel.querySelector('[name="last_name"]')?.value || '').trim();
+      payload.email = (panel.querySelector('[name="email"]')?.value || '').trim();
+      payload.phone = (panel.querySelector('[name="phone"]')?.value || '').trim();
+      payload.zone = (panel.querySelector('[name="zone"]')?.value || '').trim();
+    } else if (currentRole === 'kcca') {
+      const panel = document.getElementById('signup-kcca-fields');
+      payload.first_name = (panel.querySelector('[name="first_name"]')?.value || '').trim();
+      payload.last_name = (panel.querySelector('[name="last_name"]')?.value || '').trim();
+      payload.email = (panel.querySelector('[name="email"]')?.value || '').trim();
+      payload.department = (panel.querySelector('[name="department"]')?.value || '').trim();
+      payload.jurisdiction = (panel.querySelector('[name="jurisdiction"]')?.value || '').trim();
+      payload.staff_id = (panel.querySelector('[name="staff_id"]')?.value || '').trim();
+    } else if (currentRole === 'collector') {
+      const panel = document.getElementById('signup-collector-fields');
+      payload.full_name = (panel.querySelector('[name="full_name"]')?.value || '').trim();
+      payload.phone = (panel.querySelector('[name="phone"]')?.value || '').trim();
+      payload.email = (panel.querySelector('[name="email"]')?.value || '').trim();
+      payload.company = (panel.querySelector('[name="company"]')?.value || '').trim();
+      payload.truck_plate = (panel.querySelector('[name="truck_plate"]')?.value || '').trim();
+      payload.primary_zone = (panel.querySelector('[name="primary_zone"]')?.value || '').trim();
+    }
+
+    if (!payload.email) { btn.innerHTML = originalText; btn.disabled = false; showAuthError('Email is required.'); return; }
+
+    try {
+      if (USE_FIREBASE && firebaseAuth && firebaseDb) {
+        const cred = await firebaseAuth.createUserWithEmailAndPassword(payload.email, payload.password);
+        const profile = {
+          role: role,
+          email: payload.email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (currentRole === 'resident') {
+          profile.first_name = payload.first_name || 'Resident';
+          profile.last_name = payload.last_name || 'User';
+          profile.phone = payload.phone || null;
+          profile.zone = payload.zone || null;
+        } else if (currentRole === 'kcca') {
+          profile.first_name = payload.first_name || '';
+          profile.last_name = payload.last_name || '';
+          profile.department = payload.department || null;
+          profile.jurisdiction = payload.jurisdiction || null;
+          profile.staff_id = payload.staff_id || null;
+        } else if (currentRole === 'collector') {
+          profile.full_name = payload.full_name || '';
+          profile.phone = payload.phone || null;
+          profile.company = payload.company || null;
+          profile.truck_plate = payload.truck_plate || null;
+          profile.primary_zone = payload.primary_zone || null;
+        }
+        await firebaseDb.collection('users').doc(cred.user.uid).set(profile);
+        const token = await cred.user.getIdToken();
+        localStorage.setItem('itrush_token', token);
+        redirectByRole(role);
+        return;
+      }
+      const res = await fetch(API_BASE + '/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showAuthError(data.error || 'Registration failed.'); btn.innerHTML = originalText; btn.disabled = false; return; }
+      if (data.token) localStorage.setItem('itrush_token', data.token);
+      if (data.user) redirectByRole(data.user.role);
+      else redirectByRole(role);
+    } catch (e) {
+      console.error('Signup request failed:', e);
+      if (USE_FIREBASE && e.code) {
+        if (e.code === 'auth/email-already-in-use') showAuthError('An account with this email already exists.');
+        else if (e.code === 'auth/weak-password') showAuthError('Password should be at least 6 characters.');
+        else if (e.code === 'auth/invalid-email') showAuthError('Invalid email address.');
+        else showAuthError(e.message || 'Registration failed.');
+      } else if (!USE_FIREBASE) showAuthError('Cannot reach server. Is the API running at ' + API_BASE + '?');
+      else showAuthError(e.message || 'Registration failed.');
+    } finally {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  if (!USE_FIREBASE) {
+    console.info('iTRUSH: Using backend API for auth. To use Firebase instead, edit app/firebase-config.js with your Firebase project config.');
+  }
+</script>
+</body>
+</html>

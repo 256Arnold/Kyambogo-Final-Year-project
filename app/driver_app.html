@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Driver App · iTRUSH</title>
+<script src="firebase-config.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#060D0A;--surface:#0D1812;--surface2:#132318;--surface3:#192e1e;
+    --border:rgba(74,200,120,0.1);--border2:rgba(74,200,120,0.22);
+    --green:#2ECC71;--green-dim:#1a7a44;--amber:#F0A500;--red:#E55353;--blue:#60A5FA;
+    --text:#EDF5F0;--muted:#7A9E88;--dim:#3D5A48;
+    --input-bg:#0A1410;--input-border:rgba(74,200,120,0.15);
+  }
+  body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  .shell{display:grid;grid-template-columns:220px 1fr;min-height:100vh;}
+
+  /* SIDEBAR */
+  .sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+  .sb-logo{display:flex;align-items:center;gap:8px;padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+  .sb-logo-icon{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .sb-logo-text{font-weight:700;font-size:15px;color:var(--text);letter-spacing:-0.3px;}
+  .sb-logo-text span{color:var(--blue);}
+  .sb-badge{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(96,165,250,0.15);color:var(--blue);padding:2px 7px;border-radius:4px;margin-left:4px;}
+  .sb-truck{background:rgba(96,165,250,0.07);border-bottom:1px solid var(--border);padding:14px 18px;}
+  .sb-truck-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .sb-avatar{width:34px;height:34px;border-radius:50%;background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue);flex-shrink:0;}
+  .sb-name{font-size:13px;font-weight:600;color:var(--text);}
+  .sb-sub{font-size:11px;color:var(--muted);}
+  .truck-status-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .ts-card{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+  .ts-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;}
+  .ts-val{font-size:13px;font-weight:600;color:var(--text);}
+  .ts-val.green{color:var(--green);}
+  .ts-val.amber{color:var(--amber);}
+  .sb-nav{padding:10px 8px;flex:1;}
+  .sb-sec{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim);padding:12px 10px 6px;}
+  .ni{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:all 0.15s;color:var(--muted);font-size:13px;margin-bottom:2px;}
+  .ni:hover{background:var(--surface2);color:var(--text);}
+  .ni.active{background:rgba(96,165,250,0.1);color:var(--blue);}
+  .ni svg{flex-shrink:0;opacity:0.8;}
+  .ni.active svg{opacity:1;}
+  .nb{margin-left:auto;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;}
+  .nb-green{background:rgba(46,204,113,0.15);color:var(--green);}
+  .nb-amber{background:rgba(240,165,0,0.15);color:var(--amber);}
+  .nb-blue{background:rgba(96,165,250,0.12);color:var(--blue);}
+  .sb-bottom{padding:14px 18px;border-top:1px solid var(--border);}
+  .sb-out{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;cursor:pointer;}
+  .sb-out:hover{color:var(--text);}
+
+  /* MAIN */
+  .main{background:var(--bg);display:flex;flex-direction:column;min-width:0;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-bottom:1px solid var(--border);background:var(--surface);}
+  .tb-left{display:flex;align-items:center;gap:12px;}
+  .tb-title{font-family:'Instrument Serif',serif;font-size:19px;font-weight:400;color:var(--text);}
+  .tb-title em{font-style:italic;color:var(--blue);}
+  .on-duty-pill{display:flex;align-items:center;gap:5px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:var(--green);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:100px;}
+  .on-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+  .tb-right{display:flex;align-items:center;gap:10px;}
+  .tb-date{font-size:12px;color:var(--muted);}
+  .icon-btn{width:32px;height:32px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s;}
+  .icon-btn:hover{border-color:var(--border2);}
+  .alert-dot{position:absolute;top:6px;right:6px;width:6px;height:6px;background:var(--amber);border-radius:50%;border:1.5px solid var(--surface);}
+  .content{padding:20px 26px;flex:1;}
+
+  /* VIEWS */
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* PANELS */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);}
+  .pt{font-size:13px;font-weight:600;color:var(--text);}
+  .pa{font-size:11px;color:var(--blue);cursor:pointer;font-weight:500;}
+  .pa-muted{font-size:11px;color:var(--muted);cursor:pointer;}
+
+  /* KPI STRIP */
+  .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
+  .kpi-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .kpi-val{font-family:'Instrument Serif',serif;font-size:30px;color:var(--text);line-height:1;}
+  .kpi-val.green{color:var(--green);}
+  .kpi-val.amber{color:var(--amber);}
+  .kpi-val.blue{color:var(--blue);}
+  .kpi-sub{font-size:11px;color:var(--dim);margin-top:5px;}
+
+  /* TWO COL */
+  .two-col{display:grid;grid-template-columns:1fr 320px;gap:14px;margin-bottom:20px;}
+  .two-col-eq{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+
+  /* MAP */
+  .map-wrap{margin:14px 18px;border-radius:8px;overflow:hidden;background:#0A1610;border:1px solid var(--border);}
+  .map-wrap svg{width:100%;height:100%;display:block;}
+
+  /* JOB CARDS */
+  .job-list{padding:6px 0;}
+  .job-item{padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;}
+  .job-item:hover{background:var(--surface2);}
+  .job-item:last-child{border-bottom:none;}
+  .job-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .job-id{font-size:12px;font-weight:600;color:var(--text);}
+  .job-time{font-size:11px;color:var(--muted);}
+  .job-addr{font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .job-bottom{display:flex;align-items:center;justify-content:space-between;}
+  .job-type{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--dim);}
+  .st-pill{font-size:10px;font-weight:600;padding:2px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:0.5px;}
+  .stp-g{background:rgba(46,204,113,0.12);color:var(--green);}
+  .stp-a{background:rgba(240,165,0,0.12);color:var(--amber);}
+  .stp-b{background:rgba(96,165,250,0.1);color:var(--blue);}
+  .stp-d{background:rgba(61,90,72,0.3);color:var(--dim);}
+
+  /* ACTIVE JOB DETAIL */
+  .job-detail{padding:18px;}
+  .jd-addr-block{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+  .jd-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px;}
+  .jd-value{font-size:14px;font-weight:600;color:var(--text);}
+  .jd-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+  .jd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .jd-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+  .jd-card-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;}
+  .jd-card-val{font-size:14px;font-weight:600;color:var(--text);}
+  .jd-card-val.green{color:var(--green);}
+  .jd-card-val.amber{color:var(--amber);}
+  .action-btns{display:flex;flex-direction:column;gap:8px;}
+  .btn-confirm{width:100%;padding:12px;background:var(--green);color:#060D0A;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .btn-confirm:hover{background:#39D97E;transform:translateY(-1px);}
+  .btn-issue{width:100%;padding:10px;background:transparent;color:var(--amber);border:1px solid rgba(240,165,0,0.25);border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;}
+  .btn-issue:hover{border-color:rgba(240,165,0,0.5);}
+  .btn-skip{width:100%;padding:10px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;font-size:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all 0.2s;}
+  .btn-skip:hover{color:var(--text);border-color:var(--border2);}
+
+  /* ROUTE STEPS */
+  .route-steps{padding:12px 18px;}
+  .rs-item{display:flex;gap:12px;position:relative;padding-bottom:14px;}
+  .rs-item:not(:last-child)::after{content:'';position:absolute;left:11px;top:26px;width:1.5px;height:calc(100% - 12px);background:var(--border);}
+  .rs-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;font-weight:700;}
+  .rsd-done{background:var(--green);}
+  .rsd-active{background:rgba(96,165,250,0.15);border:2px solid var(--blue);}
+  .rsd-next{background:var(--surface2);border:1px solid var(--border);}
+  .rsd-num{color:var(--dim);}
+  .rs-body{flex:1;}
+  .rs-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:1px;}
+  .rs-title.muted{color:var(--muted);font-weight:400;}
+  .rs-meta{font-size:11px;color:var(--muted);}
+  .rs-dist{font-size:11px;color:var(--blue);margin-top:2px;}
+  .rs-done-badge{font-size:10px;font-weight:600;color:var(--green);margin-left:auto;align-self:flex-start;margin-top:3px;white-space:nowrap;}
+
+  /* EARNINGS */
+  .earn-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .es-block{background:var(--surface);padding:18px 16px;text-align:center;}
+  .es-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .es-val{font-family:'Instrument Serif',serif;font-size:26px;color:var(--text);line-height:1;}
+  .es-val.green{color:var(--green);}
+  .earn-table{width:100%;border-collapse:collapse;}
+  .earn-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .earn-table td{font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+  .earn-table tr:last-child td{border-bottom:none;}
+  .earn-table td:first-child{color:var(--text);font-weight:500;}
+
+  /* HISTORY */
+  .hist-table{width:100%;border-collapse:collapse;}
+  .hist-table th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--dim);padding:9px 14px;text-align:left;background:var(--surface2);border-bottom:1px solid var(--border);}
+  .hist-table td{font-size:12px;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+  .hist-table tr:last-child td{border-bottom:none;}
+  .hist-table td:first-child{color:var(--text);font-weight:500;}
+
+  /* PROFILE */
+  .prof-wrap{max-width:580px;}
+  .prof-header{display:flex;align-items:center;gap:18px;padding:20px 18px;border-bottom:1px solid var(--border);}
+  .prof-avatar{width:56px;height:56px;border-radius:50%;background:rgba(96,165,250,0.12);border:2px solid rgba(96,165,250,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--blue);}
+  .prof-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:3px;}
+  .prof-role{font-size:12px;color:var(--muted);}
+  .prof-fields{padding:16px 18px;}
+  .pf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .pf-field{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+  .pf-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:3px;}
+  .pf-val{font-size:13px;font-weight:600;color:var(--text);}
+  .pf-val.green{color:var(--green);}
+
+  /* CONFIRM MODAL INLINE */
+  .confirm-overlay{background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:40px 20px;min-height:320px;}
+  .confirm-card{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:28px 24px;max-width:380px;width:100%;text-align:center;}
+  .confirm-icon{width:52px;height:52px;border-radius:50%;background:rgba(46,204,113,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+  .confirm-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--text);margin-bottom:8px;}
+  .confirm-sub{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:22px;}
+  .confirm-btns{display:flex;gap:10px;}
+  .cbtn-yes{flex:1;padding:11px;background:var(--green);color:#060D0A;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+  .cbtn-yes:hover{background:#39D97E;}
+  .cbtn-no{flex:1;padding:11px;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:8px;font-size:13px;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+  .cbtn-no:hover{color:var(--text);}
+
+  .hidden{display:none!important;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">
+        <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="16" height="6" rx="2" stroke="#060D0A" stroke-width="1.4"/><path d="M1 11h2V9l2-4h7l2 4v2h2" stroke="#060D0A" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="15" r="1.5" fill="#060D0A"/><circle cx="13" cy="15" r="1.5" fill="#060D0A"/></svg>
+      </div>
+      <span class="sb-logo-text">Clean<span>GKMA</span></span>
+      <span class="sb-badge">Driver</span>
+    </div>
+
+    <div class="sb-truck">
+      <div class="sb-truck-header">
+        <div class="sb-avatar" id="sb-avatar">JM</div>
+        <div>
+          <div class="sb-name" id="sb-name">James Mukasa</div>
+          <div class="sb-sub">Truck #07 · UAX 312B</div>
+        </div>
+      </div>
+      <div class="truck-status-row">
+        <div class="ts-card"><div class="ts-label">Status</div><div class="ts-val green">On duty</div></div>
+        <div class="ts-card"><div class="ts-label">Zone</div><div class="ts-val">Nakawa</div></div>
+        <div class="ts-card"><div class="ts-label">Trips done</div><div class="ts-val green">11</div></div>
+        <div class="ts-card"><div class="ts-label">Remaining</div><div class="ts-val amber">7</div></div>
+      </div>
+    </div>
+
+    <div class="sb-nav">
+      <div class="sb-sec">Navigation</div>
+      <div class="ni active" onclick="setView('dashboard')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="1" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="1" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/></svg>
+        Dashboard
+      </div>
+      <div class="ni" onclick="setView('route')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.567 1.5 4 3.067 4 5c0 2.625 3.5 8.5 3.5 8.5S11 7.625 11 5c0-1.933-1.567-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="5" r="1.3" stroke="currentColor" stroke-width="1.2"/></svg>
+        My Route
+        <span class="nb nb-blue">18</span>
+      </div>
+      <div class="ni" onclick="setView('jobs')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 7.5h5M5 5h5M5 10h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Job List
+        <span class="nb nb-amber">7</span>
+      </div>
+      <div class="ni" onclick="setView('active')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Active Job
+        <span class="nb nb-green">Now</span>
+      </div>
+      <div class="sb-sec">Account</div>
+      <div class="ni" onclick="setView('earnings')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1.5" y="3.5" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M5 7.5h5M7.5 5.5v4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Earnings
+      </div>
+      <div class="ni" onclick="setView('history')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Trip History
+      </div>
+      <div class="ni" onclick="setView('profile')">
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 13c0-2.485 2.239-4.5 5-4.5s5 2.015 5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        My Profile
+      </div>
+    </div>
+    <div class="sb-bottom">
+      <div class="sb-out" onclick="signOut()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 7h7M9 4.5L11.5 7 9 9.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 2H3a1 1 0 00-1 1v8a1 1 0 001 1h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        Sign out
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <div class="tb-title" id="tb-title">Driver <em>Dashboard</em></div>
+        <div class="on-duty-pill"><span class="on-dot"></span>On duty</div>
+      </div>
+      <div class="tb-right">
+        <span class="tb-date" id="tb-date">Sun, 15 Mar 2026 · 08:34 AM</span>
+        <div class="icon-btn" onclick="setView('jobs')" style="position:relative;">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5a4.5 4.5 0 014.5 4.5v2.2l.8 1.8H1.7l.8-1.8V6A4.5 4.5 0 017 1.5z" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 11a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.2"/></svg>
+          <div class="alert-dot" id="driver-alert-dot" style="display:none;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="view active" id="view-dashboard">
+        <div class="kpi-strip">
+          <div class="kpi"><div class="kpi-label">Trips today</div><div class="kpi-val green">11</div><div class="kpi-sub">of 18 assigned</div></div>
+          <div class="kpi"><div class="kpi-label">Completion rate</div><div class="kpi-val blue">97%</div><div class="kpi-sub">Week average</div></div>
+          <div class="kpi"><div class="kpi-label">Km driven</div><div class="kpi-val">48</div><div class="kpi-sub">Today's route</div></div>
+          <div class="kpi"><div class="kpi-label">Earnings today</div><div class="kpi-val amber">88K</div><div class="kpi-sub">UGX · est.</div></div>
+        </div>
+
+        <div class="two-col">
+          <!-- ROUTE MAP -->
+          <div class="panel">
+            <div class="ph">
+              <span class="pt">Today's route · Nakawa Division</span>
+              <span class="pa" onclick="setView('route')">Full route →</span>
+            </div>
+            <div class="map-wrap" style="height:230px;">
+              <svg viewBox="0 0 500 230" preserveAspectRatio="xMidYMid slice">
+                <rect width="500" height="230" fill="#0A1610"/>
+                <line x1="0" y1="57" x2="500" y2="57" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="115" x2="500" y2="115" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="172" x2="500" y2="172" stroke="#1A3020" stroke-width="1"/>
+                <line x1="80" y1="0" x2="80" y2="230" stroke="#1A3020" stroke-width="1"/><line x1="180" y1="0" x2="180" y2="230" stroke="#1A3020" stroke-width="1"/><line x1="300" y1="0" x2="300" y2="230" stroke="#1A3020" stroke-width="1.5"/><line x1="410" y1="0" x2="410" y2="230" stroke="#1A3020" stroke-width="1"/>
+                <!-- Completed path -->
+                <path d="M40 190 Q80 172 130 155 Q160 145 180 130 Q210 115 240 105" stroke="#2ECC71" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+                <!-- Remaining path -->
+                <path d="M240 105 Q280 88 300 80 Q340 65 380 72 Q420 78 460 68" stroke="#60A5FA" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round" opacity="0.6"/>
+                <!-- Completed stops -->
+                <circle cx="80" cy="175" r="5" fill="#2ECC71" opacity="0.7"/>
+                <circle cx="130" cy="155" r="5" fill="#2ECC71" opacity="0.7"/>
+                <circle cx="180" cy="130" r="5" fill="#2ECC71" opacity="0.7"/>
+                <!-- Current location -->
+                <circle cx="240" cy="105" r="9" fill="#60A5FA" opacity="0.95"/>
+                <circle cx="240" cy="105" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
+                <circle cx="240" cy="105" r="24" fill="none" stroke="#60A5FA" stroke-width="0.5" opacity="0.12"/>
+                <!-- Upcoming stops -->
+                <circle cx="300" cy="80" r="5" fill="#60A5FA" opacity="0.45"/>
+                <circle cx="380" cy="72" r="5" fill="#60A5FA" opacity="0.35"/>
+                <circle cx="460" cy="68" r="5" fill="#60A5FA" opacity="0.25"/>
+                <text x="230" y="93" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You</text>
+                <text x="20" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Ntinda</text>
+                <text x="105" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Naguru</text>
+                <text x="215" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Nakawa</text>
+                <text x="325" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Luzira</text>
+                <text x="425" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Bugolobi</text>
+              </svg>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:10px 18px 14px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Completed (11)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>Remaining (7)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0.7"></div>Current location</div>
+            </div>
+          </div>
+
+          <!-- NEXT JOB + QUICK STATS -->
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="panel">
+              <div class="ph"><span class="pt">Next pickup</span><span class="pa" onclick="setView('active')">Start job →</span></div>
+              <div class="job-detail" style="padding-bottom:14px;">
+                <div class="jd-addr-block">
+                  <div class="jd-label">Address</div>
+                  <div class="jd-value">Plot 14, Ntinda Road</div>
+                  <div class="jd-sub">Nakawa Division · Stop #12 of 18</div>
+                </div>
+                <div class="jd-grid">
+                  <div class="jd-card"><div class="jd-card-label">ETA</div><div class="jd-card-val green">~4 min</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Distance</div><div class="jd-card-val">1.2 km</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">Household</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">2 bags</div></div>
+                </div>
+                <div class="action-btns">
+                  <button class="btn-confirm" onclick="setView('active')">
+                    Navigate to stop
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7.5 3L12 7l-4.5 4" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="ph"><span class="pt">Today's progress</span></div>
+              <div style="padding:14px 18px;">
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px;"><span>11 of 18 stops completed</span><span style="color:var(--green);font-weight:600;">61%</span></div>
+                <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+                  <div style="height:100%;width:61%;background:var(--green);border-radius:3px;"></div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Done</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--green);">11</div>
+                  </div>
+                  <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);">
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Left</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--amber);">7</div>
+                  </div>
+                  <div style="text-align:center;">
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Skipped</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--dim);">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ROUTE VIEW ===== -->
+      <div class="view" id="view-route">
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph"><span class="pt">Full route · 18 stops · Nakawa Division</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+            <div class="map-wrap" style="height:280px;">
+              <svg viewBox="0 0 500 280" preserveAspectRatio="xMidYMid slice">
+                <rect width="500" height="280" fill="#0A1610"/>
+                <line x1="0" y1="70" x2="500" y2="70" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="140" x2="500" y2="140" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="210" x2="500" y2="210" stroke="#1A3020" stroke-width="1"/>
+                <line x1="80" y1="0" x2="80" y2="280" stroke="#1A3020" stroke-width="1"/><line x1="200" y1="0" x2="200" y2="280" stroke="#1A3020" stroke-width="1"/><line x1="320" y1="0" x2="320" y2="280" stroke="#1A3020" stroke-width="1.5"/><line x1="430" y1="0" x2="430" y2="280" stroke="#1A3020" stroke-width="1"/>
+                <path d="M30 240 Q60 220 80 210 Q110 200 140 185 Q170 170 200 160 Q230 148 260 135" stroke="#2ECC71" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
+                <path d="M260 135 Q290 122 320 110 Q360 95 395 88 Q425 82 465 75" stroke="#60A5FA" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round" opacity="0.55"/>
+                <circle cx="50" cy="232" r="5" fill="#2ECC71" opacity="0.6"/>
+                <circle cx="80" cy="212" r="5" fill="#2ECC71" opacity="0.65"/>
+                <circle cx="115" cy="195" r="5" fill="#2ECC71" opacity="0.7"/>
+                <circle cx="145" cy="182" r="5" fill="#2ECC71" opacity="0.75"/>
+                <circle cx="175" cy="168" r="5" fill="#2ECC71" opacity="0.8"/>
+                <circle cx="200" cy="160" r="5" fill="#2ECC71" opacity="0.85"/>
+                <circle cx="225" cy="148" r="5" fill="#2ECC71" opacity="0.9"/>
+                <circle cx="245" cy="140" r="5" fill="#2ECC71" opacity="0.95"/>
+                <circle cx="260" cy="135" r="9" fill="#60A5FA" opacity="0.95"/>
+                <circle cx="260" cy="135" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
+                <text x="252" y="122" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You #12</text>
+                <circle cx="295" cy="120" r="4" fill="#60A5FA" opacity="0.4"/>
+                <circle cx="325" cy="108" r="4" fill="#60A5FA" opacity="0.38"/>
+                <circle cx="360" cy="95" r="4" fill="#60A5FA" opacity="0.35"/>
+                <circle cx="395" cy="88" r="4" fill="#60A5FA" opacity="0.3"/>
+                <circle cx="430" cy="82" r="4" fill="#60A5FA" opacity="0.28"/>
+                <circle cx="455" cy="77" r="4" fill="#60A5FA" opacity="0.25"/>
+                <circle cx="465" cy="75" r="4" fill="#60A5FA" opacity="0.2"/>
+              </svg>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:10px 18px 14px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Done (11)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>You are here (#12)</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0.35"></div>Remaining (7)</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="ph"><span class="pt">Stop sequence</span></div>
+            <div class="route-steps" style="max-height:420px;overflow-y:auto;">
+              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 1 · Ntinda Estate, Blk A</div><div class="rs-meta">Household · 1 bag · Sarah N.</div></div><div class="rs-done-badge">Done 7:12</div></div>
+              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 2 · Naguru Ring Road</div><div class="rs-meta">Household · 2 bags · John K.</div></div><div class="rs-done-badge">Done 7:28</div></div>
+              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 3 · Nakawa Market</div><div class="rs-meta">Commercial · 5 bags · Nakawa Traders</div></div><div class="rs-done-badge">Done 7:51</div></div>
+              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 4 · Plot 7, Luzira Rd</div><div class="rs-meta">Household · 2 bags · Mary D.</div></div><div class="rs-done-badge">Done 8:04</div></div>
+              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stops 5–11</div><div class="rs-meta">Various · Nakawa Zone</div></div><div class="rs-done-badge">Done</div></div>
+              <div class="rs-item"><div class="rsd-active rs-dot"></div><div class="rs-body"><div class="rs-title">Stop 12 · Plot 14, Ntinda Rd</div><div class="rs-meta">Household · 2 bags · Sarah N.</div><div class="rs-dist">~1.2 km · 4 min away</div></div></div>
+              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">13</div><div class="rs-body"><div class="rs-title muted">Stop 13 · Bugolobi Flats</div><div class="rs-meta">Household · 3 bags</div></div></div>
+              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">14</div><div class="rs-body"><div class="rs-title muted">Stop 14 · Luzira Industrial</div><div class="rs-meta">Commercial · 8 bags</div></div></div>
+              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">15</div><div class="rs-body"><div class="rs-title muted">Stop 15 · Mbuya Hill Rd</div><div class="rs-meta">Household · 2 bags</div></div></div>
+              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">16</div><div class="rs-body"><div class="rs-title muted">Stop 16 · Naguru Hospital</div><div class="rs-meta">Institutional · 10 bags</div></div></div>
+              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">17</div><div class="rs-body"><div class="rs-title muted">Stop 17 · Ntinda Road Estate</div><div class="rs-meta">Household · 1 bag</div></div></div>
+              <div class="rs-item" style="padding-bottom:0"><div class="rsd-next rs-dot rsd-num">18</div><div class="rs-body"><div class="rs-title muted">Stop 18 · Nakawa Depot</div><div class="rs-meta">Disposal drop-off</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== JOB LIST ===== -->
+      <div class="view" id="view-jobs">
+        <div class="panel">
+          <div class="ph"><span class="pt">All jobs today · 18 total</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:650;color:var(--text);margin-bottom:6px;">Assigned to you (from Admin)</div>
+            <div id="driver-assigned-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px;">
+              <div style="font-size:12px;font-weight:650;color:var(--text);">Notifications</div>
+              <button class="btn-skip" style="padding:6px 10px;" onclick="markAllDriverNotificationsRead()">Mark all read</button>
+            </div>
+            <div id="driver-notif-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+          <div class="job-list">
+            <div class="job-item" onclick="setView('active')"><div class="job-top"><span class="job-id">#REQ-2026-0312 · Stop 12</span><span class="job-time">Now · ~4 min</span></div><div class="job-addr">Plot 14, Ntinda Road · Nakawa Division</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-b">Active</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0315 · Stop 13</span><span class="job-time">~18 min</span></div><div class="job-addr">Bugolobi Flats, Block C · Nakawa Division</div><div class="job-bottom"><span class="job-type">Household · 3 bags</span><span class="st-pill stp-d">Pending</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0318 · Stop 14</span><span class="job-time">~31 min</span></div><div class="job-addr">Luzira Industrial Area, Plot 22</div><div class="job-bottom"><span class="job-type">Commercial · 8 bags</span><span class="st-pill stp-d">Pending</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0322 · Stop 15</span><span class="job-time">~42 min</span></div><div class="job-addr">Mbuya Hill Road, House 5B</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-d">Pending</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0287 · Stop 1</span><span class="job-time">Done 7:12 AM</span></div><div class="job-addr">Ntinda Estate, Block A, Plot 3</div><div class="job-bottom"><span class="job-type">Household · 1 bag</span><span class="st-pill stp-g">Collected</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0289 · Stop 2</span><span class="job-time">Done 7:28 AM</span></div><div class="job-addr">Naguru Ring Road, Plot 9</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-g">Collected</span></div></div>
+            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0293 · Stop 3</span><span class="job-time">Done 7:51 AM</span></div><div class="job-addr">Nakawa Market, Stall Row B</div><div class="job-bottom"><span class="job-type">Commercial · 5 bags</span><span class="st-pill stp-g">Collected</span></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ACTIVE JOB ===== -->
+      <div class="view" id="view-active">
+        <div class="two-col">
+          <div class="panel">
+            <div class="ph">
+              <span class="pt">Active job · Stop 12 of 18</span>
+              <span class="pa-muted" onclick="setView('dashboard')">← Back</span>
+            </div>
+            <div class="map-wrap" style="height:260px;">
+              <svg viewBox="0 0 500 260" preserveAspectRatio="xMidYMid slice">
+                <rect width="500" height="260" fill="#0A1610"/>
+                <line x1="0" y1="65" x2="500" y2="65" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="130" x2="500" y2="130" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="195" x2="500" y2="195" stroke="#1A3020" stroke-width="1"/>
+                <line x1="100" y1="0" x2="100" y2="260" stroke="#1A3020" stroke-width="1"/><line x1="240" y1="0" x2="240" y2="260" stroke="#1A3020" stroke-width="1"/><line x1="370" y1="0" x2="370" y2="260" stroke="#1A3020" stroke-width="1.5"/>
+                <path d="M80 195 Q140 165 200 148 Q240 138 280 128" stroke="#60A5FA" stroke-width="2.5" fill="none" stroke-dasharray="7 4" opacity="0.7"/>
+                <circle cx="80" cy="195" r="9" fill="#60A5FA" opacity="0.9"/>
+                <circle cx="80" cy="195" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
+                <text x="80" y="182" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You</text>
+                <circle cx="280" cy="128" r="10" fill="#2ECC71" opacity="0.9"/>
+                <circle cx="280" cy="128" r="18" fill="none" stroke="#2ECC71" stroke-width="1" opacity="0.3"/>
+                <circle cx="280" cy="128" r="26" fill="none" stroke="#2ECC71" stroke-width="0.5" opacity="0.15"/>
+                <text x="280" y="114" fill="#2ECC71" font-size="8" font-family="sans-serif" text-anchor="middle">Pickup</text>
+                <text x="70" y="248" fill="#253d2d" font-size="9" font-family="sans-serif">Current</text>
+                <text x="235" y="248" fill="#253d2d" font-size="9" font-family="sans-serif">Ntinda Rd</text>
+              </svg>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="panel" id="job-panel">
+              <div class="ph"><span class="pt">Pickup details</span><span class="st-pill stp-b">En route</span></div>
+              <div class="job-detail">
+                <div class="jd-addr-block">
+                  <div class="jd-label">Pickup address</div>
+                  <div class="jd-value">Plot 14, Ntinda Road</div>
+                  <div class="jd-sub">Nakawa Division · Resident: Sarah Namukasa</div>
+                </div>
+                <div class="jd-grid">
+                  <div class="jd-card"><div class="jd-card-label">ETA</div><div class="jd-card-val green">~4 min</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Distance</div><div class="jd-card-val">1.2 km</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">Household</div></div>
+                  <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">2 bags</div></div>
+                </div>
+                <div class="action-btns">
+                  <button class="btn-confirm" onclick="showConfirm()">
+                    Mark as collected
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-6" stroke="#060D0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                  <button class="btn-issue">Report an issue</button>
+                  <button class="btn-skip">Skip this stop</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- CONFIRM INLINE -->
+            <div id="confirm-panel" class="panel hidden">
+              <div class="confirm-overlay">
+                <div class="confirm-card">
+                  <div class="confirm-icon">
+                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                  <div class="confirm-title">Confirm collection?</div>
+                  <div class="confirm-sub">Mark <strong>Plot 14, Ntinda Road</strong> as collected. This will notify Sarah Namukasa and generate her invoice automatically.</div>
+                  <div class="confirm-btns">
+                    <button class="cbtn-yes" onclick="confirmCollection()">Yes, collected</button>
+                    <button class="cbtn-no" onclick="hideConfirm()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUCCESS -->
+            <div id="success-panel" class="panel hidden">
+              <div style="padding:28px 24px;text-align:center;">
+                <div style="width:52px;height:52px;border-radius:50%;background:rgba(46,204,113,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--text);margin-bottom:8px;">Collection logged!</div>
+                <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">Stop 12 marked complete. Sarah Namukasa has been notified and invoice generated.</div>
+                <button class="btn-confirm" style="max-width:240px;margin:0 auto;" onclick="setView('route')">
+                  Next stop →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EARNINGS ===== -->
+      <div class="view" id="view-earnings">
+        <div class="panel">
+          <div class="ph"><span class="pt">Earnings summary</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <div class="earn-summary">
+            <div class="es-block"><div class="es-label">Today (est.)</div><div class="es-val green">88,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+            <div class="es-block"><div class="es-label">This week</div><div class="es-val">412,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+            <div class="es-block"><div class="es-label">This month</div><div class="es-val">1,640,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+          </div>
+          <table class="earn-table">
+            <thead><tr><th>Date</th><th>Trips</th><th>Km driven</th><th>Completion rate</th><th>Earnings</th></tr></thead>
+            <tbody>
+              <tr><td>Sun 15 Mar (today)</td><td>11 / 18</td><td>48 km</td><td><span style="color:var(--green);font-weight:600;">97%</span></td><td style="color:var(--green);font-weight:600;">88,000 UGX</td></tr>
+              <tr><td>Sat 14 Mar</td><td>17 / 18</td><td>74 km</td><td>94%</td><td>96,000 UGX</td></tr>
+              <tr><td>Fri 13 Mar</td><td>16 / 17</td><td>68 km</td><td>94%</td><td>88,000 UGX</td></tr>
+              <tr><td>Thu 12 Mar</td><td>18 / 18</td><td>76 km</td><td>100%</td><td>104,000 UGX</td></tr>
+              <tr><td>Wed 11 Mar</td><td>15 / 18</td><td>62 km</td><td>83%</td><td>72,000 UGX</td></tr>
+              <tr><td>Tue 10 Mar</td><td>14 / 17</td><td>58 km</td><td>82%</td><td>64,000 UGX</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== HISTORY ===== -->
+      <div class="view" id="view-history">
+        <div class="panel">
+          <div class="ph"><span class="pt">Trip history · March 2026</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <table class="hist-table">
+            <thead><tr><th>Request ID</th><th>Date</th><th>Address</th><th>Type</th><th>Resident</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>#REQ-2026-0312</td><td>Today</td><td>Plot 14, Ntinda Rd</td><td>Household</td><td>Sarah N.</td><td><span class="st-pill stp-b">Active</span></td></tr>
+              <tr><td>#REQ-2026-0287</td><td>Today 7:12 AM</td><td>Ntinda Estate, Blk A</td><td>Household</td><td>John K.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
+              <tr><td>#REQ-2026-0289</td><td>Today 7:28 AM</td><td>Naguru Ring Road</td><td>Household</td><td>Mary D.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
+              <tr><td>#REQ-2026-0293</td><td>Today 7:51 AM</td><td>Nakawa Market</td><td>Commercial</td><td>Nakawa Traders</td><td><span class="st-pill stp-g">Collected</span></td></tr>
+              <tr><td>#REQ-2026-0251</td><td>14 Mar</td><td>Luzira Industrial</td><td>Commercial</td><td>Luzira Ltd</td><td><span class="st-pill stp-g">Collected</span></td></tr>
+              <tr><td>#REQ-2026-0238</td><td>14 Mar</td><td>Bugolobi Flats</td><td>Household</td><td>Grace A.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
+              <tr><td>#REQ-2026-0204</td><td>13 Mar</td><td>Mbuya Hill Rd</td><td>Household</td><td>Peter S.</td><td><span class="st-pill stp-a">Disputed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== PROFILE ===== -->
+      <div class="view" id="view-profile">
+        <div class="prof-wrap">
+          <div class="panel">
+            <div class="prof-header">
+              <div class="prof-avatar" id="prof-avatar">JM</div>
+              <div>
+                <div class="prof-name" id="prof-name">James Mukasa</div>
+                <div class="prof-role">Collector / Driver · Kampala Waste Solutions Ltd.</div>
+              </div>
+            </div>
+            <div class="prof-fields">
+              <div class="pf-row">
+                <div class="pf-field"><div class="pf-label">Truck ID</div><div class="pf-val">Truck #07</div></div>
+                <div class="pf-field"><div class="pf-label">Plate number</div><div class="pf-val">UAX 312B</div></div>
+              </div>
+              <div class="pf-row">
+                <div class="pf-field"><div class="pf-label">Phone</div><div class="pf-val">+256 772 XXX XXX</div></div>
+                <div class="pf-field"><div class="pf-label">Email</div><div class="pf-val" id="prof-email" style="font-size:12px;">j.mukasa@kwsltd.ug</div></div>
+              </div>
+              <div class="pf-row">
+                <div class="pf-field"><div class="pf-label">Operating zone</div><div class="pf-val">Nakawa Division</div></div>
+                <div class="pf-field"><div class="pf-label">Company</div><div class="pf-val" style="font-size:12px;">Kampala Waste Solutions</div></div>
+              </div>
+              <div class="pf-row">
+                <div class="pf-field"><div class="pf-label">Completion rate</div><div class="pf-val green">97%</div></div>
+                <div class="pf-field"><div class="pf-label">Total trips</div><div class="pf-val">1,284</div></div>
+              </div>
+              <div class="pf-row">
+                <div class="pf-field"><div class="pf-label">Account status</div><div class="pf-val green">Active · Verified</div></div>
+                <div class="pf-field"><div class="pf-label">Joined</div><div class="pf-val">Jan 2026</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const USE_FIREBASE = window.ITRUSH_FIREBASE_CONFIG && window.ITRUSH_FIREBASE_CONFIG.apiKey && window.ITRUSH_FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+  let firebaseAuth = null;
+  let firebaseDb = null;
+  let currentUser = null;
+  let assignedJobs = [];
+  let driverNotifUnsub = null;
+  let driverNotifDocs = [];
+
+  function formatDriverDate(d){
+    try {
+      const date = new Intl.DateTimeFormat(undefined, { weekday:'short', day:'2-digit', month:'short', year:'numeric' }).format(d);
+      const time = new Intl.DateTimeFormat(undefined, { hour:'2-digit', minute:'2-digit' }).format(d);
+      return `${date} · ${time}`;
+    } catch (_) {
+      return d.toLocaleString();
+    }
+  }
+
+  function setTopDateNow(){
+    const el = document.getElementById('tb-date');
+    if (el) el.textContent = formatDriverDate(new Date());
+  }
+
+  async function signOut(){
+    try {
+      localStorage.removeItem('itrush_token');
+      if (firebaseAuth) await firebaseAuth.signOut();
+    } finally {
+      window.location.href = 'signin.html';
+    }
+  }
+
+  async function hydrateDriverFromFirebase(user){
+    const doc = await firebaseDb.collection('users').doc(user.uid).get();
+    const data = (doc && doc.exists && doc.data()) ? doc.data() : {};
+    const full = (data.full_name || '').trim() || `${(data.first_name||'').trim()} ${(data.last_name||'').trim()}`.trim() || user.email || 'Collector';
+    const initials = full.split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join('') || 'U';
+    const sbAvatar = document.getElementById('sb-avatar');
+    const sbName = document.getElementById('sb-name');
+    const profAvatar = document.getElementById('prof-avatar');
+    const profName = document.getElementById('prof-name');
+    const profEmail = document.getElementById('prof-email');
+    if (sbAvatar) sbAvatar.textContent = initials;
+    if (sbName) sbName.textContent = full;
+    if (profAvatar) profAvatar.textContent = initials;
+    if (profName) profName.textContent = full;
+    if (profEmail) profEmail.textContent = user.email || '—';
+  }
+
+  async function createNotification(payload){
+    if (!firebaseDb) return;
+    try {
+      await firebaseDb.collection('notifications').add({ ...payload, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } catch (e) {
+      console.error('Failed to create notification:', e);
+    }
+  }
+
+  function timeAgo(ts){
+    const d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+    if (!d) return 'now';
+    const diff = Date.now() - d.getTime();
+    const mins = Math.floor(diff/60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins/60);
+    if (hrs < 24) return `${hrs} hr${hrs===1?'':'s'} ago`;
+    const days = Math.floor(hrs/24);
+    return `${days} day${days===1?'':'s'} ago`;
+  }
+
+  function renderDriverNotifications(){
+    const list = document.getElementById('driver-notif-list');
+    const dot = document.getElementById('driver-alert-dot');
+    const hasUnread = driverNotifDocs.some(n => !n.readAt);
+    if (dot) dot.style.display = hasUnread ? '' : 'none';
+    if (!list) return;
+    if (!driverNotifDocs.length) {
+      list.innerHTML = `<div style="padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No notifications yet.</div>`;
+      return;
+    }
+    list.innerHTML = driverNotifDocs.slice(0, 15).map(n => {
+      const unread = !n.readAt;
+      const color = n.type === 'assigned_job' ? 'var(--amber)' : (n.type === 'driver_confirmed' ? 'var(--green)' : 'var(--blue)');
+      return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start;">
+          <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;background:${color};opacity:${unread ? '1' : '0.45'};"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="color:var(--text);font-size:12px;line-height:1.5;">${(n.message||'Notification')}</div>
+            <div style="color:var(--muted);font-size:11px;margin-top:4px;">${timeAgo(n.createdAt)}${n.requestId ? ` · #${String(n.requestId).slice(0,8).toUpperCase()}` : ''}</div>
+          </div>
+          ${unread ? `<button class="btn-skip" style="padding:6px 10px;" onclick="markDriverNotificationRead('${n.id}')">Read</button>` : ``}
+        </div>
+      `;
+    }).join('');
+  }
+
+  function startDriverNotificationListener(){
+    if (!firebaseDb || !currentUser) return;
+    if (driverNotifUnsub) { driverNotifUnsub(); driverNotifUnsub = null; }
+    driverNotifUnsub = firebaseDb.collection('notifications')
+      .where('toUid','==', currentUser.uid)
+      .orderBy('createdAt','desc')
+      .limit(50)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        driverNotifDocs = rows;
+        renderDriverNotifications();
+      }, (err) => console.error('Driver notif listener failed:', err));
+  }
+
+  async function markDriverNotificationRead(id){
+    if (!firebaseDb || !id) return;
+    try {
+      await firebaseDb.collection('notifications').doc(id).update({ readAt: firebase.firestore.FieldValue.serverTimestamp() });
+    } catch (e) {
+      console.error('Mark read failed:', e);
+    }
+  }
+
+  async function markAllDriverNotificationsRead(){
+    if (!firebaseDb) return;
+    const unread = driverNotifDocs.filter(n => !n.readAt).slice(0, 50);
+    if (!unread.length) return;
+    try {
+      const batch = firebaseDb.batch();
+      unread.forEach(n => batch.update(firebaseDb.collection('notifications').doc(n.id), { readAt: firebase.firestore.FieldValue.serverTimestamp() }));
+      await batch.commit();
+    } catch (e) {
+      console.error('Mark all read failed:', e);
+    }
+  }
+
+  function renderAssignedJobs(){
+    const list = document.getElementById('driver-assigned-list');
+    if (!list) return;
+    if (!assignedJobs.length) {
+      list.innerHTML = `<div style="padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No jobs assigned to you yet.</div>`;
+      return;
+    }
+    list.innerHTML = assignedJobs.map(r => {
+      const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+      const addr = (r.pickupAddress || '—');
+      const meta = `${r.zone || '—'} · ${r.type || '—'} · ${r.volume || '—'}`;
+      const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
+      return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+          <div style="flex:1;min-width:240px;">
+            <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${sched}</div>
+            <div style="color:var(--muted);font-size:12px;line-height:1.5;">${addr}</div>
+            <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${r.status || 'assigned'}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-direction:column;min-width:200px;">
+            <button class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>
+            <button class="btn-skip" style="width:100%;" onclick="setView('active')">Open active view</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function refreshAssignedJobs(){
+    if (!firebaseDb || !currentUser) return;
+    try {
+      const snap = await firebaseDb.collection('collection_requests')
+        .where('collectorUid','==', currentUser.uid)
+        .limit(50)
+        .get();
+      const rows = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.status === 'assigned' || data.status === 'driver_confirmed' || data.status === 'in_progress') {
+          rows.push({ id: d.id, ...data });
+        }
+      });
+      assignedJobs = rows;
+    } catch (e) {
+      console.error('Failed to load assigned jobs:', e);
+      assignedJobs = [];
+    }
+    renderAssignedJobs();
+  }
+
+  async function confirmAssignedJob(requestId){
+    if (!firebaseDb || !currentUser) return;
+    try {
+      const ref = firebaseDb.collection('collection_requests').doc(requestId);
+      const doc = await ref.get();
+      const data = (doc && doc.exists) ? doc.data() : null;
+      if (!data) { alert('Request not found.'); return; }
+      await ref.update({
+        status: 'driver_confirmed',
+        driverConfirmedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (data.residentUid) {
+        await createNotification({
+          toUid: data.residentUid,
+          type: 'driver_confirmed',
+          requestId,
+          message: 'A driver has confirmed your booking and will proceed to pickup.'
+        });
+      }
+      await createNotification({
+        toRole: 'kcca_officer',
+        type: 'driver_confirmed',
+        requestId,
+        message: 'Driver confirmed an assigned booking.'
+      });
+      alert('Job confirmed.');
+      await refreshAssignedJobs();
+    } catch (e) {
+      console.error('Confirm job failed:', e);
+      alert(e.message || 'Could not confirm job.');
+    }
+  }
+
+  const titles={dashboard:'Driver <em>Dashboard</em>',route:'My <em>Route</em>',jobs:'Job <em>List</em>',active:'Active <em>Job</em>',earnings:'My <em>Earnings</em>',history:'Trip <em>History</em>',profile:'My <em>Profile</em>'};
+  const navIdx={dashboard:0,route:1,jobs:2,active:3,earnings:4,history:5,profile:6};
+
+  function setView(v){
+    document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+    document.getElementById('view-'+v).classList.add('active');
+    document.querySelectorAll('.ni').forEach(el=>el.classList.remove('active'));
+    const items=document.querySelectorAll('.ni');
+    if(navIdx[v]!==undefined) items[navIdx[v]].classList.add('active');
+    document.getElementById('tb-title').innerHTML=titles[v]||titles.dashboard;
+    if(v==='active'){
+      document.getElementById('job-panel').classList.remove('hidden');
+      document.getElementById('confirm-panel').classList.add('hidden');
+      document.getElementById('success-panel').classList.add('hidden');
+    }
+  }
+
+  function showConfirm(){
+    document.getElementById('job-panel').classList.add('hidden');
+    document.getElementById('confirm-panel').classList.remove('hidden');
+  }
+  function hideConfirm(){
+    document.getElementById('confirm-panel').classList.add('hidden');
+    document.getElementById('job-panel').classList.remove('hidden');
+  }
+  function confirmCollection(){
+    document.getElementById('confirm-panel').classList.add('hidden');
+    document.getElementById('success-panel').classList.remove('hidden');
+  }
+
+  (function init(){
+    setTopDateNow();
+    setInterval(setTopDateNow, 60 * 1000);
+    if (!USE_FIREBASE || typeof firebase === 'undefined') return;
+    try {
+      firebase.initializeApp(window.ITRUSH_FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      firebaseDb = firebase.firestore();
+    } catch (e) {
+      console.error('Firebase init failed:', e);
+      return;
+    }
+    firebaseAuth.onAuthStateChanged(async (user) => {
+      if (!user) { window.location.href = 'signin.html'; return; }
+      currentUser = user;
+      try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) {}
+      try { await hydrateDriverFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
+      try { await refreshAssignedJobs(); } catch (_) {}
+      try { startDriverNotificationListener(); } catch (_) {}
+    });
+  })();
+</script>
+</body>
+</html>
