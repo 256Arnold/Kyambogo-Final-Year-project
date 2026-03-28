@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Research proposal · CleanGKMA</title>
+<script src="site-config.js"></script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,sans-serif;background:#060D0A;color:#EDF5F0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;line-height:1.6;}
+  .card{max-width:520px;background:#0D1812;border:1px solid rgba(74,200,120,0.15);border-radius:12px;padding:28px;}
+  h1{font-size:1.25rem;margin-bottom:12px;color:#2ECC71;}
+  p{color:#7A9E88;font-size:0.95rem;margin-bottom:16px;}
+  a{color:#2ECC71;}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:14px;}
+  .btn-primary{background:#2ECC71;color:#060D0A;}
+  .btn-ghost{border:1px solid rgba(74,200,120,0.25);color:#EDF5F0;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Research proposal</h1>
+    <p>The full research document will be linked here when it is ready. You can also set a direct URL in <code style="font-size:0.85em;color:#EDF5F0;">app/site-config.js</code> as <code style="font-size:0.85em;">ITRUSH_RESEARCH_DOC_URL</code> — then “View Research Proposal” on the landing page will open it in a new tab.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="index.html">Back to home</a>
+      <a class="btn btn-ghost" href="signin.html">Sign in</a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var u = (window.ITRUSH_RESEARCH_DOC_URL || '').trim();
+      if (u) window.location.replace(u);
+    })();
+  </script>
+</body>
+</html>

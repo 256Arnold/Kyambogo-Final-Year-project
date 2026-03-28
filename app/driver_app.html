@@ -657,6 +657,7 @@
   let assignedJobs = [];
   let driverNotifUnsub = null;
   let driverNotifDocs = [];
+  let driverJobsUnsub = null;
 
   function formatDriverDate(d){
     try {
@@ -793,18 +794,27 @@
     }
     list.innerHTML = assignedJobs.map(r => {
       const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
-      const addr = (r.pickupAddress || '—');
+      const addr = (r.pickupAddress || '—').replace(/</g, '&lt;');
       const meta = `${r.zone || '—'} · ${r.type || '—'} · ${r.volume || '—'}`;
       const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
+      const st = r.status || 'assigned';
+      let actions = '';
+      if (st === 'assigned') {
+        actions = `<button class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>`;
+      } else if (st === 'driver_confirmed' || st === 'in_progress') {
+        actions = `<button class="btn-confirm" style="width:100%;" onclick="completeCollection('${r.id}')">Complete pickup</button>`;
+      } else {
+        actions = `<button type="button" class="btn-skip" style="width:100%;opacity:0.55;" disabled>${String(st).replace(/_/g, ' ')}</button>`;
+      }
       return `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
           <div style="flex:1;min-width:240px;">
             <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${sched}</div>
             <div style="color:var(--muted);font-size:12px;line-height:1.5;">${addr}</div>
-            <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${r.status || 'assigned'}</div>
+            <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${st.replace(/_/g, ' ')}</div>
           </div>
           <div style="display:flex;gap:8px;flex-direction:column;min-width:200px;">
-            <button class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>
+            ${actions}
             <button class="btn-skip" style="width:100%;" onclick="setView('active')">Open active view</button>
           </div>
         </div>
@@ -812,26 +822,28 @@
     }).join('');
   }
 
+  function startDriverJobsListener(){
+    if (!firebaseDb || !currentUser) return;
+    if (driverJobsUnsub) { driverJobsUnsub(); driverJobsUnsub = null; }
+    driverJobsUnsub = firebaseDb.collection('collection_requests')
+      .where('collectorUid', '==', currentUser.uid)
+      .limit(50)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => {
+          const data = d.data();
+          if (data.status === 'assigned' || data.status === 'driver_confirmed' || data.status === 'in_progress') {
+            rows.push({ id: d.id, ...data });
+          }
+        });
+        assignedJobs = rows;
+        renderAssignedJobs();
+      }, (err) => console.error('Driver jobs listener failed:', err));
+  }
+
   async function refreshAssignedJobs(){
     if (!firebaseDb || !currentUser) return;
-    try {
-      const snap = await firebaseDb.collection('collection_requests')
-        .where('collectorUid','==', currentUser.uid)
-        .limit(50)
-        .get();
-      const rows = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.status === 'assigned' || data.status === 'driver_confirmed' || data.status === 'in_progress') {
-          rows.push({ id: d.id, ...data });
-        }
-      });
-      assignedJobs = rows;
-    } catch (e) {
-      console.error('Failed to load assigned jobs:', e);
-      assignedJobs = [];
-    }
-    renderAssignedJobs();
+    startDriverJobsListener();
   }
 
   async function confirmAssignedJob(requestId){
@@ -850,7 +862,7 @@
           toUid: data.residentUid,
           type: 'driver_confirmed',
           requestId,
-          message: 'A driver has confirmed your booking and will proceed to pickup.'
+          message: 'Your driver confirmed the job and is proceeding to your pickup address.'
         });
       }
       await createNotification({
@@ -864,6 +876,39 @@
     } catch (e) {
       console.error('Confirm job failed:', e);
       alert(e.message || 'Could not confirm job.');
+    }
+  }
+
+  async function completeCollection(requestId){
+    if (!firebaseDb || !currentUser) return;
+    try {
+      const ref = firebaseDb.collection('collection_requests').doc(requestId);
+      const doc = await ref.get();
+      const data = (doc && doc.exists) ? doc.data() : null;
+      if (!data) { alert('Request not found.'); return; }
+      if (data.collectorUid !== currentUser.uid) { alert('Not your assignment.'); return; }
+      await ref.update({
+        status: 'completed',
+        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (data.residentUid) {
+        await createNotification({
+          toUid: data.residentUid,
+          type: 'collection_completed',
+          requestId,
+          message: 'Your waste collection has been marked complete. Thank you for using CleanGKMA.'
+        });
+      }
+      await createNotification({
+        toRole: 'kcca_officer',
+        type: 'collection_completed',
+        requestId,
+        message: 'A collection was completed by a driver.'
+      });
+      alert('Collection marked complete.');
+    } catch (e) {
+      console.error('Complete collection failed:', e);
+      alert(e.message || 'Could not complete.');
     }
   }
 

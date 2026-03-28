@@ -397,13 +397,13 @@
 <body>
 
 <nav>
-  <a class="logo" href="#">
+  <a class="logo" href="index.html" title="CleanGKMA — Home">
     <div class="logo-icon">
       <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="3.5" fill="#060D0A"/><path d="M9 2L3 6v6l6 4 6-4V6L9 2z" stroke="#060D0A" stroke-width="1" fill="none"/></svg>
     </div>
     <span class="logo-text">Clean<span>GKMA</span></span>
   </a>
-  <a class="nav-back" href="#">
+  <a class="nav-back" href="index.html">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     Back to home
   </a>
@@ -513,7 +513,7 @@
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" stroke="currentColor" stroke-width="1.3"/></svg>
           </button>
         </div>
-        <div class="forgot-row"><a class="forgot-link" href="#">Forgot password?</a></div>
+        <div class="forgot-row"><a class="forgot-link" href="#" id="forgot-password-link">Forgot password?</a></div>
       </div>
 
       <button type="button" class="btn-submit" id="btn-login">
@@ -522,7 +522,7 @@
       </button>
 
       <div class="divider">or continue with</div>
-      <button class="btn-google">
+      <button type="button" class="btn-google" id="btn-google-login">
         <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
         Sign in with Google
       </button>
@@ -699,7 +699,7 @@
       </button>
 
       <div class="divider">or</div>
-      <button class="btn-google">
+      <button type="button" class="btn-google" id="btn-google-signup">
         <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
         Sign up with Google
       </button>
@@ -826,6 +826,118 @@
   function clearAuthError() {
     const el = document.getElementById('auth-error');
     if (el) el.classList.add('hidden');
+    const ok = document.getElementById('auth-success');
+    if (ok) ok.classList.add('hidden');
+  }
+
+  function showAuthSuccess(msg) {
+    clearAuthError();
+    let el = document.getElementById('auth-success');
+    const panel = currentTab === 'login' ? document.getElementById('panel-login') : document.getElementById('panel-signup');
+    if (!panel) return;
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'auth-success';
+      el.className = 'auth-success-msg';
+      el.style.cssText = 'color:#2ECC71;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(46,204,113,0.12);border-radius:8px;';
+      panel.insertBefore(el, panel.firstChild);
+    } else {
+      el.classList.remove('hidden');
+    }
+    el.textContent = msg;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function firestoreRoleFromUi() {
+    return currentRole === 'kcca' ? 'kcca_officer' : currentRole;
+  }
+
+  async function signInWithGoogleFlow() {
+    clearAuthError();
+    if (!USE_FIREBASE || !firebaseAuth || !firebaseDb) {
+      showAuthError('Google sign-in requires Firebase. Configure app/firebase-config.js with your project.');
+      return;
+    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    const cred = await firebaseAuth.signInWithPopup(provider);
+    const user = cred.user;
+    const uid = user.uid;
+    const snap = await firebaseDb.collection('users').doc(uid).get();
+    const roleKey = firestoreRoleFromUi();
+    if (!snap.exists) {
+      await firebaseDb.collection('users').doc(uid).set({
+        role: roleKey,
+        email: user.email || null,
+        displayName: user.displayName || null,
+        photoURL: user.photoURL || null,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    const token = await user.getIdToken();
+    localStorage.setItem('itrush_token', token);
+    const role = (snap.exists && snap.data() && snap.data().role) ? snap.data().role : roleKey;
+    redirectByRole(role === 'kcca' ? 'kcca_officer' : role);
+  }
+
+  document.getElementById('forgot-password-link').addEventListener('click', async function(e) {
+    e.preventDefault();
+    clearAuthError();
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) {
+      showAuthError('Enter your email above, then click Forgot password again.');
+      document.getElementById('login-email').focus();
+      return;
+    }
+    if (!USE_FIREBASE || !firebaseAuth) {
+      showAuthError('Password reset requires Firebase. Configure app/firebase-config.js.');
+      return;
+    }
+    try {
+      await firebaseAuth.sendPasswordResetEmail(email);
+      showAuthSuccess('Check your inbox for a link to reset your password.');
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') showAuthError('No account found for that email.');
+      else if (err.code === 'auth/invalid-email') showAuthError('Invalid email address.');
+      else showAuthError(err.message || 'Could not send reset email.');
+    }
+  });
+
+  const btnGoogleLogin = document.getElementById('btn-google-login');
+  const btnGoogleSignup = document.getElementById('btn-google-signup');
+  if (btnGoogleLogin) {
+    btnGoogleLogin.addEventListener('click', async function() {
+      this.disabled = true;
+      try {
+        await signInWithGoogleFlow();
+      } catch (e) {
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+        if (e.code === 'auth/account-exists-with-different-credential') {
+          showAuthError('This email is already registered with email/password. Sign in with password or use the same method you used before.');
+        } else if (e.code === 'auth/popup-blocked') {
+          showAuthError('Pop-up was blocked. Allow pop-ups for this site and try again.');
+        } else showAuthError(e.message || 'Google sign-in failed.');
+      } finally {
+        this.disabled = false;
+      }
+    });
+  }
+  if (btnGoogleSignup) {
+    btnGoogleSignup.addEventListener('click', async function() {
+      this.disabled = true;
+      try {
+        await signInWithGoogleFlow();
+      } catch (e) {
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+        if (e.code === 'auth/account-exists-with-different-credential') {
+          showAuthError('This email is already registered. Try Sign in with Google or use your password.');
+        } else if (e.code === 'auth/popup-blocked') {
+          showAuthError('Pop-up was blocked. Allow pop-ups for this site and try again.');
+        } else showAuthError(e.message || 'Google sign-in failed.');
+      } finally {
+        this.disabled = false;
+      }
+    });
   }
 
   document.getElementById('btn-login').addEventListener('click', async function() {

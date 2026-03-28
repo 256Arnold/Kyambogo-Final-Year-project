@@ -280,28 +280,28 @@
         <div class="kpi-grid">
           <div class="kpi">
             <div class="kpi-label">Requests today</div>
-            <div class="kpi-val green">1,247</div>
-            <div class="kpi-trend up">↑ 8% vs yesterday</div>
+            <div class="kpi-val green" id="admin-kpi-req-today">0</div>
+            <div class="kpi-trend up" id="admin-kpi-req-note">Live from Firestore</div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Collections done</div>
-            <div class="kpi-val">894</div>
-            <div class="kpi-sub">71.7% completion rate</div>
+            <div class="kpi-val" id="admin-kpi-done">0</div>
+            <div class="kpi-sub" id="admin-kpi-done-sub">Completed (in loaded data)</div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Active trucks</div>
-            <div class="kpi-val amber">32</div>
-            <div class="kpi-sub">6 idle · 0 breakdown</div>
+            <div class="kpi-val amber" id="admin-kpi-trucks">0</div>
+            <div class="kpi-sub" id="admin-kpi-trucks-sub">Drivers on active jobs</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Open reports</div>
-            <div class="kpi-val red">7</div>
-            <div class="kpi-trend dn">↑ 3 since yesterday</div>
+            <div class="kpi-label">Awaiting assignment</div>
+            <div class="kpi-val red" id="admin-kpi-pending">0</div>
+            <div class="kpi-trend dn" id="admin-kpi-pending-note">Paid, no driver yet</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Tonnes collected</div>
-            <div class="kpi-val">643</div>
-            <div class="kpi-sub">of ~1,300 daily est.</div>
+            <div class="kpi-label">Tonnes (est.)</div>
+            <div class="kpi-val" id="admin-kpi-tonnes">0</div>
+            <div class="kpi-sub">~50 kg per completed job</div>
           </div>
         </div>
 
@@ -658,6 +658,8 @@
   let pendingAssignments = [];
   let adminNotifUnsub = null;
   let adminNotifDocs = [];
+  let adminRequestsUnsub = null;
+  let adminAllRequests = [];
 
   function formatAdminDate(d){
     try {
@@ -865,6 +867,75 @@
     }).join('');
   }
 
+  function recomputeAdminAssignmentsFromCache(){
+    const rows = [];
+    adminAllRequests.forEach(r => {
+      const data = r.data;
+      if (data.paymentStatus === 'paid' && !data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment' || !data.status)) {
+        rows.push({ id: r.id, ...data });
+      }
+    });
+    pendingAssignments = rows;
+    renderAssignments();
+  }
+
+  function updateAdminKpis(){
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let reqToday = 0;
+    let doneTotal = 0;
+    let doneToday = 0;
+    const activeCollectorUids = new Set();
+    let pendingAssign = 0;
+    adminAllRequests.forEach(r => {
+      const data = r.data;
+      const c = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate() : null;
+      if (c && c >= today) reqToday++;
+      if (data.status === 'completed') {
+        doneTotal++;
+        const comp = data.completedAt && data.completedAt.toDate ? data.completedAt.toDate() : c;
+        if (comp && comp >= today) doneToday++;
+      }
+      if (data.paymentStatus === 'paid' && !data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment')) pendingAssign++;
+      if (data.collectorUid && ['assigned', 'driver_confirmed', 'in_progress'].includes(data.status || '')) {
+        activeCollectorUids.add(data.collectorUid);
+      }
+    });
+    const tonnes = Math.round(doneTotal * 0.05 * 10) / 10;
+    const el1 = document.getElementById('admin-kpi-req-today');
+    const el2 = document.getElementById('admin-kpi-done');
+    const el2s = document.getElementById('admin-kpi-done-sub');
+    const el3 = document.getElementById('admin-kpi-trucks');
+    const el3s = document.getElementById('admin-kpi-trucks-sub');
+    const el4 = document.getElementById('admin-kpi-pending');
+    const el5 = document.getElementById('admin-kpi-tonnes');
+    if (el1) el1.textContent = String(reqToday);
+    if (el2) el2.textContent = String(doneTotal);
+    if (el2s) el2s.textContent = doneToday ? `${doneToday} completed today` : 'Completed (all time in sample)';
+    if (el3) el3.textContent = String(activeCollectorUids.size);
+    if (el3s) el3s.textContent = activeCollectorUids.size ? 'Unique drivers on jobs' : 'No active assignments';
+    if (el4) el4.textContent = String(pendingAssign);
+    if (el5) el5.textContent = String(tonnes);
+  }
+
+  function startAdminRequestsListener(){
+    if (!firebaseDb) return;
+    if (adminRequestsUnsub) { adminRequestsUnsub(); adminRequestsUnsub = null; }
+    adminRequestsUnsub = firebaseDb.collection('collection_requests')
+      .limit(200)
+      .onSnapshot((snap) => {
+        adminAllRequests = [];
+        snap.forEach(d => adminAllRequests.push({ id: d.id, data: d.data() }));
+        adminAllRequests.sort((a, b) => {
+          const ta = a.data.createdAt && a.data.createdAt.toDate ? a.data.createdAt.toDate().getTime() : 0;
+          const tb = b.data.createdAt && b.data.createdAt.toDate ? b.data.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+        recomputeAdminAssignmentsFromCache();
+        updateAdminKpis();
+      }, (err) => console.error('Admin requests listener failed:', err));
+  }
+
   async function refreshAssignments(){
     if (!firebaseDb) return;
     try {
@@ -873,24 +944,7 @@
       console.error('Failed to load collectors:', e);
       collectorsCache = [];
     }
-    try {
-      const snap = await firebaseDb.collection('collection_requests')
-        .where('paymentStatus','==','paid')
-        .limit(50)
-        .get();
-      const rows = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if (!data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment' || !data.status)) {
-          rows.push({ id: d.id, ...data });
-        }
-      });
-      pendingAssignments = rows;
-    } catch (e) {
-      console.error('Failed to load assignments:', e);
-      pendingAssignments = [];
-    }
-    renderAssignments();
+    recomputeAdminAssignmentsFromCache();
   }
 
   async function assignRequest(requestId){
@@ -898,9 +952,19 @@
     const sel = document.getElementById(`assign-select-${requestId}`);
     const driverUid = sel ? sel.value : '';
     if (!driverUid) { alert('Select a driver first.'); return; }
+    const driver = collectorsCache.find(c => c.uid === driverUid);
+    const collectorName = driver ? ((driver.full_name || `${(driver.first_name || '').trim()} ${(driver.last_name || '').trim()}`).trim() || driver.email || 'Driver') : 'Driver';
+    const collectorTruckPlate = (driver && driver.truck_plate) ? driver.truck_plate : null;
+    const collectorCompany = (driver && driver.company) ? driver.company : null;
     try {
-      await firebaseDb.collection('collection_requests').doc(requestId).update({
+      const ref = firebaseDb.collection('collection_requests').doc(requestId);
+      const before = await ref.get();
+      const prev = before.exists ? before.data() : {};
+      await ref.update({
         collectorUid: driverUid,
+        collectorName,
+        collectorTruckPlate,
+        collectorCompany,
         assignedByUid: currentUser.uid,
         assignedAt: firebase.firestore.FieldValue.serverTimestamp(),
         status: 'assigned'
@@ -911,6 +975,14 @@
         requestId,
         message: 'You have been assigned a new collection job. Please confirm in Driver App.'
       });
+      if (prev.residentUid) {
+        await createNotification({
+          toUid: prev.residentUid,
+          type: 'driver_assigned',
+          requestId,
+          message: `A driver (${collectorName}) has been assigned to your pickup.`
+        });
+      }
       await createNotification({
         toRole: 'kcca_officer',
         type: 'assigned_job',
@@ -944,6 +1016,7 @@
       try { await hydrateAdminFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
       try { await refreshAssignments(); } catch (_) {}
       try { startAdminNotificationListener(); } catch (_) {}
+      try { startAdminRequestsListener(); } catch (_) {}
     });
   })();
 </script>
