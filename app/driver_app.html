@@ -214,17 +214,17 @@
 
     <div class="sb-truck">
       <div class="sb-truck-header">
-        <div class="sb-avatar" id="sb-avatar">JM</div>
+        <div class="sb-avatar" id="sb-avatar">—</div>
         <div>
-          <div class="sb-name" id="sb-name">James Mukasa</div>
-          <div class="sb-sub">Truck #07 · UAX 312B</div>
+          <div class="sb-name" id="sb-name">—</div>
+          <div class="sb-sub" id="sb-sub">—</div>
         </div>
       </div>
       <div class="truck-status-row">
-        <div class="ts-card"><div class="ts-label">Status</div><div class="ts-val green">On duty</div></div>
-        <div class="ts-card"><div class="ts-label">Zone</div><div class="ts-val">Nakawa</div></div>
-        <div class="ts-card"><div class="ts-label">Trips done</div><div class="ts-val green">11</div></div>
-        <div class="ts-card"><div class="ts-label">Remaining</div><div class="ts-val amber">7</div></div>
+        <div class="ts-card"><div class="ts-label">Status</div><div class="ts-val green" id="sb-st-duty">—</div></div>
+        <div class="ts-card"><div class="ts-label">Active jobs</div><div class="ts-val" id="sb-st-active">0</div></div>
+        <div class="ts-card"><div class="ts-label">Done (loaded)</div><div class="ts-val green" id="sb-st-done">0</div></div>
+        <div class="ts-card"><div class="ts-label">Drivers in app</div><div class="ts-val" id="sb-st-fleet">—</div></div>
       </div>
     </div>
 
@@ -237,17 +237,17 @@
       <div class="ni" onclick="setView('route')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.567 1.5 4 3.067 4 5c0 2.625 3.5 8.5 3.5 8.5S11 7.625 11 5c0-1.933-1.567-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="5" r="1.3" stroke="currentColor" stroke-width="1.2"/></svg>
         My Route
-        <span class="nb nb-blue">18</span>
+        <span class="nb nb-blue" id="nb-route">0</span>
       </div>
       <div class="ni" onclick="setView('jobs')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="2" y="2" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3"/><path d="M5 7.5h5M5 5h5M5 10h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         Job List
-        <span class="nb nb-amber">7</span>
+        <span class="nb nb-amber" id="nb-jobs">0</span>
       </div>
       <div class="ni" onclick="setView('active')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         Active Job
-        <span class="nb nb-green">Now</span>
+        <span class="nb nb-green" id="nb-active">—</span>
       </div>
       <div class="sb-sec">Account</div>
       <div class="ni" onclick="setView('earnings')">
@@ -276,7 +276,7 @@
     <div class="topbar">
       <div class="tb-left">
         <div class="tb-title" id="tb-title">Driver <em>Dashboard</em></div>
-        <div class="on-duty-pill"><span class="on-dot"></span>On duty</div>
+        <div class="on-duty-pill" id="driver-duty-pill"><span class="on-dot"></span><span id="driver-duty-text">Loading…</span></div>
       </div>
       <div class="tb-right">
         <span class="tb-date" id="tb-date">Sun, 15 Mar 2026 · 08:34 AM</span>
@@ -292,99 +292,53 @@
       <!-- ===== DASHBOARD ===== -->
       <div class="view active" id="view-dashboard">
         <div class="kpi-strip">
-          <div class="kpi"><div class="kpi-label">Trips today</div><div class="kpi-val green">11</div><div class="kpi-sub">of 18 assigned</div></div>
-          <div class="kpi"><div class="kpi-label">Completion rate</div><div class="kpi-val blue">97%</div><div class="kpi-sub">Week average</div></div>
-          <div class="kpi"><div class="kpi-label">Km driven</div><div class="kpi-val">48</div><div class="kpi-sub">Today's route</div></div>
-          <div class="kpi"><div class="kpi-label">Earnings today</div><div class="kpi-val amber">88K</div><div class="kpi-sub">UGX · est.</div></div>
+          <div class="kpi"><div class="kpi-label">Completed today</div><div class="kpi-val green" id="kpi-done-today">0</div><div class="kpi-sub" id="kpi-done-today-sub">Pickups you finished</div></div>
+          <div class="kpi"><div class="kpi-label">Completion rate</div><div class="kpi-val blue" id="kpi-rate">0%</div><div class="kpi-sub">Your assigned jobs (loaded)</div></div>
+          <div class="kpi"><div class="kpi-label">Active jobs</div><div class="kpi-val" id="kpi-active">0</div><div class="kpi-sub">Awaiting action</div></div>
+          <div class="kpi"><div class="kpi-label">Booking value done</div><div class="kpi-val amber" id="kpi-earn">0</div><div class="kpi-sub" id="kpi-earn-sub">UGX · completed (all time)</div></div>
         </div>
 
         <div class="two-col">
-          <!-- ROUTE MAP -->
           <div class="panel">
             <div class="ph">
-              <span class="pt">Today's route · Nakawa Division</span>
+              <span class="pt">Your route (assigned jobs)</span>
               <span class="pa" onclick="setView('route')">Full route →</span>
             </div>
-            <div class="map-wrap" style="height:230px;">
-              <svg viewBox="0 0 500 230" preserveAspectRatio="xMidYMid slice">
-                <rect width="500" height="230" fill="#0A1610"/>
-                <line x1="0" y1="57" x2="500" y2="57" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="115" x2="500" y2="115" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="172" x2="500" y2="172" stroke="#1A3020" stroke-width="1"/>
-                <line x1="80" y1="0" x2="80" y2="230" stroke="#1A3020" stroke-width="1"/><line x1="180" y1="0" x2="180" y2="230" stroke="#1A3020" stroke-width="1"/><line x1="300" y1="0" x2="300" y2="230" stroke="#1A3020" stroke-width="1.5"/><line x1="410" y1="0" x2="410" y2="230" stroke="#1A3020" stroke-width="1"/>
-                <!-- Completed path -->
-                <path d="M40 190 Q80 172 130 155 Q160 145 180 130 Q210 115 240 105" stroke="#2ECC71" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-                <!-- Remaining path -->
-                <path d="M240 105 Q280 88 300 80 Q340 65 380 72 Q420 78 460 68" stroke="#60A5FA" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round" opacity="0.6"/>
-                <!-- Completed stops -->
-                <circle cx="80" cy="175" r="5" fill="#2ECC71" opacity="0.7"/>
-                <circle cx="130" cy="155" r="5" fill="#2ECC71" opacity="0.7"/>
-                <circle cx="180" cy="130" r="5" fill="#2ECC71" opacity="0.7"/>
-                <!-- Current location -->
-                <circle cx="240" cy="105" r="9" fill="#60A5FA" opacity="0.95"/>
-                <circle cx="240" cy="105" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
-                <circle cx="240" cy="105" r="24" fill="none" stroke="#60A5FA" stroke-width="0.5" opacity="0.12"/>
-                <!-- Upcoming stops -->
-                <circle cx="300" cy="80" r="5" fill="#60A5FA" opacity="0.45"/>
-                <circle cx="380" cy="72" r="5" fill="#60A5FA" opacity="0.35"/>
-                <circle cx="460" cy="68" r="5" fill="#60A5FA" opacity="0.25"/>
-                <text x="230" y="93" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You</text>
-                <text x="20" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Ntinda</text>
-                <text x="105" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Naguru</text>
-                <text x="215" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Nakawa</text>
-                <text x="325" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Luzira</text>
-                <text x="425" y="220" fill="#253d2d" font-size="8" font-family="sans-serif">Bugolobi</text>
-              </svg>
+            <div style="padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.65;">
+              Live GPS mapping is not connected in this build. Stops are the collection requests KCCA assigned to you—the same data the <strong>KCCA dashboard</strong> uses. Registered drivers in the system: <strong id="dash-fleet-count">—</strong>.
             </div>
-            <div style="display:flex;align-items:center;gap:16px;padding:10px 18px 14px;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Completed (11)</div>
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>Remaining (7)</div>
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0.7"></div>Current location</div>
+            <div class="map-wrap" style="height:120px;display:flex;align-items:center;justify-content:center;border-top:1px solid var(--border);margin:0 18px 14px;">
+              <span style="font-size:11px;color:var(--dim);">Use pickup address + map app on your phone for navigation.</span>
             </div>
           </div>
 
-          <!-- NEXT JOB + QUICK STATS -->
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="panel">
-              <div class="ph"><span class="pt">Next pickup</span><span class="pa" onclick="setView('active')">Start job →</span></div>
-              <div class="job-detail" style="padding-bottom:14px;">
-                <div class="jd-addr-block">
-                  <div class="jd-label">Address</div>
-                  <div class="jd-value">Plot 14, Ntinda Road</div>
-                  <div class="jd-sub">Nakawa Division · Stop #12 of 18</div>
-                </div>
-                <div class="jd-grid">
-                  <div class="jd-card"><div class="jd-card-label">ETA</div><div class="jd-card-val green">~4 min</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Distance</div><div class="jd-card-val">1.2 km</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">Household</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">2 bags</div></div>
-                </div>
-                <div class="action-btns">
-                  <button class="btn-confirm" onclick="setView('active')">
-                    Navigate to stop
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7.5 3L12 7l-4.5 4" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
-                </div>
+              <div class="ph"><span class="pt">Next job</span><span class="pa" onclick="setView('active')">Open active →</span></div>
+              <div class="job-detail" style="padding-bottom:14px;" id="dash-next-job">
+                <div style="padding:4px 0 12px;color:var(--muted);font-size:12px;">Loading…</div>
               </div>
             </div>
 
             <div class="panel">
-              <div class="ph"><span class="pt">Today's progress</span></div>
+              <div class="ph"><span class="pt">Job pipeline</span></div>
               <div style="padding:14px 18px;">
-                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px;"><span>11 of 18 stops completed</span><span style="color:var(--green);font-weight:600;">61%</span></div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:7px;"><span id="dash-prog-label">Completed vs active</span><span style="color:var(--green);font-weight:600;" id="dash-prog-pct">0%</span></div>
                 <div style="height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
-                  <div style="height:100%;width:61%;background:var(--green);border-radius:3px;"></div>
+                  <div id="dash-prog-bar" style="height:100%;width:0%;background:var(--green);border-radius:3px;"></div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;">
                   <div style="text-align:center;">
                     <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Done</div>
-                    <div style="font-size:18px;font-weight:700;color:var(--green);">11</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--green);" id="dash-p-done">0</div>
                   </div>
                   <div style="text-align:center;border-left:1px solid var(--border);border-right:1px solid var(--border);">
-                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Left</div>
-                    <div style="font-size:18px;font-weight:700;color:var(--amber);">7</div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Active</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--amber);" id="dash-p-left">0</div>
                   </div>
                   <div style="text-align:center;">
-                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Skipped</div>
-                    <div style="font-size:18px;font-weight:700;color:var(--dim);">0</div>
+                    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Total</div>
+                    <div style="font-size:18px;font-weight:700;color:var(--dim);" id="dash-p-skip">0</div>
                   </div>
                 </div>
               </div>
@@ -397,56 +351,19 @@
       <div class="view" id="view-route">
         <div class="two-col">
           <div class="panel">
-            <div class="ph"><span class="pt">Full route · 18 stops · Nakawa Division</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
-            <div class="map-wrap" style="height:280px;">
-              <svg viewBox="0 0 500 280" preserveAspectRatio="xMidYMid slice">
-                <rect width="500" height="280" fill="#0A1610"/>
-                <line x1="0" y1="70" x2="500" y2="70" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="140" x2="500" y2="140" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="210" x2="500" y2="210" stroke="#1A3020" stroke-width="1"/>
-                <line x1="80" y1="0" x2="80" y2="280" stroke="#1A3020" stroke-width="1"/><line x1="200" y1="0" x2="200" y2="280" stroke="#1A3020" stroke-width="1"/><line x1="320" y1="0" x2="320" y2="280" stroke="#1A3020" stroke-width="1.5"/><line x1="430" y1="0" x2="430" y2="280" stroke="#1A3020" stroke-width="1"/>
-                <path d="M30 240 Q60 220 80 210 Q110 200 140 185 Q170 170 200 160 Q230 148 260 135" stroke="#2ECC71" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.7"/>
-                <path d="M260 135 Q290 122 320 110 Q360 95 395 88 Q425 82 465 75" stroke="#60A5FA" stroke-width="2" fill="none" stroke-dasharray="6 4" stroke-linecap="round" opacity="0.55"/>
-                <circle cx="50" cy="232" r="5" fill="#2ECC71" opacity="0.6"/>
-                <circle cx="80" cy="212" r="5" fill="#2ECC71" opacity="0.65"/>
-                <circle cx="115" cy="195" r="5" fill="#2ECC71" opacity="0.7"/>
-                <circle cx="145" cy="182" r="5" fill="#2ECC71" opacity="0.75"/>
-                <circle cx="175" cy="168" r="5" fill="#2ECC71" opacity="0.8"/>
-                <circle cx="200" cy="160" r="5" fill="#2ECC71" opacity="0.85"/>
-                <circle cx="225" cy="148" r="5" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="245" cy="140" r="5" fill="#2ECC71" opacity="0.95"/>
-                <circle cx="260" cy="135" r="9" fill="#60A5FA" opacity="0.95"/>
-                <circle cx="260" cy="135" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
-                <text x="252" y="122" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You #12</text>
-                <circle cx="295" cy="120" r="4" fill="#60A5FA" opacity="0.4"/>
-                <circle cx="325" cy="108" r="4" fill="#60A5FA" opacity="0.38"/>
-                <circle cx="360" cy="95" r="4" fill="#60A5FA" opacity="0.35"/>
-                <circle cx="395" cy="88" r="4" fill="#60A5FA" opacity="0.3"/>
-                <circle cx="430" cy="82" r="4" fill="#60A5FA" opacity="0.28"/>
-                <circle cx="455" cy="77" r="4" fill="#60A5FA" opacity="0.25"/>
-                <circle cx="465" cy="75" r="4" fill="#60A5FA" opacity="0.2"/>
-              </svg>
+            <div class="ph"><span class="pt" id="route-panel-title">Your route</span><span class="pa-muted" onclick="setView('dashboard')">← Dashboard</span></div>
+            <div style="padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.65;">
+              Stops are your open assignments from Firestore (same assignments KCCA sees). Order: in progress → confirmed → newly assigned.
             </div>
-            <div style="display:flex;align-items:center;gap:16px;padding:10px 18px 14px;flex-wrap:wrap;">
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--green)"></div>Done (11)</div>
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue)"></div>You are here (#12)</div>
-              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);opacity:0.35"></div>Remaining (7)</div>
+            <div class="map-wrap" style="height:100px;display:flex;align-items:center;justify-content:center;margin:0 18px 14px;">
+              <span style="font-size:11px;color:var(--dim);">Navigate using each address in your phone’s maps app.</span>
             </div>
           </div>
 
           <div class="panel">
             <div class="ph"><span class="pt">Stop sequence</span></div>
-            <div class="route-steps" style="max-height:420px;overflow-y:auto;">
-              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 1 · Ntinda Estate, Blk A</div><div class="rs-meta">Household · 1 bag · Sarah N.</div></div><div class="rs-done-badge">Done 7:12</div></div>
-              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 2 · Naguru Ring Road</div><div class="rs-meta">Household · 2 bags · John K.</div></div><div class="rs-done-badge">Done 7:28</div></div>
-              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 3 · Nakawa Market</div><div class="rs-meta">Commercial · 5 bags · Nakawa Traders</div></div><div class="rs-done-badge">Done 7:51</div></div>
-              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stop 4 · Plot 7, Luzira Rd</div><div class="rs-meta">Household · 2 bags · Mary D.</div></div><div class="rs-done-badge">Done 8:04</div></div>
-              <div class="rs-item"><div class="rsd-done rs-dot"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rs-body"><div class="rs-title">Stops 5–11</div><div class="rs-meta">Various · Nakawa Zone</div></div><div class="rs-done-badge">Done</div></div>
-              <div class="rs-item"><div class="rsd-active rs-dot"></div><div class="rs-body"><div class="rs-title">Stop 12 · Plot 14, Ntinda Rd</div><div class="rs-meta">Household · 2 bags · Sarah N.</div><div class="rs-dist">~1.2 km · 4 min away</div></div></div>
-              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">13</div><div class="rs-body"><div class="rs-title muted">Stop 13 · Bugolobi Flats</div><div class="rs-meta">Household · 3 bags</div></div></div>
-              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">14</div><div class="rs-body"><div class="rs-title muted">Stop 14 · Luzira Industrial</div><div class="rs-meta">Commercial · 8 bags</div></div></div>
-              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">15</div><div class="rs-body"><div class="rs-title muted">Stop 15 · Mbuya Hill Rd</div><div class="rs-meta">Household · 2 bags</div></div></div>
-              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">16</div><div class="rs-body"><div class="rs-title muted">Stop 16 · Naguru Hospital</div><div class="rs-meta">Institutional · 10 bags</div></div></div>
-              <div class="rs-item"><div class="rsd-next rs-dot rsd-num">17</div><div class="rs-body"><div class="rs-title muted">Stop 17 · Ntinda Road Estate</div><div class="rs-meta">Household · 1 bag</div></div></div>
-              <div class="rs-item" style="padding-bottom:0"><div class="rsd-next rs-dot rsd-num">18</div><div class="rs-body"><div class="rs-title muted">Stop 18 · Nakawa Depot</div><div class="rs-meta">Disposal drop-off</div></div></div>
+            <div class="route-steps" style="max-height:420px;overflow-y:auto;" id="driver-route-steps">
+              <div style="padding:14px 18px;color:var(--muted);font-size:12px;">Loading…</div>
             </div>
           </div>
         </div>
@@ -455,26 +372,21 @@
       <!-- ===== JOB LIST ===== -->
       <div class="view" id="view-jobs">
         <div class="panel">
-          <div class="ph"><span class="pt">All jobs today · 18 total</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <div class="ph"><span class="pt" id="jobs-panel-title">Your jobs</span><span class="pa-muted" onclick="setView('dashboard')">← Dashboard</span></div>
           <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
-            <div style="font-size:12px;font-weight:650;color:var(--text);margin-bottom:6px;">Assigned to you (from Admin)</div>
+            <div style="font-size:12px;font-weight:650;color:var(--text);margin-bottom:6px;">Assigned by KCCA (action cards)</div>
             <div id="driver-assigned-list" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
           <div style="padding:12px 16px;border-bottom:1px solid var(--border);">
             <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:6px;">
               <div style="font-size:12px;font-weight:650;color:var(--text);">Notifications</div>
-              <button class="btn-skip" style="padding:6px 10px;" onclick="markAllDriverNotificationsRead()">Mark all read</button>
+              <button type="button" class="btn-skip" style="padding:6px 10px;" onclick="markAllDriverNotificationsRead()">Mark all read</button>
             </div>
             <div id="driver-notif-list" style="display:flex;flex-direction:column;gap:8px;"></div>
           </div>
-          <div class="job-list">
-            <div class="job-item" onclick="setView('active')"><div class="job-top"><span class="job-id">#REQ-2026-0312 · Stop 12</span><span class="job-time">Now · ~4 min</span></div><div class="job-addr">Plot 14, Ntinda Road · Nakawa Division</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-b">Active</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0315 · Stop 13</span><span class="job-time">~18 min</span></div><div class="job-addr">Bugolobi Flats, Block C · Nakawa Division</div><div class="job-bottom"><span class="job-type">Household · 3 bags</span><span class="st-pill stp-d">Pending</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0318 · Stop 14</span><span class="job-time">~31 min</span></div><div class="job-addr">Luzira Industrial Area, Plot 22</div><div class="job-bottom"><span class="job-type">Commercial · 8 bags</span><span class="st-pill stp-d">Pending</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0322 · Stop 15</span><span class="job-time">~42 min</span></div><div class="job-addr">Mbuya Hill Road, House 5B</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-d">Pending</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0287 · Stop 1</span><span class="job-time">Done 7:12 AM</span></div><div class="job-addr">Ntinda Estate, Block A, Plot 3</div><div class="job-bottom"><span class="job-type">Household · 1 bag</span><span class="st-pill stp-g">Collected</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0289 · Stop 2</span><span class="job-time">Done 7:28 AM</span></div><div class="job-addr">Naguru Ring Road, Plot 9</div><div class="job-bottom"><span class="job-type">Household · 2 bags</span><span class="st-pill stp-g">Collected</span></div></div>
-            <div class="job-item"><div class="job-top"><span class="job-id">#REQ-2026-0293 · Stop 3</span><span class="job-time">Done 7:51 AM</span></div><div class="job-addr">Nakawa Market, Stall Row B</div><div class="job-bottom"><span class="job-type">Commercial · 5 bags</span><span class="st-pill stp-g">Collected</span></div></div>
+          <div class="ph" style="border-top:none;"><span class="pt">All pickups (loaded history)</span></div>
+          <div class="job-list" id="driver-job-list-all">
+            <div style="padding:14px 18px;color:var(--muted);font-size:12px;">Loading…</div>
           </div>
         </div>
       </div>
@@ -484,55 +396,22 @@
         <div class="two-col">
           <div class="panel">
             <div class="ph">
-              <span class="pt">Active job · Stop 12 of 18</span>
-              <span class="pa-muted" onclick="setView('dashboard')">← Back</span>
+              <span class="pt" id="active-job-heading">Active job</span>
+              <span class="pa-muted" onclick="setView('dashboard')">← Dashboard</span>
             </div>
-            <div class="map-wrap" style="height:260px;">
-              <svg viewBox="0 0 500 260" preserveAspectRatio="xMidYMid slice">
-                <rect width="500" height="260" fill="#0A1610"/>
-                <line x1="0" y1="65" x2="500" y2="65" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="130" x2="500" y2="130" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="195" x2="500" y2="195" stroke="#1A3020" stroke-width="1"/>
-                <line x1="100" y1="0" x2="100" y2="260" stroke="#1A3020" stroke-width="1"/><line x1="240" y1="0" x2="240" y2="260" stroke="#1A3020" stroke-width="1"/><line x1="370" y1="0" x2="370" y2="260" stroke="#1A3020" stroke-width="1.5"/>
-                <path d="M80 195 Q140 165 200 148 Q240 138 280 128" stroke="#60A5FA" stroke-width="2.5" fill="none" stroke-dasharray="7 4" opacity="0.7"/>
-                <circle cx="80" cy="195" r="9" fill="#60A5FA" opacity="0.9"/>
-                <circle cx="80" cy="195" r="16" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
-                <text x="80" y="182" fill="#60A5FA" font-size="8" font-family="sans-serif" text-anchor="middle">You</text>
-                <circle cx="280" cy="128" r="10" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="280" cy="128" r="18" fill="none" stroke="#2ECC71" stroke-width="1" opacity="0.3"/>
-                <circle cx="280" cy="128" r="26" fill="none" stroke="#2ECC71" stroke-width="0.5" opacity="0.15"/>
-                <text x="280" y="114" fill="#2ECC71" font-size="8" font-family="sans-serif" text-anchor="middle">Pickup</text>
-                <text x="70" y="248" fill="#253d2d" font-size="9" font-family="sans-serif">Current</text>
-                <text x="235" y="248" fill="#253d2d" font-size="9" font-family="sans-serif">Ntinda Rd</text>
-              </svg>
+            <div class="map-wrap" style="height:140px;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:11px;color:var(--dim);padding:16px;text-align:center;">Open the address below in Google Maps / Maps.me to navigate. Job status syncs with KCCA when you complete.</span>
             </div>
           </div>
 
           <div style="display:flex;flex-direction:column;gap:14px;">
             <div class="panel" id="job-panel">
-              <div class="ph"><span class="pt">Pickup details</span><span class="st-pill stp-b">En route</span></div>
-              <div class="job-detail">
-                <div class="jd-addr-block">
-                  <div class="jd-label">Pickup address</div>
-                  <div class="jd-value">Plot 14, Ntinda Road</div>
-                  <div class="jd-sub">Nakawa Division · Resident: Sarah Namukasa</div>
-                </div>
-                <div class="jd-grid">
-                  <div class="jd-card"><div class="jd-card-label">ETA</div><div class="jd-card-val green">~4 min</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Distance</div><div class="jd-card-val">1.2 km</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">Household</div></div>
-                  <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">2 bags</div></div>
-                </div>
-                <div class="action-btns">
-                  <button class="btn-confirm" onclick="showConfirm()">
-                    Mark as collected
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-6" stroke="#060D0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
-                  <button class="btn-issue">Report an issue</button>
-                  <button class="btn-skip">Skip this stop</button>
-                </div>
+              <div class="ph"><span class="pt">Pickup details</span><span class="st-pill stp-b" id="active-job-pill">—</span></div>
+              <div class="job-detail" id="active-job-detail-inner">
+                <div style="padding:8px 0;color:var(--muted);font-size:12px;">Loading…</div>
               </div>
             </div>
 
-            <!-- CONFIRM INLINE -->
             <div id="confirm-panel" class="panel hidden">
               <div class="confirm-overlay">
                 <div class="confirm-card">
@@ -540,25 +419,24 @@
                     <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   </div>
                   <div class="confirm-title">Confirm collection?</div>
-                  <div class="confirm-sub">Mark <strong>Plot 14, Ntinda Road</strong> as collected. This will notify Sarah Namukasa and generate her invoice automatically.</div>
+                  <div class="confirm-sub" id="confirm-sub-text">This will mark the pickup complete in Firestore and notify the resident and KCCA.</div>
                   <div class="confirm-btns">
-                    <button class="cbtn-yes" onclick="confirmCollection()">Yes, collected</button>
-                    <button class="cbtn-no" onclick="hideConfirm()">Cancel</button>
+                    <button type="button" class="cbtn-yes" onclick="confirmCollection()">Yes, collected</button>
+                    <button type="button" class="cbtn-no" onclick="hideConfirm()">Cancel</button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- SUCCESS -->
             <div id="success-panel" class="panel hidden">
               <div style="padding:28px 24px;text-align:center;">
                 <div style="width:52px;height:52px;border-radius:50%;background:rgba(46,204,113,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
                   <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M4 11l5 5 9-9" stroke="#2ECC71" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-                <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--text);margin-bottom:8px;">Collection logged!</div>
-                <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">Stop 12 marked complete. Sarah Namukasa has been notified and invoice generated.</div>
-                <button class="btn-confirm" style="max-width:240px;margin:0 auto;" onclick="setView('route')">
-                  Next stop →
+                <div style="font-family:'Instrument Serif',serif;font-size:20px;color:var(--text);margin-bottom:8px;">Collection logged</div>
+                <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;" id="success-sub-text">The resident and KCCA have been notified.</div>
+                <button type="button" class="btn-confirm" style="max-width:240px;margin:0 auto;" onclick="afterSuccessGo()">
+                  Next →
                 </button>
               </div>
             </div>
@@ -569,21 +447,17 @@
       <!-- ===== EARNINGS ===== -->
       <div class="view" id="view-earnings">
         <div class="panel">
-          <div class="ph"><span class="pt">Earnings summary</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <div class="ph"><span class="pt">Booking value (completed)</span><span class="pa-muted" onclick="setView('dashboard')">← Dashboard</span></div>
+          <p style="padding:12px 18px;font-size:12px;color:var(--muted);line-height:1.65;">Figures sum the resident <strong>amountUGX</strong> on jobs you marked complete. Payout rules are not stored in the app—use this as a reference for completed work only.</p>
           <div class="earn-summary">
-            <div class="es-block"><div class="es-label">Today (est.)</div><div class="es-val green">88,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
-            <div class="es-block"><div class="es-label">This week</div><div class="es-val">412,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
-            <div class="es-block"><div class="es-label">This month</div><div class="es-val">1,640,000</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+            <div class="es-block"><div class="es-label">Today</div><div class="es-val green" id="earn-today">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+            <div class="es-block"><div class="es-label">Last 7 days</div><div class="es-val" id="earn-week">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
+            <div class="es-block"><div class="es-label">All completed</div><div class="es-val" id="earn-all">0</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">UGX</div></div>
           </div>
           <table class="earn-table">
-            <thead><tr><th>Date</th><th>Trips</th><th>Km driven</th><th>Completion rate</th><th>Earnings</th></tr></thead>
-            <tbody>
-              <tr><td>Sun 15 Mar (today)</td><td>11 / 18</td><td>48 km</td><td><span style="color:var(--green);font-weight:600;">97%</span></td><td style="color:var(--green);font-weight:600;">88,000 UGX</td></tr>
-              <tr><td>Sat 14 Mar</td><td>17 / 18</td><td>74 km</td><td>94%</td><td>96,000 UGX</td></tr>
-              <tr><td>Fri 13 Mar</td><td>16 / 17</td><td>68 km</td><td>94%</td><td>88,000 UGX</td></tr>
-              <tr><td>Thu 12 Mar</td><td>18 / 18</td><td>76 km</td><td>100%</td><td>104,000 UGX</td></tr>
-              <tr><td>Wed 11 Mar</td><td>15 / 18</td><td>62 km</td><td>83%</td><td>72,000 UGX</td></tr>
-              <tr><td>Tue 10 Mar</td><td>14 / 17</td><td>58 km</td><td>82%</td><td>64,000 UGX</td></tr>
+            <thead><tr><th>Day</th><th>Completed pickups</th><th>Booking value (UGX)</th></tr></thead>
+            <tbody id="earn-table-body">
+              <tr><td colspan="3" style="color:var(--muted);">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -592,17 +466,11 @@
       <!-- ===== HISTORY ===== -->
       <div class="view" id="view-history">
         <div class="panel">
-          <div class="ph"><span class="pt">Trip history · March 2026</span><span class="pa-muted" onclick="setView('dashboard')">← Back</span></div>
+          <div class="ph"><span class="pt">Trip history</span><span class="pa-muted" onclick="setView('dashboard')">← Dashboard</span></div>
           <table class="hist-table">
-            <thead><tr><th>Request ID</th><th>Date</th><th>Address</th><th>Type</th><th>Resident</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td>#REQ-2026-0312</td><td>Today</td><td>Plot 14, Ntinda Rd</td><td>Household</td><td>Sarah N.</td><td><span class="st-pill stp-b">Active</span></td></tr>
-              <tr><td>#REQ-2026-0287</td><td>Today 7:12 AM</td><td>Ntinda Estate, Blk A</td><td>Household</td><td>John K.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
-              <tr><td>#REQ-2026-0289</td><td>Today 7:28 AM</td><td>Naguru Ring Road</td><td>Household</td><td>Mary D.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
-              <tr><td>#REQ-2026-0293</td><td>Today 7:51 AM</td><td>Nakawa Market</td><td>Commercial</td><td>Nakawa Traders</td><td><span class="st-pill stp-g">Collected</span></td></tr>
-              <tr><td>#REQ-2026-0251</td><td>14 Mar</td><td>Luzira Industrial</td><td>Commercial</td><td>Luzira Ltd</td><td><span class="st-pill stp-g">Collected</span></td></tr>
-              <tr><td>#REQ-2026-0238</td><td>14 Mar</td><td>Bugolobi Flats</td><td>Household</td><td>Grace A.</td><td><span class="st-pill stp-g">Collected</span></td></tr>
-              <tr><td>#REQ-2026-0204</td><td>13 Mar</td><td>Mbuya Hill Rd</td><td>Household</td><td>Peter S.</td><td><span class="st-pill stp-a">Disputed</span></td></tr>
+            <thead><tr><th>Request</th><th>Date</th><th>Address</th><th>Type</th><th>Status</th></tr></thead>
+            <tbody id="hist-table-body">
+              <tr><td colspan="5" style="color:var(--muted);">Loading…</td></tr>
             </tbody>
           </table>
         </div>
@@ -613,32 +481,32 @@
         <div class="prof-wrap">
           <div class="panel">
             <div class="prof-header">
-              <div class="prof-avatar" id="prof-avatar">JM</div>
+              <div class="prof-avatar" id="prof-avatar">—</div>
               <div>
-                <div class="prof-name" id="prof-name">James Mukasa</div>
-                <div class="prof-role">Collector / Driver · Kampala Waste Solutions Ltd.</div>
+                <div class="prof-name" id="prof-name">—</div>
+                <div class="prof-role" id="prof-role-line">Collector · CleanGKMA</div>
               </div>
             </div>
             <div class="prof-fields">
               <div class="pf-row">
-                <div class="pf-field"><div class="pf-label">Truck ID</div><div class="pf-val">Truck #07</div></div>
-                <div class="pf-field"><div class="pf-label">Plate number</div><div class="pf-val">UAX 312B</div></div>
+                <div class="pf-field"><div class="pf-label">Plate number</div><div class="pf-val" id="prof-plate">—</div></div>
+                <div class="pf-field"><div class="pf-label">Company</div><div class="pf-val" id="prof-company" style="font-size:12px;">—</div></div>
               </div>
               <div class="pf-row">
-                <div class="pf-field"><div class="pf-label">Phone</div><div class="pf-val">+256 772 XXX XXX</div></div>
-                <div class="pf-field"><div class="pf-label">Email</div><div class="pf-val" id="prof-email" style="font-size:12px;">j.mukasa@kwsltd.ug</div></div>
+                <div class="pf-field"><div class="pf-label">Phone</div><div class="pf-val" id="prof-phone">—</div></div>
+                <div class="pf-field"><div class="pf-label">Email</div><div class="pf-val" id="prof-email" style="font-size:12px;">—</div></div>
               </div>
               <div class="pf-row">
-                <div class="pf-field"><div class="pf-label">Operating zone</div><div class="pf-val">Nakawa Division</div></div>
-                <div class="pf-field"><div class="pf-label">Company</div><div class="pf-val" style="font-size:12px;">Kampala Waste Solutions</div></div>
+                <div class="pf-field"><div class="pf-label">Jurisdiction / zone</div><div class="pf-val" id="prof-zone">—</div></div>
+                <div class="pf-field"><div class="pf-label">Drivers registered</div><div class="pf-val" id="prof-fleet">—</div></div>
               </div>
               <div class="pf-row">
-                <div class="pf-field"><div class="pf-label">Completion rate</div><div class="pf-val green">97%</div></div>
-                <div class="pf-field"><div class="pf-label">Total trips</div><div class="pf-val">1,284</div></div>
+                <div class="pf-field"><div class="pf-label">Completion rate</div><div class="pf-val green" id="prof-rate">—</div></div>
+                <div class="pf-field"><div class="pf-label">Completed pickups</div><div class="pf-val" id="prof-trips">—</div></div>
               </div>
               <div class="pf-row">
-                <div class="pf-field"><div class="pf-label">Account status</div><div class="pf-val green">Active · Verified</div></div>
-                <div class="pf-field"><div class="pf-label">Joined</div><div class="pf-val">Jan 2026</div></div>
+                <div class="pf-field"><div class="pf-label">Account</div><div class="pf-val green">Active (Firebase)</div></div>
+                <div class="pf-field"><div class="pf-label">User ID</div><div class="pf-val" style="font-size:11px;" id="prof-uid">—</div></div>
               </div>
             </div>
           </div>
@@ -655,9 +523,34 @@
   let firebaseDb = null;
   let currentUser = null;
   let assignedJobs = [];
+  let driverAllRequests = [];
+  let collectorsInSystemCount = 0;
+  let driverProfile = {};
+  let focusJobId = null;
+  let pendingCompleteId = null;
+  let lastCompletedSummary = '';
   let driverNotifUnsub = null;
   let driverNotifDocs = [];
   let driverJobsUnsub = null;
+
+  function escapeHtml(s){
+    if (s == null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function normalizeZone(z){
+    return String(z || '').trim().toLowerCase();
+  }
+
+  function jobZoneMatchesDriver(jobZone){
+    const pz = (driverProfile.primary_zone || '').trim();
+    if (!pz) return true;
+    return normalizeZone(jobZone) === normalizeZone(pz);
+  }
 
   function formatDriverDate(d){
     try {
@@ -686,18 +579,393 @@
   async function hydrateDriverFromFirebase(user){
     const doc = await firebaseDb.collection('users').doc(user.uid).get();
     const data = (doc && doc.exists && doc.data()) ? doc.data() : {};
+    driverProfile = { ...data, uid: user.uid };
     const full = (data.full_name || '').trim() || `${(data.first_name||'').trim()} ${(data.last_name||'').trim()}`.trim() || user.email || 'Collector';
     const initials = full.split(/\s+/).filter(Boolean).slice(0,2).map(s=>s[0].toUpperCase()).join('') || 'U';
+    const plate = (data.truck_plate || '').trim();
+    const company = (data.company || '').trim();
+    const subLine = [plate || null, company || null].filter(Boolean).join(' · ') || 'Collector account';
     const sbAvatar = document.getElementById('sb-avatar');
     const sbName = document.getElementById('sb-name');
+    const sbSub = document.getElementById('sb-sub');
     const profAvatar = document.getElementById('prof-avatar');
     const profName = document.getElementById('prof-name');
     const profEmail = document.getElementById('prof-email');
+    const profPlate = document.getElementById('prof-plate');
+    const profCompany = document.getElementById('prof-company');
+    const profPhone = document.getElementById('prof-phone');
+    const profZone = document.getElementById('prof-zone');
+    const profUid = document.getElementById('prof-uid');
+    const profRole = document.getElementById('prof-role-line');
     if (sbAvatar) sbAvatar.textContent = initials;
     if (sbName) sbName.textContent = full;
+    if (sbSub) sbSub.textContent = subLine;
     if (profAvatar) profAvatar.textContent = initials;
     if (profName) profName.textContent = full;
     if (profEmail) profEmail.textContent = user.email || '—';
+    if (profPlate) profPlate.textContent = plate || '—';
+    if (profCompany) profCompany.textContent = company || '—';
+    if (profPhone) profPhone.textContent = (data.phone || '').trim() || '—';
+    if (profZone) profZone.textContent = (data.jurisdiction || '').trim() || (data.zone || '').trim() || '—';
+    if (profUid) profUid.textContent = user.uid;
+    if (profRole) profRole.textContent = company ? `Collector · ${company}` : 'Collector · CleanGKMA';
+  }
+
+  async function fetchCollectorsCount(){
+    if (!firebaseDb) return 0;
+    try {
+      const snap = await firebaseDb.collection('users').where('role', '==', 'collector').limit(200).get();
+      return snap.size;
+    } catch (e) {
+      console.error('fetchCollectorsCount:', e);
+      return 0;
+    }
+  }
+
+  function pickFocusJob(){
+    const active = assignedJobs.filter(j => ['assigned', 'driver_confirmed', 'in_progress'].includes(j.status || ''));
+    const order = { in_progress: 0, driver_confirmed: 1, assigned: 2 };
+    active.sort((a, b) => (order[a.status] ?? 9) - (order[b.status] ?? 9));
+    return active[0] || null;
+  }
+
+  function countCompletedToday(){
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return driverAllRequests.filter(r => {
+      if (r.status !== 'completed') return false;
+      const ca = r.completedAt && r.completedAt.toDate ? r.completedAt.toDate() : null;
+      return ca && ca >= today;
+    }).length;
+  }
+
+  function sumAmountForCompleted(filterFn){
+    let sum = 0;
+    driverAllRequests.forEach(r => {
+      if (r.status !== 'completed') return;
+      if (!filterFn(r)) return;
+      sum += Number(r.amountUGX || 0);
+    });
+    return sum;
+  }
+
+  function renderAllDriverUi(){
+    const focus = pickFocusJob();
+    focusJobId = focus ? focus.id : null;
+
+    const activeCount = assignedJobs.length;
+    const doneTotal = driverAllRequests.filter(r => r.status === 'completed').length;
+    const nbR = document.getElementById('nb-route');
+    const nbJ = document.getElementById('nb-jobs');
+    const nbA = document.getElementById('nb-active');
+    if (nbR) nbR.textContent = String(activeCount);
+    if (nbJ) nbJ.textContent = String(activeCount);
+    if (nbA) nbA.textContent = activeCount ? 'Live' : '—';
+
+    const duty = document.getElementById('driver-duty-text');
+    const pill = document.getElementById('driver-duty-pill');
+    if (duty) duty.textContent = activeCount ? 'Has assignments' : 'Available';
+    if (pill) pill.style.opacity = activeCount ? '1' : '0.85';
+
+    const sbStDuty = document.getElementById('sb-st-duty');
+    const sbStActive = document.getElementById('sb-st-active');
+    const sbStDone = document.getElementById('sb-st-done');
+    const sbStFleet = document.getElementById('sb-st-fleet');
+    if (sbStDuty) sbStDuty.textContent = activeCount ? 'Busy' : 'Ready';
+    if (sbStActive) sbStActive.textContent = String(activeCount);
+    if (sbStDone) sbStDone.textContent = String(doneTotal);
+    if (sbStFleet) sbStFleet.textContent = String(collectorsInSystemCount);
+
+    const dashFleet = document.getElementById('dash-fleet-count');
+    if (dashFleet) dashFleet.textContent = String(collectorsInSystemCount);
+
+    const doneToday = countCompletedToday();
+    const totalAssigned = driverAllRequests.filter(r => ['assigned', 'driver_confirmed', 'in_progress', 'completed'].includes(r.status || '')).length;
+    const completed = driverAllRequests.filter(r => r.status === 'completed').length;
+    const rate = totalAssigned ? Math.round((completed / totalAssigned) * 100) : 0;
+    const earnAll = sumAmountForCompleted(() => true);
+    const k1 = document.getElementById('kpi-done-today');
+    const k1s = document.getElementById('kpi-done-today-sub');
+    const k2 = document.getElementById('kpi-rate');
+    const k3 = document.getElementById('kpi-active');
+    const k4 = document.getElementById('kpi-earn');
+    const k4s = document.getElementById('kpi-earn-sub');
+    if (k1) k1.textContent = String(doneToday);
+    if (k1s) k1s.textContent = 'Pickups finished today';
+    if (k2) k2.textContent = `${rate}%`;
+    if (k3) k3.textContent = String(activeCount);
+    if (k4) k4.textContent = earnAll >= 100000 ? `${Math.round(earnAll / 1000)}K` : earnAll.toLocaleString();
+    if (k4s) k4s.textContent = 'UGX · resident payments (completed)';
+
+    const totalPipeline = completed + activeCount;
+    const pct = totalPipeline ? Math.round((completed / totalPipeline) * 100) : 0;
+    const dl = document.getElementById('dash-prog-label');
+    const dp = document.getElementById('dash-prog-pct');
+    const bar = document.getElementById('dash-prog-bar');
+    const pDone = document.getElementById('dash-p-done');
+    const pLeft = document.getElementById('dash-p-left');
+    const pTot = document.getElementById('dash-p-skip');
+    if (dl) dl.textContent = `${completed} done · ${activeCount} active`;
+    if (dp) dp.textContent = `${pct}%`;
+    if (bar) bar.style.width = `${pct}%`;
+    if (pDone) pDone.textContent = String(completed);
+    if (pLeft) pLeft.textContent = String(activeCount);
+    if (pTot) pTot.textContent = String(totalPipeline);
+
+    const nextBox = document.getElementById('dash-next-job');
+    if (nextBox) {
+      if (!focus) {
+        nextBox.innerHTML = `<div style="padding:4px 0 12px;color:var(--muted);font-size:12px;line-height:1.65;">No open assignment. When KCCA assigns a paid booking to you, it appears here and under <strong>Job List</strong>.</div>`;
+      } else {
+        const addr = escapeHtml(focus.pickupAddress || '—');
+        const st = escapeHtml((focus.status || '').replace(/_/g, ' '));
+        const z = escapeHtml(focus.zone || '—');
+        const typ = escapeHtml(focus.type || '—');
+        const vol = escapeHtml(focus.volume || '—');
+        nextBox.innerHTML = `
+          <div class="jd-addr-block">
+            <div class="jd-label">Next pickup</div>
+            <div class="jd-value">${addr}</div>
+            <div class="jd-sub">${z} · ${st}</div>
+          </div>
+          <div class="jd-grid">
+            <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">${typ}</div></div>
+            <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">${vol}</div></div>
+            <div class="jd-card"><div class="jd-card-label">Scheduled</div><div class="jd-card-val" style="font-size:12px;">${escapeHtml(focus.preferredDate || '—')} ${escapeHtml(focus.preferredTime || '')}</div></div>
+            <div class="jd-card"><div class="jd-card-label">Amount</div><div class="jd-card-val green">UGX ${Number(focus.amountUGX || 0).toLocaleString()}</div></div>
+          </div>
+          <div class="action-btns">
+            <button type="button" class="btn-confirm" onclick="setView('active')">Open active job</button>
+          </div>`;
+      }
+    }
+
+    const rtp = document.getElementById('route-panel-title');
+    if (rtp) rtp.textContent = `Your route · ${activeCount} stop${activeCount === 1 ? '' : 's'}`;
+
+    const jpt = document.getElementById('jobs-panel-title');
+    if (jpt) jpt.textContent = `Your jobs · ${driverAllRequests.length} loaded`;
+
+    renderRouteSteps();
+    renderJobListAll();
+    renderActiveJobPanel();
+    renderEarningsViews();
+    renderHistoryTable();
+    updateProfileStats();
+
+    const ah = document.getElementById('active-job-heading');
+    if (ah && focus) ah.textContent = `Job #${focus.id.slice(0, 8).toUpperCase()}`;
+    else if (ah) ah.textContent = 'Active job';
+  }
+
+  function renderRouteSteps(){
+    const box = document.getElementById('driver-route-steps');
+    if (!box) return;
+    const seq = [...assignedJobs].sort((a, b) => {
+      const o = { in_progress: 0, driver_confirmed: 1, assigned: 2 };
+      return (o[a.status] ?? 9) - (o[b.status] ?? 9);
+    });
+    if (!seq.length) {
+      box.innerHTML = `<div style="padding:14px 18px;color:var(--muted);font-size:12px;">No stops on your route. Assignments from KCCA will list here.</div>`;
+      return;
+    }
+    box.innerHTML = seq.map((r, i) => {
+      const st = r.status || '';
+      const isFirst = i === 0;
+      const dotClass = isFirst ? 'rsd-active' : 'rsd-next';
+      const addr = escapeHtml((r.pickupAddress || '—').slice(0, 80));
+      const meta = `${escapeHtml(r.zone || '—')} · ${escapeHtml(r.type || '—')} · ${escapeHtml(r.volume || '—')}`;
+      const badge = isFirst ? '<div class="rs-done-badge" style="color:var(--blue);">Next</div>' : '';
+      return `
+        <div class="rs-item">
+          <div class="${dotClass} rs-dot"></div>
+          <div class="rs-body">
+            <div class="rs-title">Stop ${i + 1} · ${addr}</div>
+            <div class="rs-meta">${meta}</div>
+            <div class="rs-meta" style="margin-top:4px;">${escapeHtml((st || '').replace(/_/g, ' '))}</div>
+          </div>
+          ${badge}
+        </div>`;
+    }).join('');
+  }
+
+  function renderJobListAll(){
+    const box = document.getElementById('driver-job-list-all');
+    if (!box) return;
+    if (!driverAllRequests.length) {
+      box.innerHTML = `<div style="padding:14px 18px;color:var(--muted);font-size:12px;">No jobs loaded for your account yet.</div>`;
+      return;
+    }
+    box.innerHTML = driverAllRequests.map(r => {
+      const short = r.id.slice(0, 8).toUpperCase();
+      const st = r.status || '';
+      let pill = '<span class="st-pill stp-d">' + escapeHtml(st.replace(/_/g, ' ')) + '</span>';
+      if (st === 'completed') pill = '<span class="st-pill stp-g">Completed</span>';
+      else if (['assigned', 'driver_confirmed', 'in_progress'].includes(st)) pill = '<span class="st-pill stp-b">Active</span>';
+      const t = r.createdAt && r.createdAt.toDate ? formatDriverDate(r.createdAt.toDate()) : '—';
+      return `
+        <div class="job-item" onclick="setView('active')">
+          <div class="job-top"><span class="job-id">#${short}</span><span class="job-time">${escapeHtml(t)}</span></div>
+          <div class="job-addr">${escapeHtml((r.pickupAddress || '—').slice(0, 120))}</div>
+          <div class="job-bottom"><span class="job-type">${escapeHtml(r.type || '—')} · ${escapeHtml(r.volume || '—')}</span>${pill}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderActiveJobPanel(){
+    const inner = document.getElementById('active-job-detail-inner');
+    const pill = document.getElementById('active-job-pill');
+    const job = pickFocusJob();
+    if (!inner) return;
+    if (!job) {
+      if (pill) pill.textContent = 'None';
+      inner.innerHTML = `<div style="padding:8px 0;color:var(--muted);font-size:12px;line-height:1.65;">You have no open assignment. Check <strong>Job List</strong> after KCCA assigns a paid booking.</div>`;
+      return;
+    }
+    const st = job.status || '';
+    if (pill) pill.textContent = st === 'assigned' ? 'Confirm first' : (st === 'driver_confirmed' || st === 'in_progress' ? 'Ready' : escapeHtml(st.replace(/_/g, ' ')));
+
+    let actions = '';
+    if (st === 'assigned') {
+      actions = `
+        <div class="action-btns">
+          <button type="button" class="btn-confirm" onclick="confirmAssignedJob('${job.id}')">Confirm job</button>
+          <button type="button" class="btn-issue" onclick="reportIssue()">Report an issue</button>
+        </div>`;
+    } else if (st === 'driver_confirmed' || st === 'in_progress') {
+      actions = `
+        <div class="action-btns">
+          <button type="button" class="btn-confirm" onclick="showConfirm()">
+            Mark as collected
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3 3 7-6" stroke="#060D0A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="btn-issue" onclick="reportIssue()">Report an issue</button>
+          <button type="button" class="btn-skip" onclick="skipStop()">Skip this stop</button>
+        </div>`;
+    } else {
+      actions = `<div class="action-btns"><button type="button" class="btn-skip" disabled style="opacity:0.5;">No action</button></div>`;
+    }
+
+    inner.innerHTML = `
+      <div class="jd-addr-block">
+        <div class="jd-label">Pickup address</div>
+        <div class="jd-value">${escapeHtml(job.pickupAddress || '—')}</div>
+        <div class="jd-sub">${escapeHtml(job.zone || '—')} · Request #${job.id.slice(0, 8).toUpperCase()}</div>
+      </div>
+      <div class="jd-grid">
+        <div class="jd-card"><div class="jd-card-label">Waste type</div><div class="jd-card-val" style="font-size:12px;">${escapeHtml(job.type || '—')}</div></div>
+        <div class="jd-card"><div class="jd-card-label">Volume</div><div class="jd-card-val" style="font-size:12px;">${escapeHtml(job.volume || '—')}</div></div>
+        <div class="jd-card"><div class="jd-card-label">Date / time</div><div class="jd-card-val" style="font-size:12px;">${escapeHtml(job.preferredDate || '—')} ${escapeHtml(job.preferredTime || '')}</div></div>
+        <div class="jd-card"><div class="jd-card-label">Booking value</div><div class="jd-card-val green">UGX ${Number(job.amountUGX || 0).toLocaleString()}</div></div>
+      </div>
+      ${actions}`;
+  }
+
+  function renderEarningsViews(){
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+
+    let todaySum = 0;
+    let weekSum = 0;
+    let allSum = 0;
+    const byDay = {};
+    driverAllRequests.forEach(r => {
+      if (r.status !== 'completed') return;
+      const amt = Number(r.amountUGX || 0);
+      allSum += amt;
+      const ca = r.completedAt && r.completedAt.toDate ? r.completedAt.toDate() : null;
+      if (ca) {
+        if (ca >= today) todaySum += amt;
+        if (ca >= weekAgo) weekSum += amt;
+        const key = ca.toDateString();
+        if (!byDay[key]) byDay[key] = { count: 0, sum: 0 };
+        byDay[key].count++;
+        byDay[key].sum += amt;
+      }
+    });
+
+    const e1 = document.getElementById('earn-today');
+    const e2 = document.getElementById('earn-week');
+    const e3 = document.getElementById('earn-all');
+    if (e1) e1.textContent = todaySum.toLocaleString();
+    if (e2) e2.textContent = weekSum.toLocaleString();
+    if (e3) e3.textContent = allSum.toLocaleString();
+
+    const tbody = document.getElementById('earn-table-body');
+    if (tbody) {
+      const keys = Object.keys(byDay).sort((a, b) => new Date(b) - new Date(a)).slice(0, 14);
+      if (!keys.length) tbody.innerHTML = `<tr><td colspan="3" style="color:var(--muted);">No completed pickups in loaded data.</td></tr>`;
+      else {
+        tbody.innerHTML = keys.map(k => {
+          const row = byDay[k];
+          return `<tr><td>${escapeHtml(k)}</td><td>${row.count}</td><td>${row.sum.toLocaleString()} UGX</td></tr>`;
+        }).join('');
+      }
+    }
+  }
+
+  function renderHistoryTable(){
+    const tbody = document.getElementById('hist-table-body');
+    if (!tbody) return;
+    const rows = driverAllRequests.filter(r => r.status === 'completed').slice(0, 50);
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);">No completed trips yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const short = r.id.slice(0, 8).toUpperCase();
+      const dt = r.completedAt && r.completedAt.toDate ? formatDriverDate(r.completedAt.toDate()) : '—';
+      return `<tr>
+        <td>#${short}</td>
+        <td>${escapeHtml(dt)}</td>
+        <td>${escapeHtml((r.pickupAddress || '—').slice(0, 40))}</td>
+        <td>${escapeHtml(r.type || '—')}</td>
+        <td><span class="st-pill stp-g">Completed</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function updateProfileStats(){
+    const total = driverAllRequests.filter(r => ['assigned', 'driver_confirmed', 'in_progress', 'completed'].includes(r.status || '')).length;
+    const done = driverAllRequests.filter(r => r.status === 'completed').length;
+    const rate = total ? Math.round((done / total) * 100) : 0;
+    const pr = document.getElementById('prof-rate');
+    const pt = document.getElementById('prof-trips');
+    const pf = document.getElementById('prof-fleet');
+    if (pr) pr.textContent = `${rate}%`;
+    if (pt) pt.textContent = String(done);
+    if (pf) pf.textContent = `${collectorsInSystemCount} registered`;
+  }
+
+  function reportIssue(){
+    const job = pickFocusJob();
+    if (!job) {
+      alert('No active job to report against.');
+      return;
+    }
+    const text = window.prompt('Describe the issue for KCCA (this sends a notification to the admin dashboard):');
+    if (!text || !String(text).trim()) return;
+    createNotification({
+      toRole: 'kcca_officer',
+      type: 'driver_issue',
+      requestId: job.id,
+      message: `Driver reported: ${String(text).trim()}`
+    });
+    alert('KCCA has been notified.');
+  }
+
+  function skipStop(){
+    alert('Skipping is not automated in the app. Contact KCCA to cancel or reassign this booking.');
+  }
+
+  function afterSuccessGo(){
+    document.getElementById('success-panel').classList.add('hidden');
+    document.getElementById('job-panel').classList.remove('hidden');
+    document.getElementById('confirm-panel').classList.add('hidden');
+    setView('route');
+    renderAllDriverUi();
   }
 
   async function createNotification(payload){
@@ -739,10 +1007,10 @@
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start;">
           <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;background:${color};opacity:${unread ? '1' : '0.45'};"></div>
           <div style="flex:1;min-width:0;">
-            <div style="color:var(--text);font-size:12px;line-height:1.5;">${(n.message||'Notification')}</div>
+            <div style="color:var(--text);font-size:12px;line-height:1.5;">${escapeHtml(n.message || 'Notification')}</div>
             <div style="color:var(--muted);font-size:11px;margin-top:4px;">${timeAgo(n.createdAt)}${n.requestId ? ` · #${String(n.requestId).slice(0,8).toUpperCase()}` : ''}</div>
           </div>
-          ${unread ? `<button class="btn-skip" style="padding:6px 10px;" onclick="markDriverNotificationRead('${n.id}')">Read</button>` : ``}
+          ${unread ? `<button type="button" class="btn-skip" style="padding:6px 10px;" onclick="markDriverNotificationRead('${n.id}')">Read</button>` : ``}
         </div>
       `;
     }).join('');
@@ -794,28 +1062,28 @@
     }
     list.innerHTML = assignedJobs.map(r => {
       const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
-      const addr = (r.pickupAddress || '—').replace(/</g, '&lt;');
-      const meta = `${r.zone || '—'} · ${r.type || '—'} · ${r.volume || '—'}`;
+      const addr = escapeHtml(r.pickupAddress || '—');
+      const meta = escapeHtml(`${r.zone || '—'} · ${r.type || '—'} · ${r.volume || '—'}`);
       const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
       const st = r.status || 'assigned';
       let actions = '';
       if (st === 'assigned') {
-        actions = `<button class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>`;
+        actions = `<button type="button" class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>`;
       } else if (st === 'driver_confirmed' || st === 'in_progress') {
-        actions = `<button class="btn-confirm" style="width:100%;" onclick="completeCollection('${r.id}')">Complete pickup</button>`;
+        actions = `<button type="button" class="btn-confirm" style="width:100%;" onclick="completeCollection('${r.id}', false)">Complete pickup</button>`;
       } else {
-        actions = `<button type="button" class="btn-skip" style="width:100%;opacity:0.55;" disabled>${String(st).replace(/_/g, ' ')}</button>`;
+        actions = `<button type="button" class="btn-skip" style="width:100%;opacity:0.55;" disabled>${escapeHtml(String(st).replace(/_/g, ' '))}</button>`;
       }
       return `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
           <div style="flex:1;min-width:240px;">
-            <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${sched}</div>
+            <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${escapeHtml(sched)}</div>
             <div style="color:var(--muted);font-size:12px;line-height:1.5;">${addr}</div>
-            <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${st.replace(/_/g, ' ')}</div>
+            <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${escapeHtml(String(st).replace(/_/g, ' '))}</div>
           </div>
           <div style="display:flex;gap:8px;flex-direction:column;min-width:200px;">
             ${actions}
-            <button class="btn-skip" style="width:100%;" onclick="setView('active')">Open active view</button>
+            <button type="button" class="btn-skip" style="width:100%;" onclick="setView('active')">Open active view</button>
           </div>
         </div>
       `;
@@ -827,17 +1095,23 @@
     if (driverJobsUnsub) { driverJobsUnsub(); driverJobsUnsub = null; }
     driverJobsUnsub = firebaseDb.collection('collection_requests')
       .where('collectorUid', '==', currentUser.uid)
-      .limit(50)
+      .limit(100)
       .onSnapshot((snap) => {
         const rows = [];
         snap.forEach(d => {
           const data = d.data();
-          if (data.status === 'assigned' || data.status === 'driver_confirmed' || data.status === 'in_progress') {
-            rows.push({ id: d.id, ...data });
-          }
+          if (!jobZoneMatchesDriver(data.zone)) return;
+          rows.push({ id: d.id, ...data });
         });
-        assignedJobs = rows;
+        rows.sort((a, b) => {
+          const ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+          const tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+        driverAllRequests = rows;
+        assignedJobs = rows.filter(r => ['assigned', 'driver_confirmed', 'in_progress'].includes(r.status || ''));
         renderAssignedJobs();
+        renderAllDriverUi();
       }, (err) => console.error('Driver jobs listener failed:', err));
   }
 
@@ -853,6 +1127,10 @@
       const doc = await ref.get();
       const data = (doc && doc.exists) ? doc.data() : null;
       if (!data) { alert('Request not found.'); return; }
+      if (!jobZoneMatchesDriver(data.zone)) {
+        alert('This pickup is outside your registered operating zone. Contact KCCA if this is a mistake.');
+        return;
+      }
       await ref.update({
         status: 'driver_confirmed',
         driverConfirmedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -872,14 +1150,14 @@
         message: 'Driver confirmed an assigned booking.'
       });
       alert('Job confirmed.');
-      await refreshAssignedJobs();
+      renderAllDriverUi();
     } catch (e) {
       console.error('Confirm job failed:', e);
       alert(e.message || 'Could not confirm job.');
     }
   }
 
-  async function completeCollection(requestId){
+  async function completeCollection(requestId, silent){
     if (!firebaseDb || !currentUser) return;
     try {
       const ref = firebaseDb.collection('collection_requests').doc(requestId);
@@ -887,6 +1165,10 @@
       const data = (doc && doc.exists) ? doc.data() : null;
       if (!data) { alert('Request not found.'); return; }
       if (data.collectorUid !== currentUser.uid) { alert('Not your assignment.'); return; }
+      if (!jobZoneMatchesDriver(data.zone)) {
+        alert('This job is outside your registered zone.');
+        return;
+      }
       await ref.update({
         status: 'completed',
         completedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -905,10 +1187,12 @@
         requestId,
         message: 'A collection was completed by a driver.'
       });
-      alert('Collection marked complete.');
+      if (!silent) alert('Collection marked complete.');
+      renderAllDriverUi();
     } catch (e) {
       console.error('Complete collection failed:', e);
       alert(e.message || 'Could not complete.');
+      throw e;
     }
   }
 
@@ -926,20 +1210,46 @@
       document.getElementById('job-panel').classList.remove('hidden');
       document.getElementById('confirm-panel').classList.add('hidden');
       document.getElementById('success-panel').classList.add('hidden');
+      renderActiveJobPanel();
     }
   }
 
   function showConfirm(){
+    const job = pickFocusJob();
+    if (!job || !['driver_confirmed', 'in_progress'].includes(job.status || '')) {
+      alert('Confirm the job first (from the list or Active), then mark collected when you have finished the pickup.');
+      return;
+    }
+    pendingCompleteId = job.id;
+    const sub = document.getElementById('confirm-sub-text');
+    if (sub) sub.innerHTML = `Mark <strong>${escapeHtml(job.pickupAddress || 'this pickup')}</strong> as collected. The resident and KCCA will be notified.`;
     document.getElementById('job-panel').classList.add('hidden');
     document.getElementById('confirm-panel').classList.remove('hidden');
   }
   function hideConfirm(){
     document.getElementById('confirm-panel').classList.add('hidden');
     document.getElementById('job-panel').classList.remove('hidden');
+    pendingCompleteId = null;
   }
-  function confirmCollection(){
-    document.getElementById('confirm-panel').classList.add('hidden');
-    document.getElementById('success-panel').classList.remove('hidden');
+  async function confirmCollection(){
+    const id = pendingCompleteId || focusJobId;
+    if (!id) { hideConfirm(); return; }
+    const row = driverAllRequests.find(r => r.id === id);
+    const addr = row ? (row.pickupAddress || 'this address') : 'this address';
+    try {
+      await completeCollection(id, true);
+      const ss = document.getElementById('success-sub-text');
+      if (ss) ss.textContent = `Pickup at ${addr} is complete. Resident and KCCA have been notified.`;
+      document.getElementById('confirm-panel').classList.add('hidden');
+      document.getElementById('job-panel').classList.add('hidden');
+      document.getElementById('success-panel').classList.remove('hidden');
+      pendingCompleteId = null;
+      renderAllDriverUi();
+    } catch (_) {
+      pendingCompleteId = null;
+      document.getElementById('confirm-panel').classList.add('hidden');
+      document.getElementById('job-panel').classList.remove('hidden');
+    }
   }
 
   (function init(){
@@ -957,10 +1267,22 @@
     firebaseAuth.onAuthStateChanged(async (user) => {
       if (!user) { window.location.href = 'signin.html'; return; }
       currentUser = user;
+      try {
+        const udoc = await firebaseDb.collection('users').doc(user.uid).get();
+        const ud = udoc.data() || {};
+        if (ud.role === 'collector' && (ud.approvalStatus === 'pending' || ud.approvalStatus === 'rejected')) {
+          await firebaseAuth.signOut();
+          localStorage.removeItem('itrush_token');
+          window.location.href = 'signin.html';
+          return;
+        }
+      } catch (_) {}
       try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) {}
       try { await hydrateDriverFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
+      try { collectorsInSystemCount = await fetchCollectorsCount(); } catch (_) { collectorsInSystemCount = 0; }
       try { await refreshAssignedJobs(); } catch (_) {}
       try { startDriverNotificationListener(); } catch (_) {}
+      try { renderAllDriverUi(); } catch (_) {}
     });
   })();
 </script>

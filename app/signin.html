@@ -666,18 +666,19 @@
         </div>
         <div class="form-group">
           <label>Operating zone</label>
-          <select name="primary_zone">
-            <option value="" disabled selected>Select primary zone</option>
-            <option>Kampala Central</option>
+          <select name="primary_zone" required>
+            <option value="" disabled selected>Select primary zone (must match bookings in this area)</option>
+            <option>Nakawa Division</option>
             <option>Kawempe Division</option>
             <option>Makindye Division</option>
-            <option>Nakawa Division</option>
             <option>Rubaga Division</option>
+            <option>Kampala Central</option>
             <option>Wakiso Municipality</option>
             <option>Mukono Municipality</option>
             <option>Kira Municipality</option>
             <option>Entebbe Municipality</option>
           </select>
+          <div class="input-hint">You will only receive assignments for pickups in this zone. Use the same names as residents see when booking.</div>
         </div>
       </div>
 
@@ -809,6 +810,14 @@
     window.location.href = url;
   }
 
+  function collectorApprovalAllowsLogin(data) {
+    if (!data || data.role !== 'collector') return true;
+    const st = data.approvalStatus;
+    if (st === 'pending') return false;
+    if (st === 'rejected') return false;
+    return true;
+  }
+
   function showAuthError(msg) {
     const el = document.getElementById('auth-error');
     if (el) { el.textContent = msg; el.classList.remove('hidden'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
@@ -866,18 +875,32 @@
     const snap = await firebaseDb.collection('users').doc(uid).get();
     const roleKey = firestoreRoleFromUi();
     if (!snap.exists) {
+      if (roleKey === 'collector') {
+        await firebaseAuth.signOut();
+        showAuthError('Driver accounts must be registered with email and password so your operating zone is saved. Use Create account with the Collector role.');
+        return;
+      }
       await firebaseDb.collection('users').doc(uid).set({
         role: roleKey,
         email: user.email || null,
         displayName: user.displayName || null,
         photoURL: user.photoURL || null,
+        approvalStatus: 'approved',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     }
     const token = await user.getIdToken();
     localStorage.setItem('itrush_token', token);
-    const role = (snap.exists && snap.data() && snap.data().role) ? snap.data().role : roleKey;
-    redirectByRole(role === 'kcca' ? 'kcca_officer' : role);
+    const data = snap.exists ? snap.data() : { role: roleKey, approvalStatus: 'approved' };
+    const role = data.role || roleKey;
+    const eff = role === 'kcca' ? 'kcca_officer' : role;
+    if (eff === 'collector' && !collectorApprovalAllowsLogin(data)) {
+      await firebaseAuth.signOut();
+      localStorage.removeItem('itrush_token');
+      showAuthError(data.approvalStatus === 'rejected' ? 'Your driver registration was not approved. Contact KCCA.' : 'Your driver account is pending KCCA approval.');
+      return;
+    }
+    redirectByRole(eff);
   }
 
   document.getElementById('forgot-password-link').addEventListener('click', async function(e) {
@@ -949,11 +972,18 @@
     try {
       if (USE_FIREBASE && firebaseAuth) {
         const cred = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        const snap = await firebaseDb.collection('users').doc(cred.user.uid).get();
+        const data = (snap && snap.data()) ? snap.data() : {};
+        const role = data.role || 'resident';
+        const eff = role === 'kcca' ? 'kcca_officer' : role;
+        if (eff === 'collector' && !collectorApprovalAllowsLogin({ ...data, role: 'collector' })) {
+          await firebaseAuth.signOut();
+          showAuthError(data.approvalStatus === 'rejected' ? 'Your driver registration was not approved. Contact KCCA.' : 'Your driver account is pending KCCA approval. You can sign in once KCCA approves it.');
+          return;
+        }
         const token = await cred.user.getIdToken();
         localStorage.setItem('itrush_token', token);
-        const snap = await firebaseDb.collection('users').doc(cred.user.uid).get();
-        const role = (snap && snap.data() && snap.data().role) || 'resident';
-        redirectByRole(role === 'kcca' ? 'kcca_officer' : role);
+        redirectByRole(eff);
         return;
       }
       const res = await fetch(API_BASE + '/api/auth/signin', {
@@ -1032,20 +1062,45 @@
           profile.last_name = payload.last_name || 'User';
           profile.phone = payload.phone || null;
           profile.zone = payload.zone || null;
+          profile.approvalStatus = 'approved';
         } else if (currentRole === 'kcca') {
           profile.first_name = payload.first_name || '';
           profile.last_name = payload.last_name || '';
           profile.department = payload.department || null;
           profile.jurisdiction = payload.jurisdiction || null;
           profile.staff_id = payload.staff_id || null;
+          profile.approvalStatus = 'approved';
         } else if (currentRole === 'collector') {
+          if (!payload.primary_zone) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            showAuthError('Select your operating zone.');
+            return;
+          }
           profile.full_name = payload.full_name || '';
           profile.phone = payload.phone || null;
           profile.company = payload.company || null;
           profile.truck_plate = payload.truck_plate || null;
           profile.primary_zone = payload.primary_zone || null;
+          profile.approvalStatus = 'pending';
         }
         await firebaseDb.collection('users').doc(cred.user.uid).set(profile);
+        if (currentRole === 'collector') {
+          try {
+            await firebaseDb.collection('notifications').add({
+              toRole: 'kcca_officer',
+              type: 'collector_pending',
+              message: `New driver registration: ${payload.email} (${payload.full_name || 'driver'}) · Zone: ${payload.primary_zone || '—'}`,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } catch (nErr) {
+            console.warn('Could not notify KCCA:', nErr);
+          }
+          await firebaseAuth.signOut();
+          localStorage.removeItem('itrush_token');
+          showAuthSuccess('Your driver account was created. You cannot sign in until a KCCA officer approves it. You will use the same email and password after approval.');
+          return;
+        }
         const token = await cred.user.getIdToken();
         localStorage.setItem('itrush_token', token);
         redirectByRole(role);

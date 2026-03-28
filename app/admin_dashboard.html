@@ -223,26 +223,21 @@
       </div>
       <div class="ni" onclick="setView('map')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5C5.567 1.5 4 3.067 4 5c0 2.625 3.5 8.5 3.5 8.5S11 7.625 11 5c0-1.933-1.567-3.5-3.5-3.5z" stroke="currentColor" stroke-width="1.3"/><circle cx="7.5" cy="5" r="1.3" stroke="currentColor" stroke-width="1.2"/></svg>
-        Live Map
+        By zone
       </div>
       <div class="ni" onclick="setView('fleet')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="8" width="13" height="5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 10h2V8l1.5-3h6L12 8v2h2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="4.5" cy="13" r="1.2" stroke="currentColor" stroke-width="1.1"/><circle cx="10.5" cy="13" r="1.2" stroke="currentColor" stroke-width="1.1"/></svg>
-        Fleet Management
-        <span class="nb nb-amber">38</span>
+        Drivers
+        <span class="nb nb-amber" id="nb-fleet">0</span>
       </div>
       <div class="ni" onclick="setView('reports')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 2v7M4.5 6l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-        Overflow Reports
-        <span class="nb nb-red">7</span>
+        All requests
+        <span class="nb nb-red" id="nb-open-requests">0</span>
       </div>
       <div class="ni" onclick="setView('performance')">
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2 11l3-3.5 3 2 3-4 2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.3"/></svg>
-        Performance
-      </div>
-      <div class="sb-sec">Settings</div>
-      <div class="ni">
-        <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="2" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 1v1.5M7.5 12.5V14M1 7.5h1.5M12.5 7.5H14M3.05 3.05l1.06 1.06M10.9 10.9l1.05 1.05M3.05 11.95l1.06-1.06M10.9 4.1l1.05-1.05" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-        Settings
+        Driver activity
       </div>
     </div>
     <div class="sb-bottom">
@@ -257,17 +252,14 @@
   <div class="main">
     <div class="topbar">
       <div class="tb-left">
-        <div class="tb-title" id="tb-title">GKMA <em>Operations Overview</em></div>
-        <div class="live-pill"><span class="live-dot"></span>Live</div>
+        <div class="tb-title" id="tb-title">KCCA <em>dashboard</em></div>
+        <div class="live-pill"><span class="live-dot"></span>Live data</div>
       </div>
       <div class="tb-right">
         <span class="tb-date" id="tb-date">Sun, 15 Mar 2026 · 08:34 AM</span>
-        <div class="icon-btn" onclick="setView('assign')">
+        <div class="icon-btn" onclick="setView('assign')" title="Assignments and notifications">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1.5a4.5 4.5 0 014.5 4.5v2.2l.8 1.8H1.7l.8-1.8V6A4.5 4.5 0 017 1.5z" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 11a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.2"/></svg>
           <div class="alert-dot" id="admin-alert-dot" style="display:none;"></div>
-        </div>
-        <div class="icon-btn">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 12.5c0-2.2 2.24-4 5-4s5 1.8 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         </div>
       </div>
     </div>
@@ -279,24 +271,24 @@
 
         <div class="kpi-grid">
           <div class="kpi">
-            <div class="kpi-label">Requests today</div>
+            <div class="kpi-label">Bookings created today</div>
             <div class="kpi-val green" id="admin-kpi-req-today">0</div>
-            <div class="kpi-trend up" id="admin-kpi-req-note">Live from Firestore</div>
+            <div class="kpi-trend up" id="admin-kpi-req-note">From Firestore</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Collections done</div>
+            <div class="kpi-label">Completed pickups</div>
             <div class="kpi-val" id="admin-kpi-done">0</div>
-            <div class="kpi-sub" id="admin-kpi-done-sub">Completed (in loaded data)</div>
+            <div class="kpi-sub" id="admin-kpi-done-sub">All time (loaded)</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Active trucks</div>
+            <div class="kpi-label">Drivers on active jobs</div>
             <div class="kpi-val amber" id="admin-kpi-trucks">0</div>
-            <div class="kpi-sub" id="admin-kpi-trucks-sub">Drivers on active jobs</div>
+            <div class="kpi-sub" id="admin-kpi-trucks-sub">Assigned / confirmed / in progress</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Awaiting assignment</div>
+            <div class="kpi-label">Paid, need a driver</div>
             <div class="kpi-val red" id="admin-kpi-pending">0</div>
-            <div class="kpi-trend dn" id="admin-kpi-pending-note">Paid, no driver yet</div>
+            <div class="kpi-trend dn" id="admin-kpi-pending-note">Assign on Assignments tab</div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Tonnes (est.)</div>
@@ -307,174 +299,47 @@
 
         <div class="three-col">
 
-          <!-- MAP PANEL -->
           <div class="panel" style="grid-column:span 2;">
             <div class="ph">
-              <span class="pt">Live fleet map · GKMA</span>
-              <span class="pa" onclick="setView('map')">Full map →</span>
-            </div>
-            <div class="map-wrap">
-              <svg viewBox="0 0 560 240" preserveAspectRatio="xMidYMid slice">
-                <rect width="560" height="240" fill="#0A1610"/>
-                <line x1="0" y1="60" x2="560" y2="60" stroke="#1A3020" stroke-width="1"/>
-                <line x1="0" y1="120" x2="560" y2="120" stroke="#1A3020" stroke-width="1.5"/>
-                <line x1="0" y1="180" x2="560" y2="180" stroke="#1A3020" stroke-width="1"/>
-                <line x1="80" y1="0" x2="80" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="180" y1="0" x2="180" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="300" y1="0" x2="300" y2="240" stroke="#1A3020" stroke-width="1.5"/>
-                <line x1="420" y1="0" x2="420" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="500" y1="0" x2="500" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <!-- Zone labels -->
-                <text x="30" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Rubaga</text>
-                <text x="110" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Kawempe</text>
-                <text x="215" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Central</text>
-                <text x="318" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Nakawa</text>
-                <text x="425" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Makindye</text>
-                <!-- Routes -->
-                <path d="M40 160 Q100 120 180 100 Q240 85 300 90" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
-                <path d="M300 90 Q370 75 420 100 Q470 120 510 110" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
-                <path d="M80 180 Q130 150 180 160 Q230 170 300 155" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
-                <path d="M180 60 Q240 80 300 70 Q360 60 420 65" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.35"/>
-                <!-- Active trucks (green) -->
-                <circle cx="150" cy="108" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="150" cy="108" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="260" cy="92" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="260" cy="92" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="380" cy="95" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="380" cy="95" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="470" cy="115" r="6" fill="#2ECC71" opacity="0.9"/>
-                <!-- Idle truck (amber) -->
-                <circle cx="80" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
-                <circle cx="340" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
-                <!-- Overflow reports (red) -->
-                <circle cx="120" cy="75" r="5" fill="#E55353" opacity="0.8"/>
-                <circle cx="120" cy="75" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="430" cy="140" r="5" fill="#E55353" opacity="0.8"/>
-                <circle cx="430" cy="140" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-                <text x="126" y="68" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
-                <text x="436" y="133" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
-              </svg>
-            </div>
-            <div class="map-legend">
-              <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
-              <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
-              <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow report (7)</div>
-            </div>
-          </div>
-
-          <!-- ALERTS -->
-          <div class="panel">
-            <div class="ph">
-              <span class="pt">Active alerts</span>
-              <span class="pa" onclick="setView('reports')">View all →</span>
-            </div>
-            <div class="alert-list">
-              <div class="al-item">
-                <div class="al-icon ali-red">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v5M7 9.5v.5" stroke="#E55353" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="5.5" stroke="#E55353" stroke-width="1.2"/></svg>
-                </div>
-                <div class="al-body">
-                  <div class="al-title">Overflow — Kawempe Mkt</div>
-                  <div class="al-meta">Severity: High · Nakawa zone</div>
-                </div>
-                <div class="al-time">12m ago</div>
-              </div>
-              <div class="al-item">
-                <div class="al-icon ali-red">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2.5v5M7 9.5v.5" stroke="#E55353" stroke-width="1.5" stroke-linecap="round"/><circle cx="7" cy="7" r="5.5" stroke="#E55353" stroke-width="1.2"/></svg>
-                </div>
-                <div class="al-body">
-                  <div class="al-title">Illegal dump — Makindye</div>
-                  <div class="al-meta">Severity: Critical · Near wetland</div>
-                </div>
-                <div class="al-time">38m ago</div>
-              </div>
-              <div class="al-item">
-                <div class="al-icon ali-amber">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v4M7 9.5v.5" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/><path d="M1.5 12L7 2l5.5 10H1.5z" stroke="#F0A500" stroke-width="1.2"/></svg>
-                </div>
-                <div class="al-body">
-                  <div class="al-title">Truck #14 — idle 90 min</div>
-                  <div class="al-meta">Rubaga Division · UAX 099C</div>
-                </div>
-                <div class="al-time">1h ago</div>
-              </div>
-              <div class="al-item">
-                <div class="al-icon ali-amber">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 3v4M7 9.5v.5" stroke="#F0A500" stroke-width="1.5" stroke-linecap="round"/><path d="M1.5 12L7 2l5.5 10H1.5z" stroke="#F0A500" stroke-width="1.2"/></svg>
-                </div>
-                <div class="al-body">
-                  <div class="al-title">Missed pickup · 14 requests</div>
-                  <div class="al-meta">Kawempe · Unassigned zone</div>
-                </div>
-                <div class="al-time">2h ago</div>
-              </div>
-              <div class="al-item">
-                <div class="al-icon ali-blue">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="#60A5FA" stroke-width="1.2"/><path d="M7 5v3M7 9.5v.5" stroke="#60A5FA" stroke-width="1.4" stroke-linecap="round"/></svg>
-                </div>
-                <div class="al-body">
-                  <div class="al-title">New collector registered</div>
-                  <div class="al-meta">Pending approval · Wakiso</div>
-                </div>
-                <div class="al-time">3h ago</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- BOTTOM: MUNICIPALITY TABLE + COLLECTION CHART + TOP COLLECTORS -->
-        <div class="three-col">
-          <div class="panel" style="grid-column:span 2;">
-            <div class="ph">
-              <span class="pt">Collection rate by municipality</span>
-              <span class="pa-muted">Today · All zones</span>
+              <span class="pt">Bookings by zone</span>
+              <span class="pa" onclick="setView('map')">Zone detail →</span>
             </div>
             <table class="muni-table">
-              <thead><tr><th>Municipality</th><th>Requests</th><th>Completed</th><th>Rate</th><th>Trucks</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr><td>Kampala Central</td><td>312</td><td>268</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:86%"></div></div>86%</td><td>9</td><td><span class="st-pill stp-g">On track</span></td></tr>
-                <tr><td>Nakawa Division</td><td>247</td><td>183</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:74%"></div></div>74%</td><td>7</td><td><span class="st-pill stp-g">On track</span></td></tr>
-                <tr><td>Kawempe Division</td><td>198</td><td>118</td><td><div class="prog-bar"><div class="prog-fill pf-amber" style="width:60%"></div></div>60%</td><td>5</td><td><span class="st-pill stp-a">Behind</span></td></tr>
-                <tr><td>Makindye Division</td><td>287</td><td>196</td><td><div class="prog-bar"><div class="prog-fill pf-green" style="width:68%"></div></div>68%</td><td>7</td><td><span class="st-pill stp-g">On track</span></td></tr>
-                <tr><td>Rubaga Division</td><td>203</td><td>129</td><td><div class="prog-bar"><div class="prog-fill pf-amber" style="width:64%"></div></div>64%</td><td>4</td><td><span class="st-pill stp-a">Behind</span></td></tr>
+              <thead><tr><th>Zone</th><th>Total</th><th>Awaiting payment</th><th>Paid, unassigned</th><th>With driver</th><th>Done</th></tr></thead>
+              <tbody id="tbody-overview-zones">
+                <tr><td colspan="6" style="color:var(--muted);">Loading…</td></tr>
               </tbody>
             </table>
           </div>
 
           <div class="panel">
-            <div class="ph"><span class="pt">Top collectors</span><span class="pa" onclick="setView('performance')">All →</span></div>
-            <div class="coll-list">
-              <div class="coll-item">
-                <div class="coll-rank">1</div>
-                <div class="coll-avatar ca-g">JM</div>
-                <div class="coll-info"><div class="coll-name">James Mukasa</div><div class="coll-zone">Nakawa · Truck #07</div></div>
-                <div class="coll-score"><div class="coll-pct">97%</div><div class="coll-trips">18 trips</div></div>
-              </div>
-              <div class="coll-item">
-                <div class="coll-rank">2</div>
-                <div class="coll-avatar ca-b">GA</div>
-                <div class="coll-info"><div class="coll-name">Grace Atim</div><div class="coll-zone">Kampala Central · #03</div></div>
-                <div class="coll-score"><div class="coll-pct">94%</div><div class="coll-trips">16 trips</div></div>
-              </div>
-              <div class="coll-item">
-                <div class="coll-rank">3</div>
-                <div class="coll-avatar ca-a">PS</div>
-                <div class="coll-info"><div class="coll-name">Peter Ssempa</div><div class="coll-zone">Makindye · Truck #11</div></div>
-                <div class="coll-score"><div class="coll-pct">91%</div><div class="coll-trips">15 trips</div></div>
-              </div>
-              <div class="coll-item">
-                <div class="coll-rank">4</div>
-                <div class="coll-avatar ca-g">RA</div>
-                <div class="coll-info"><div class="coll-name">Rose Akullo</div><div class="coll-zone">Kawempe · Truck #19</div></div>
-                <div class="coll-score"><div class="coll-pct">88%</div><div class="coll-trips">14 trips</div></div>
-              </div>
-              <div class="coll-item">
-                <div class="coll-rank">5</div>
-                <div class="coll-avatar ca-b">BK</div>
-                <div class="coll-info"><div class="coll-name">Brian Kato</div><div class="coll-zone">Rubaga · Truck #22</div></div>
-                <div class="coll-score"><div class="coll-pct">85%</div><div class="coll-trips">13 trips</div></div>
-              </div>
+            <div class="ph">
+              <span class="pt">KCCA notifications</span>
+              <span class="pa" onclick="setView('assign')">Open inbox →</span>
+            </div>
+            <div class="alert-list" id="overview-notif-preview">
+              <div style="padding:14px 18px;color:var(--muted);font-size:12px;">Loading…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="three-col">
+          <div class="panel" style="grid-column:span 2;">
+            <div class="ph">
+              <span class="pt">Drivers · completed pickups</span>
+              <span class="pa-muted">From loaded bookings (max 200)</span>
+            </div>
+            <div class="coll-list" id="overview-collectors-list">
+              <div style="padding:14px 18px;color:var(--muted);font-size:12px;">Loading…</div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="ph"><span class="pt">Quick actions</span></div>
+            <div style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+              <button type="button" class="rf-btn active" style="width:100%;border-radius:8px;text-align:center;" onclick="setView('assign')">Assign paid bookings to drivers</button>
+              <button type="button" class="rf-btn" style="width:100%;border-radius:8px;text-align:center;" onclick="setView('reports')">Browse all collection requests</button>
+              <button type="button" class="rf-btn" style="width:100%;border-radius:8px;text-align:center;" onclick="setView('fleet')">View registered drivers</button>
             </div>
           </div>
         </div>
@@ -484,162 +349,122 @@
       <div class="view" id="view-assign">
         <div class="panel" style="margin-bottom:16px;">
           <div class="ph">
-            <span class="pt">Bookings awaiting assignment</span>
+            <span class="pt">Driver registrations · pending approval</span>
             <span class="pa-muted" onclick="refreshAssignments()">Refresh</span>
+          </div>
+          <div id="pending-drivers-list" style="padding:14px 18px;">
+            <div style="color:var(--muted);font-size:12px;">Loading…</div>
+          </div>
+        </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="ph">
+            <span class="pt">Paid bookings · assign a driver</span>
+            <span class="pa-muted" onclick="refreshAssignments()">Refresh drivers</span>
           </div>
           <div style="padding:14px 18px;">
             <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
-              Assign a paid booking to a registered driver. The driver will see it in the Driver App and can confirm.
+              Only bookings where the resident has paid and no driver is assigned appear here. Choose a driver from the list (collector accounts from Firebase) and click <strong>Assign driver</strong>. The driver gets a notification and the job appears in the Driver App; the resident is notified when someone is assigned.
             </div>
             <div id="assign-list" style="display:flex;flex-direction:column;gap:10px;"></div>
           </div>
         </div>
         <div class="panel">
           <div class="ph">
-            <span class="pt">Notifications</span>
+            <span class="pt">Your notifications (KCCA inbox)</span>
             <span class="pa-muted" onclick="markAllNotificationsRead()">Mark all read</span>
           </div>
           <div style="padding:8px 0;" id="admin-notif-list"></div>
         </div>
       </div>
 
-      <!-- ===== LIVE MAP ===== -->
+      <!-- ===== BY ZONE ===== -->
       <div class="view" id="view-map">
         <div class="panel" style="margin-bottom:16px;">
           <div class="ph">
-            <span class="pt">Live fleet map · All GKMA municipalities</span>
-            <span class="pa-muted" onclick="setView('overview')">← Back to overview</span>
+            <span class="pt">Bookings by resident zone</span>
+            <span class="pa-muted" onclick="setView('overview')">← Overview</span>
           </div>
-          <div class="map-wrap" style="height:360px;margin:16px 18px 14px;">
-            <svg viewBox="0 0 700 360" preserveAspectRatio="xMidYMid slice">
-              <rect width="700" height="360" fill="#0A1610"/>
-              <line x1="0" y1="90" x2="700" y2="90" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="180" x2="700" y2="180" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="270" x2="700" y2="270" stroke="#1A3020" stroke-width="1"/>
-              <line x1="100" y1="0" x2="100" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="220" y1="0" x2="220" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="360" y1="0" x2="360" y2="360" stroke="#1A3020" stroke-width="1.5"/><line x1="500" y1="0" x2="500" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="620" y1="0" x2="620" y2="360" stroke="#1A3020" stroke-width="1"/>
-              <path d="M40 240 Q120 180 220 160 Q300 145 360 150 Q420 155 500 140 Q560 130 640 145" stroke="#2ECC71" stroke-width="2" fill="none" stroke-dasharray="7 4" opacity="0.6"/>
-              <path d="M100 270 Q170 240 220 250 Q290 265 360 245 Q430 225 500 235" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
-              <path d="M220 90 Q290 110 360 100 Q430 90 500 100 Q570 110 630 95" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.3"/>
-              <circle cx="180" cy="165" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="180" cy="165" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="290" cy="148" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="290" cy="148" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="420" cy="143" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="420" cy="143" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="560" cy="138" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="560" cy="138" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="630" cy="148" r="8" fill="#2ECC71" opacity="0.9"/>
-              <circle cx="100" cy="248" r="7" fill="#F0A500" opacity="0.85"/>
-              <circle cx="360" cy="242" r="7" fill="#F0A500" opacity="0.85"/>
-              <circle cx="140" cy="110" r="7" fill="#E55353" opacity="0.8"/><circle cx="140" cy="110" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-              <circle cx="510" cy="200" r="7" fill="#E55353" opacity="0.8"/><circle cx="510" cy="200" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-              <text x="20" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Rubaga</text>
-              <text x="155" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Kawempe</text>
-              <text x="295" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Central</text>
-              <text x="415" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Nakawa</text>
-              <text x="520" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Makindye</text>
-            </svg>
-          </div>
-          <div class="map-legend" style="padding:0 18px 16px;">
-            <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
-            <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
-            <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow / alert (7)</div>
-          </div>
+          <p style="padding:14px 18px 0;font-size:12px;color:var(--muted);line-height:1.65;">
+            Numbers come from the same <code style="font-size:11px;color:var(--dim);">collection_requests</code> documents residents create. “With driver” means assigned, driver confirmed, or in progress. The app does not track live GPS on a map yet—use this table for workload by zone.
+          </p>
+          <table class="muni-table" style="margin-top:10px;">
+            <thead><tr><th>Zone</th><th>Total</th><th>Awaiting payment</th><th>Paid, unassigned</th><th>With driver</th><th>Completed</th></tr></thead>
+            <tbody id="tbody-zone-detail">
+              <tr><td colspan="6" style="color:var(--muted);">Loading…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <!-- ===== FLEET MANAGEMENT ===== -->
+      <!-- ===== DRIVERS ===== -->
       <div class="view" id="view-fleet">
         <div class="panel">
           <div class="ph">
-            <span class="pt">Fleet management · 38 vehicles</span>
-            <span class="pa-muted" onclick="setView('overview')">← Back</span>
+            <span class="pt">Registered collectors (drivers)</span>
+            <span class="pa-muted" onclick="refreshAssignments(); renderFleetTable();">Refresh list</span>
           </div>
-          <table class="fleet-full-table">
-            <thead><tr><th>Truck ID</th><th>Plate</th><th>Driver</th><th>Zone</th><th>Status</th><th>Trips today</th><th>Last ping</th></tr></thead>
-            <tbody>
-              <tr><td>Truck #03</td><td>UAX 088A</td><td>Grace Atim</td><td>Kampala Central</td><td><span class="st-pill stp-g">Active</span></td><td>16</td><td>1 min ago</td></tr>
-              <tr><td>Truck #07</td><td>UAX 312B</td><td>James Mukasa</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>18</td><td>Just now</td></tr>
-              <tr><td>Truck #11</td><td>UAX 201C</td><td>Peter Ssempa</td><td>Makindye Division</td><td><span class="st-pill stp-g">Active</span></td><td>15</td><td>3 min ago</td></tr>
-              <tr><td>Truck #14</td><td>UAX 099C</td><td>Moses Lwanga</td><td>Rubaga Division</td><td><span class="st-pill stp-a">Idle</span></td><td>6</td><td>94 min ago</td></tr>
-              <tr><td>Truck #19</td><td>UAX 445D</td><td>Rose Akullo</td><td>Kawempe Division</td><td><span class="st-pill stp-g">Active</span></td><td>14</td><td>2 min ago</td></tr>
-              <tr><td>Truck #22</td><td>UAX 567E</td><td>Brian Kato</td><td>Rubaga Division</td><td><span class="st-pill stp-g">Active</span></td><td>13</td><td>5 min ago</td></tr>
-              <tr><td>Truck #27</td><td>UAX 712F</td><td>Unassigned</td><td>Kawempe Division</td><td><span class="st-pill stp-r">Idle</span></td><td>0</td><td>3h ago</td></tr>
-              <tr><td>Truck #31</td><td>UAX 834G</td><td>Alice Nambi</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>11</td><td>7 min ago</td></tr>
+          <p style="padding:12px 18px 0;font-size:12px;color:var(--muted);line-height:1.65;">
+            Pulled from Firebase <code style="font-size:11px;color:var(--dim);">users</code> with role <code style="font-size:11px;color:var(--dim);">collector</code>. Job counts are from the latest <strong>200</strong> collection requests loaded in this dashboard.
+          </p>
+          <table class="fleet-full-table" style="margin-top:8px;">
+            <thead><tr><th>Driver</th><th>Email</th><th>Operating zone</th><th>Approval</th><th>Active jobs</th><th>Completed</th></tr></thead>
+            <tbody id="tbody-fleet-drivers">
+              <tr><td colspan="5" style="color:var(--muted);">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- ===== OVERFLOW REPORTS ===== -->
+      <!-- ===== ALL REQUESTS ===== -->
       <div class="view" id="view-reports">
         <div class="panel">
           <div class="ph">
-            <span class="pt">Overflow & incident reports · 7 open</span>
-            <span class="pa-muted" onclick="setView('overview')">← Back</span>
+            <span class="pt">All collection requests</span>
+            <span class="pa-muted" onclick="setView('overview')">← Overview</span>
           </div>
-          <div class="rep-filters">
-            <button class="rf-btn active">All (7)</button>
-            <button class="rf-btn" onclick="filterRep(this)">Critical (1)</button>
-            <button class="rf-btn" onclick="filterRep(this)">High (3)</button>
-            <button class="rf-btn" onclick="filterRep(this)">Medium (2)</button>
-            <button class="rf-btn" onclick="filterRep(this)">Resolved (12)</button>
+          <div class="rep-filters" id="request-log-filters">
+            <button type="button" class="rf-btn active" data-req-filter="all" onclick="setRequestLogFilter('all', this)">All</button>
+            <button type="button" class="rf-btn" data-req-filter="unpaid" onclick="setRequestLogFilter('unpaid', this)">Awaiting payment</button>
+            <button type="button" class="rf-btn" data-req-filter="need_driver" onclick="setRequestLogFilter('need_driver', this)">Paid · need driver</button>
+            <button type="button" class="rf-btn" data-req-filter="active_job" onclick="setRequestLogFilter('active_job', this)">With driver</button>
+            <button type="button" class="rf-btn" data-req-filter="done" onclick="setRequestLogFilter('done', this)">Completed</button>
           </div>
           <table class="rep-table">
-            <thead><tr><th>Report ID</th><th>Type</th><th>Location</th><th>Zone</th><th>Severity</th><th>Reported by</th><th>Time</th><th>Status</th></tr></thead>
-            <tbody>
-              <tr><td>#RPT-031</td><td>Illegal dump</td><td>Near Lubigi wetland</td><td>Kawempe</td><td><span class="st-pill stp-r">Critical</span></td><td>Anon resident</td><td>38m ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
-              <tr><td>#RPT-030</td><td>Overflow</td><td>Kawempe Market Rd</td><td>Kawempe</td><td><span class="st-pill stp-r">High</span></td><td>Sarah N.</td><td>12m ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
-              <tr><td>#RPT-029</td><td>Overflow</td><td>Ntinda Rd junction</td><td>Nakawa</td><td><span class="st-pill stp-r">High</span></td><td>Resident app</td><td>1h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
-              <tr><td>#RPT-028</td><td>Missed pickup</td><td>Makindye Stage II</td><td>Makindye</td><td><span class="st-pill stp-a">Medium</span></td><td>David K.</td><td>2h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
-              <tr><td>#RPT-027</td><td>Overflow</td><td>Rubaga Hospital Rd</td><td>Rubaga</td><td><span class="st-pill stp-r">High</span></td><td>Anon resident</td><td>3h ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
-              <tr><td>#RPT-026</td><td>Missed pickup</td><td>Naguru Estate</td><td>Nakawa</td><td><span class="st-pill stp-a">Medium</span></td><td>Resident app</td><td>4h ago</td><td><span class="st-pill stp-a">Assigned</span></td></tr>
-              <tr><td>#RPT-025</td><td>Illegal dump</td><td>Bwaise drainage</td><td>Kawempe</td><td><span class="st-pill stp-r">High</span></td><td>KCCA patrol</td><td>5h ago</td><td><span class="st-pill stp-r">Open</span></td></tr>
+            <thead><tr><th>ID</th><th>Zone</th><th>Waste type</th><th>Volume</th><th>Payment</th><th>Status</th><th>Pickup address</th><th>Created</th></tr></thead>
+            <tbody id="tbody-request-log">
+              <tr><td colspan="8" style="color:var(--muted);">Loading…</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- ===== PERFORMANCE ===== -->
+      <!-- ===== DRIVER ACTIVITY ===== -->
       <div class="view" id="view-performance">
         <div class="two-col">
           <div class="panel">
-            <div class="ph"><span class="pt">Weekly collection rate · Mar 2026</span><span class="pa-muted" onclick="setView('overview')">← Back</span></div>
-            <div class="bar-chart">
-              <div class="bc-bars">
-                <div class="bc-bar" style="height:68%;background:rgba(46,204,113,0.5);"></div>
-                <div class="bc-bar" style="height:72%;background:rgba(46,204,113,0.5);"></div>
-                <div class="bc-bar" style="height:65%;background:rgba(46,204,113,0.5);"></div>
-                <div class="bc-bar" style="height:78%;background:rgba(46,204,113,0.7);"></div>
-                <div class="bc-bar" style="height:74%;background:rgba(46,204,113,0.7);"></div>
-                <div class="bc-bar" style="height:80%;background:rgba(46,204,113,0.9);"></div>
-                <div class="bc-bar" style="height:72%;background:rgba(240,165,0,0.7);"></div>
-              </div>
-              <div class="bc-labels">
-                <div class="bc-lbl">Mon</div><div class="bc-lbl">Tue</div><div class="bc-lbl">Wed</div><div class="bc-lbl">Thu</div><div class="bc-lbl">Fri</div><div class="bc-lbl">Sat</div><div class="bc-lbl">Sun</div>
-              </div>
-              <div class="bc-legend">
-                <div class="bcl-item"><div class="bcl-dot" style="background:var(--green)"></div>Collection rate (%)</div>
-                <div class="bcl-item"><div class="bcl-dot" style="background:var(--amber)"></div>Today (in progress)</div>
-              </div>
+            <div class="ph"><span class="pt">Completion summary</span><span class="pa-muted" onclick="setView('overview')">← Overview</span></div>
+            <div style="padding:18px;font-size:12px;color:var(--muted);line-height:1.7;">
+              <p style="margin-bottom:12px;">These figures are computed from the same <strong>200 most recent</strong> collection requests synced to this page—not a separate analytics database.</p>
+              <ul style="padding-left:18px;display:flex;flex-direction:column;gap:8px;">
+                <li><strong id="perf-stat-total">0</strong> bookings in the loaded set</li>
+                <li><strong id="perf-stat-done">0</strong> marked completed by a driver</li>
+                <li><strong id="perf-stat-rate">0%</strong> completion rate (completed ÷ total)</li>
+              </ul>
             </div>
             <div style="border-top:1px solid var(--border);">
+              <div class="ph" style="border:none;"><span class="pt">Completed pickups by zone</span></div>
               <table class="muni-table">
-                <thead><tr><th>Municipality</th><th>Avg rate this week</th><th>vs last week</th><th>Target</th></tr></thead>
-                <tbody>
-                  <tr><td>Kampala Central</td><td>84%</td><td class="up">↑ 4%</td><td>80%</td></tr>
-                  <tr><td>Nakawa Division</td><td>76%</td><td class="up">↑ 2%</td><td>75%</td></tr>
-                  <tr><td>Makindye Division</td><td>71%</td><td class="up">↑ 1%</td><td>70%</td></tr>
-                  <tr><td>Kawempe Division</td><td>59%</td><td class="dn">↓ 3%</td><td>70%</td></tr>
-                  <tr><td>Rubaga Division</td><td>62%</td><td class="dn">↓ 1%</td><td>70%</td></tr>
+                <thead><tr><th>Zone</th><th>Completed count</th></tr></thead>
+                <tbody id="tbody-perf-zones">
+                  <tr><td colspan="2" style="color:var(--muted);">Loading…</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
           <div class="panel">
-            <div class="ph"><span class="pt">Collector performance</span><span class="pa-muted">This week</span></div>
-            <div class="coll-list">
-              <div class="coll-item"><div class="coll-rank">1</div><div class="coll-avatar ca-g">JM</div><div class="coll-info"><div class="coll-name">James Mukasa</div><div class="coll-zone">Nakawa · Truck #07</div></div><div class="coll-score"><div class="coll-pct">97%</div><div class="coll-trips">18 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">2</div><div class="coll-avatar ca-b">GA</div><div class="coll-info"><div class="coll-name">Grace Atim</div><div class="coll-zone">Central · Truck #03</div></div><div class="coll-score"><div class="coll-pct">94%</div><div class="coll-trips">16 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">3</div><div class="coll-avatar ca-a">PS</div><div class="coll-info"><div class="coll-name">Peter Ssempa</div><div class="coll-zone">Makindye · Truck #11</div></div><div class="coll-score"><div class="coll-pct">91%</div><div class="coll-trips">15 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">4</div><div class="coll-avatar ca-g">RA</div><div class="coll-info"><div class="coll-name">Rose Akullo</div><div class="coll-zone">Kawempe · Truck #19</div></div><div class="coll-score"><div class="coll-pct">88%</div><div class="coll-trips">14 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">5</div><div class="coll-avatar ca-b">BK</div><div class="coll-info"><div class="coll-name">Brian Kato</div><div class="coll-zone">Rubaga · Truck #22</div></div><div class="coll-score"><div class="coll-pct">85%</div><div class="coll-trips">13 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">6</div><div class="coll-avatar ca-g">AN</div><div class="coll-info"><div class="coll-name">Alice Nambi</div><div class="coll-zone">Nakawa · Truck #31</div></div><div class="coll-score"><div class="coll-pct">82%</div><div class="coll-trips">11 trips today</div></div></div>
-              <div class="coll-item"><div class="coll-rank">7</div><div class="coll-avatar" style="background:rgba(229,83,83,0.1);color:var(--red);">ML</div><div class="coll-info"><div class="coll-name">Moses Lwanga</div><div class="coll-zone">Rubaga · Truck #14</div></div><div class="coll-score"><div class="coll-pct" style="color:var(--amber);">48%</div><div class="coll-trips">6 trips · idle 90m</div></div></div>
+            <div class="ph"><span class="pt">Drivers ranked by completions</span><span class="pa-muted">Loaded data</span></div>
+            <div class="coll-list" id="perf-drivers-list">
+              <div style="padding:14px 18px;color:var(--muted);font-size:12px;">Loading…</div>
             </div>
           </div>
         </div>
@@ -660,6 +485,7 @@
   let adminNotifDocs = [];
   let adminRequestsUnsub = null;
   let adminAllRequests = [];
+  let requestLogFilter = 'all';
 
   function formatAdminDate(d){
     try {
@@ -705,12 +531,12 @@
   }
 
   const titles = {
-    overview:'GKMA <em>Operations Overview</em>',
-    assign:'Booking <em>Assignments</em>',
-    map:'Live <em>Fleet Map</em>',
-    fleet:'Fleet <em>Management</em>',
-    reports:'Overflow <em>Reports</em>',
-    performance:'Performance <em>Analytics</em>'
+    overview:'Operations <em>overview</em>',
+    assign:'Assign <em>drivers</em>',
+    map:'Bookings <em>by zone</em>',
+    fleet:'Registered <em>drivers</em>',
+    reports:'All <em>requests</em>',
+    performance:'Driver <em>activity</em>'
   };
   const navIdx = {overview:0,assign:1,map:2,fleet:3,reports:4,performance:5};
 
@@ -723,9 +549,271 @@
     document.getElementById('tb-title').innerHTML=titles[v]||titles.overview;
   }
 
-  function filterRep(btn){
-    btn.closest('.rep-filters').querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
+  function setRequestLogFilter(mode, btn){
+    requestLogFilter = mode;
+    const wrap = document.getElementById('request-log-filters');
+    if (wrap) wrap.querySelectorAll('.rf-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderRequestLog();
+  }
+
+  function escapeHtml(s){
+    if (s == null || s === undefined) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function normalizeZone(z){
+    return String(z || '').trim().toLowerCase();
+  }
+
+  function isApprovedCollector(c){
+    const st = c.approvalStatus;
+    if (st === 'pending' || st === 'rejected') return false;
+    return true;
+  }
+
+  function zoneMatch(bookingZone, driverZone){
+    const dz = String(driverZone || '').trim();
+    if (!dz) return true;
+    return normalizeZone(bookingZone) === normalizeZone(dz);
+  }
+
+  function collectorsForBookingZone(bookingZone){
+    return collectorsCache.filter(c => isApprovedCollector(c) && zoneMatch(bookingZone, c.primary_zone));
+  }
+
+  function aggregateZonesFromRequests(){
+    const zones = {};
+    function ensure(zoneKey){
+      const key = zoneKey || '—';
+      if (!zones[key]) zones[key] = { total: 0, unpaid: 0, needDriver: 0, withDriver: 0, done: 0 };
+      return zones[key];
+    }
+    adminAllRequests.forEach(r => {
+      const d = r.data;
+      const z = ensure(d.zone || '—');
+      z.total++;
+      const st = d.status || '';
+      const paid = d.paymentStatus === 'paid';
+      const terminal = st === 'completed' || st === 'cancelled';
+      if (!paid && !terminal) z.unpaid++;
+      if (paid && !d.collectorUid && (st === 'paid_pending_assignment' || st === 'pending_assignment')) z.needDriver++;
+      if (d.collectorUid && ['assigned', 'driver_confirmed', 'in_progress'].includes(st)) z.withDriver++;
+      if (st === 'completed') z.done++;
+    });
+    return zones;
+  }
+
+  function collectorJobCounts(){
+    const completed = {};
+    const active = {};
+    adminAllRequests.forEach(r => {
+      const d = r.data;
+      const uid = d.collectorUid;
+      if (!uid) return;
+      const st = d.status || '';
+      if (st === 'completed') completed[uid] = (completed[uid] || 0) + 1;
+      else if (['assigned', 'driver_confirmed', 'in_progress'].includes(st)) active[uid] = (active[uid] || 0) + 1;
+    });
+    return { completed, active };
+  }
+
+  function renderZoneTbody(tbodyId){
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    const zones = aggregateZonesFromRequests();
+    const keys = Object.keys(zones).sort((a, b) => a.localeCompare(b));
+    if (!keys.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);">No collection requests in the loaded set yet.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = keys.map(k => {
+      const z = zones[k];
+      return `<tr><td>${escapeHtml(k)}</td><td>${z.total}</td><td>${z.unpaid}</td><td>${z.needDriver}</td><td>${z.withDriver}</td><td>${z.done}</td></tr>`;
+    }).join('');
+  }
+
+  function renderOverviewNotifPreview(){
+    const box = document.getElementById('overview-notif-preview');
+    if (!box) return;
+    if (!adminNotifDocs.length) {
+      box.innerHTML = `<div style="padding:14px 18px;color:var(--muted);font-size:12px;">No KCCA notifications yet. New bookings and payments appear here.</div>`;
+      return;
+    }
+    box.innerHTML = adminNotifDocs.slice(0, 6).map(n => `
+      <div class="al-item" onclick="setView('assign')" style="cursor:pointer;">
+        <div class="al-icon ${n.type === 'payment_completed' ? 'ali-blue' : 'ali-amber'}">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/></svg>
+        </div>
+        <div class="al-body">
+          <div class="al-title">${escapeHtml(n.message || 'Notification')}</div>
+          <div class="al-meta">${n.requestId ? 'Request #' + escapeHtml(String(n.requestId).slice(0, 8).toUpperCase()) : ''}</div>
+        </div>
+        <div class="al-time">${timeAgo(n.createdAt)}</div>
+      </div>
+    `).join('');
+  }
+
+  function displayNameFromProfile(p){
+    if (!p) return '—';
+    const full = (p.full_name || `${(p.first_name || '').trim()} ${(p.last_name || '').trim()}`.trim());
+    return full || p.email || p.uid || '—';
+  }
+
+  function initialsFromName(name){
+    const parts = String(name || '').split(/\s+/).filter(Boolean);
+    return parts.slice(0, 2).map(s => s[0].toUpperCase()).join('') || '—';
+  }
+
+  function renderOverviewTopDrivers(){
+    const box = document.getElementById('overview-collectors-list');
+    if (!box) return;
+    const { completed } = collectorJobCounts();
+    const ranked = Object.keys(completed).map(uid => ({ uid, n: completed[uid] })).sort((a, b) => b.n - a.n).slice(0, 6);
+    if (!ranked.length) {
+      box.innerHTML = `<div style="padding:14px 18px;color:var(--muted);font-size:12px;">No completed pickups recorded yet in this dataset.</div>`;
+      return;
+    }
+    box.innerHTML = ranked.map((row, i) => {
+      const c = collectorsCache.find(x => x.uid === row.uid);
+      const name = displayNameFromProfile(c) || ('Driver ' + row.uid.slice(0, 6));
+      const sub = c ? [c.truck_plate, c.company].filter(Boolean).join(' · ') : row.uid.slice(0, 8);
+      const ini = initialsFromName(name);
+      return `
+        <div class="coll-item">
+          <div class="coll-rank">${i + 1}</div>
+          <div class="coll-avatar ca-g">${escapeHtml(ini)}</div>
+          <div class="coll-info"><div class="coll-name">${escapeHtml(name)}</div><div class="coll-zone">${escapeHtml(sub || 'Collector')}</div></div>
+          <div class="coll-score"><div class="coll-pct">${row.n}</div><div class="coll-trips">completed</div></div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderFleetTable(){
+    const tbody = document.getElementById('tbody-fleet-drivers');
+    if (!tbody) return;
+    const { completed, active } = collectorJobCounts();
+    if (!collectorsCache.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);">No collector accounts found. Drivers must sign up with the Collector role in the app.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = collectorsCache.map(c => {
+      const name = displayNameFromProfile(c);
+      const truckCo = [c.truck_plate, c.company].filter(Boolean).join(' · ') || '—';
+      const ac = active[c.uid] || 0;
+      const comp = completed[c.uid] || 0;
+      const st = c.approvalStatus || 'approved';
+      let ap = escapeHtml(st);
+      if (st === 'pending') ap = '<span class=\"st-pill stp-a\">Pending</span>';
+      else if (st === 'rejected') ap = '<span class=\"st-pill stp-r\">Rejected</span>';
+      else ap = '<span class=\"st-pill stp-g\">Approved</span>';
+      return `<tr><td>${escapeHtml(name)}<div style="font-size:10px;color:var(--dim);margin-top:2px;">${escapeHtml(truckCo)}</div></td><td>${escapeHtml(c.email || '—')}</td><td>${escapeHtml(c.primary_zone || '—')}</td><td>${ap}</td><td>${ac}</td><td>${comp}</td></tr>`;
+    }).join('');
+  }
+
+  function requestMatchesLogFilter(d){
+    const st = d.status || '';
+    const paid = d.paymentStatus === 'paid';
+    if (requestLogFilter === 'all') return true;
+    if (requestLogFilter === 'done') return st === 'completed';
+    if (requestLogFilter === 'unpaid') return !paid && st !== 'completed' && st !== 'cancelled';
+    if (requestLogFilter === 'need_driver') return paid && !d.collectorUid && (st === 'paid_pending_assignment' || st === 'pending_assignment');
+    if (requestLogFilter === 'active_job') return !!(d.collectorUid && ['assigned', 'driver_confirmed', 'in_progress'].includes(st));
+    return true;
+  }
+
+  function renderRequestLog(){
+    const tbody = document.getElementById('tbody-request-log');
+    if (!tbody) return;
+    const rows = adminAllRequests.filter(r => requestMatchesLogFilter(r.data));
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="color:var(--muted);">No requests match this filter.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.slice(0, 200).map(r => {
+      const d = r.data;
+      const shortId = r.id.slice(0, 8).toUpperCase();
+      const pay = d.paymentStatus || '—';
+      const st = (d.status || '—').replace(/_/g, ' ');
+      const addr = (d.pickupAddress || '—').slice(0, 48) + ((d.pickupAddress && d.pickupAddress.length > 48) ? '…' : '');
+      const created = d.createdAt && d.createdAt.toDate ? formatAdminDate(d.createdAt.toDate()) : '—';
+      return `<tr>
+        <td>#${escapeHtml(shortId)}</td>
+        <td>${escapeHtml(d.zone || '—')}</td>
+        <td>${escapeHtml(d.type || '—')}</td>
+        <td>${escapeHtml(d.volume || '—')}</td>
+        <td>${escapeHtml(pay)}</td>
+        <td>${escapeHtml(st)}</td>
+        <td>${escapeHtml(addr)}</td>
+        <td>${escapeHtml(created)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderPerformancePanels(){
+    const total = adminAllRequests.length;
+    let done = 0;
+    const doneByZone = {};
+    adminAllRequests.forEach(r => {
+      const d = r.data;
+      if (d.status === 'completed') {
+        done++;
+        const z = d.zone || '—';
+        doneByZone[z] = (doneByZone[z] || 0) + 1;
+      }
+    });
+    const rate = total ? Math.round((done / total) * 100) : 0;
+    const elTot = document.getElementById('perf-stat-total');
+    const elDone = document.getElementById('perf-stat-done');
+    const elRate = document.getElementById('perf-stat-rate');
+    if (elTot) elTot.textContent = String(total);
+    if (elDone) elDone.textContent = String(done);
+    if (elRate) elRate.textContent = `${rate}%`;
+
+    const tz = document.getElementById('tbody-perf-zones');
+    if (tz) {
+      const keys = Object.keys(doneByZone).sort((a, b) => a.localeCompare(b));
+      if (!keys.length) tz.innerHTML = `<tr><td colspan="2" style="color:var(--muted);">No completed pickups in loaded data.</td></tr>`;
+      else tz.innerHTML = keys.map(k => `<tr><td>${escapeHtml(k)}</td><td>${doneByZone[k]}</td></tr>`).join('');
+    }
+
+    const perfList = document.getElementById('perf-drivers-list');
+    if (perfList) {
+      const { completed } = collectorJobCounts();
+      const ranked = Object.keys(completed).map(uid => ({ uid, n: completed[uid] })).sort((a, b) => b.n - a.n);
+      if (!ranked.length) {
+        perfList.innerHTML = `<div style="padding:14px 18px;color:var(--muted);font-size:12px;">No driver completion data yet.</div>`;
+      } else {
+        perfList.innerHTML = ranked.map((row, i) => {
+          const c = collectorsCache.find(x => x.uid === row.uid);
+          const name = displayNameFromProfile(c) || ('Driver ' + row.uid.slice(0, 6));
+          const sub = c ? [c.truck_plate, c.company].filter(Boolean).join(' · ') : '';
+          const ini = initialsFromName(name);
+          return `
+            <div class="coll-item">
+              <div class="coll-rank">${i + 1}</div>
+              <div class="coll-avatar ca-g">${escapeHtml(ini)}</div>
+              <div class="coll-info"><div class="coll-name">${escapeHtml(name)}</div><div class="coll-zone">${escapeHtml(sub || 'Collector account')}</div></div>
+              <div class="coll-score"><div class="coll-pct">${row.n}</div><div class="coll-trips">completed pickups</div></div>
+            </div>`;
+        }).join('');
+      }
+    }
+  }
+
+  function renderAllAdminDerivedUi(){
+    renderZoneTbody('tbody-overview-zones');
+    renderZoneTbody('tbody-zone-detail');
+    renderOverviewNotifPreview();
+    renderPendingDrivers();
+    renderOverviewTopDrivers();
+    renderFleetTable();
+    renderRequestLog();
+    renderPerformancePanels();
   }
 
   async function createNotification(payload){
@@ -756,7 +844,8 @@
     if (dot) dot.style.display = adminNotifDocs.some(n => !n.readAt) ? '' : 'none';
     if (!list) return;
     if (!adminNotifDocs.length) {
-      list.innerHTML = `<div style="padding:12px 18px;color:var(--muted);font-size:12px;">No notifications yet.</div>`;
+      list.innerHTML = `<div style="padding:12px 18px;color:var(--muted);font-size:12px;">No notifications yet. You’ll see new bookings and payment activity here.</div>`;
+      renderOverviewNotifPreview();
       return;
     }
     list.innerHTML = adminNotifDocs.slice(0, 20).map(n => {
@@ -766,13 +855,14 @@
         <div style="display:flex;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border);${unread ? 'background:rgba(240,165,0,0.04);' : ''}">
           <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;background:${color};opacity:${unread ? '1' : '0.5'};"></div>
           <div style="flex:1;min-width:0;">
-            <div style="color:var(--text);font-size:12px;line-height:1.5;">${(n.message||'Notification')}</div>
+            <div style="color:var(--text);font-size:12px;line-height:1.5;">${escapeHtml(n.message || 'Notification')}</div>
             <div style="color:var(--muted);font-size:11px;margin-top:4px;">${timeAgo(n.createdAt)}${n.requestId ? ` · #${String(n.requestId).slice(0,8).toUpperCase()}` : ''}</div>
           </div>
-          ${unread ? `<button class="rf-btn" style="padding:4px 10px;" onclick="markNotificationRead('${n.id}')">Read</button>` : ``}
+          ${unread ? `<button type="button" class="rf-btn" style="padding:4px 10px;" onclick="markNotificationRead('${n.id}')">Mark read</button>` : ``}
         </div>
       `;
     }).join('');
+    renderOverviewNotifPreview();
   }
 
   function startAdminNotificationListener(){
@@ -816,17 +906,83 @@
 
   async function fetchCollectors(){
     if (!firebaseDb) return [];
-    const snap = await firebaseDb.collection('users').where('role','==','collector').limit(200).get();
-    const out = [];
-    snap.forEach(d => out.push({ uid: d.id, ...d.data() }));
-    return out;
+    try {
+      const snap = await firebaseDb.collection('users').where('role','==','collector').limit(200).get();
+      const out = [];
+      snap.forEach(d => out.push({ uid: d.id, ...d.data() }));
+      if (!out.length) {
+        console.warn('No collector profiles returned. If drivers exist, check Firestore rules: KCCA officers must be allowed to read users/* (see GETTING_STARTED.md).');
+      }
+      return out;
+    } catch (e) {
+      console.error('fetchCollectors failed (permissions or network):', e);
+      alert('Could not load drivers. Publish Firestore rules from GETTING_STARTED.md so kcca_officer can read users documents.');
+      return [];
+    }
+  }
+
+  function renderPendingDrivers(){
+    const box = document.getElementById('pending-drivers-list');
+    if (!box) return;
+    const pending = collectorsCache.filter(c => c.approvalStatus === 'pending');
+    if (!pending.length) {
+      box.innerHTML = '<div style="color:var(--muted);font-size:12px;">No pending driver registrations.</div>';
+      return;
+    }
+    box.innerHTML = pending.map(c => {
+      const name = escapeHtml((c.full_name || c.email || c.uid).toString());
+      const z = escapeHtml(c.primary_zone || '—');
+      const em = escapeHtml(c.email || '');
+      return `
+        <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="min-width:200px;">
+            <div style="font-weight:600;color:var(--text);font-size:13px;">${name}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">${em} · Zone: ${z}</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button type="button" class="rf-btn active" style="border-radius:8px;" onclick="approveCollector('${c.uid}')">Approve</button>
+            <button type="button" class="rf-btn" style="border-radius:8px;" onclick="rejectCollector('${c.uid}')">Reject</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  async function approveCollector(uid){
+    if (!firebaseDb || !currentUser || !uid) return;
+    try {
+      await firebaseDb.collection('users').doc(uid).update({
+        approvalStatus: 'approved',
+        approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        approvedByUid: currentUser.uid
+      });
+      await refreshAssignments();
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'Approve failed. Check Firestore rules allow KCCA to update users.');
+    }
+  }
+
+  async function rejectCollector(uid){
+    if (!firebaseDb || !currentUser || !uid) return;
+    if (!window.confirm('Reject this driver registration? They will not be able to sign in.')) return;
+    try {
+      await firebaseDb.collection('users').doc(uid).update({
+        approvalStatus: 'rejected',
+        rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        rejectedByUid: currentUser.uid
+      });
+      await refreshAssignments();
+    } catch (e) {
+      console.error(e);
+      alert(e.message || 'Reject failed.');
+    }
   }
 
   function fmtReqLine(r){
-    const zone = r.zone || '—';
-    const type = r.type || '—';
-    const vol = r.volume || '—';
-    const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
+    const zone = escapeHtml(r.zone || '—');
+    const type = escapeHtml(r.type || '—');
+    const vol = escapeHtml(r.volume || '—');
+    const sched = escapeHtml(`${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim());
     return `${zone} · ${type} · ${vol} · ${sched}`;
   }
 
@@ -836,18 +992,31 @@
     if (badge) badge.textContent = String(pendingAssignments.length);
     if (!list) return;
     if (!pendingAssignments.length) {
-      list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No bookings waiting for assignment.</div>`;
+      list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No paid bookings waiting for a driver. Residents must complete payment first; then the job appears here.</div>`;
       return;
     }
-    const driverOpts = collectorsCache.map(c => {
-      const name = (c.full_name || `${(c.first_name||'').trim()} ${(c.last_name||'').trim()}`.trim() || c.email || c.uid).toString();
-      return `<option value="${c.uid}">${name}</option>`;
-    }).join('');
-
-    list.innerHTML = pendingAssignments.map(r => {
+    let globalWarn = '';
+    if (!collectorsCache.length) {
+      globalWarn = `<div style="padding:10px 12px;background:rgba(229,83,83,0.08);border:1px solid rgba(229,83,83,0.2);border-radius:8px;color:var(--muted);font-size:12px;line-height:1.5;margin-bottom:10px;">No <strong>collector</strong> profiles could be loaded. If drivers already registered, <strong>publish Firestore rules</strong> from GETTING_STARTED.md (KCCA must read <code style="font-size:11px;">users</code>). Then click <strong>Refresh drivers</strong>.</div>`;
+    }
+    list.innerHTML = globalWarn + pendingAssignments.map(r => {
       const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+      const zoneDrivers = collectorsForBookingZone(r.zone);
+      let zoneWarn = '';
+      if (collectorsCache.length && !zoneDrivers.length) {
+        const hasApproved = collectorsCache.some(c => isApprovedCollector(c));
+        if (hasApproved) {
+          zoneWarn = `<div style="padding:8px 10px;margin-bottom:8px;background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.2);border-radius:8px;font-size:11px;color:var(--muted);">No <strong>approved</strong> driver for zone <strong>${escapeHtml(r.zone || '—')}</strong>. Approve a driver registered for this zone or ask the resident to correct the booking zone.</div>`;
+        }
+      }
+      const driverOpts = zoneDrivers.map(c => {
+        const name = (c.full_name || `${(c.first_name||'').trim()} ${(c.last_name||'').trim()}`.trim() || c.email || c.uid).toString();
+        return `<option value="${c.uid}">${escapeHtml(name)} · ${escapeHtml(c.primary_zone || '')}</option>`;
+      }).join('');
+      const noDrivers = !zoneDrivers.length;
       return `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          ${zoneWarn}
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
             <div style="min-width:240px;flex:1;">
               <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · UGX ${(Number(r.amountUGX||0)).toLocaleString()}</div>
@@ -855,11 +1024,11 @@
               <div style="color:var(--dim);font-size:11px;margin-top:6px;">Status: ${r.status || '—'} · Payment: ${r.paymentStatus || '—'}</div>
             </div>
             <div style="min-width:240px;display:flex;gap:8px;flex-direction:column;">
-              <select id="assign-select-${r.id}" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;">
-                <option value="" selected disabled>Select driver…</option>
+              <select id="assign-select-${r.id}" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;" ${noDrivers ? 'disabled' : ''}>
+                <option value="" selected disabled>${noDrivers ? 'No driver for this zone' : 'Select driver…'}</option>
                 ${driverOpts}
               </select>
-              <button class="rf-btn active" style="width:100%;border-radius:8px;" onclick="assignRequest('${r.id}')">Assign to driver</button>
+              <button type="button" class="rf-btn active" style="width:100%;border-radius:8px;${noDrivers ? 'opacity:0.5;' : ''}" onclick="assignRequest('${r.id}')" ${noDrivers ? 'disabled' : ''}>Assign driver</button>
             </div>
           </div>
         </div>
@@ -871,7 +1040,7 @@
     const rows = [];
     adminAllRequests.forEach(r => {
       const data = r.data;
-      if (data.paymentStatus === 'paid' && !data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment' || !data.status)) {
+      if (data.paymentStatus === 'paid' && !data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment')) {
         rows.push({ id: r.id, ...data });
       }
     });
@@ -916,6 +1085,16 @@
     if (el3s) el3s.textContent = activeCollectorUids.size ? 'Unique drivers on jobs' : 'No active assignments';
     if (el4) el4.textContent = String(pendingAssign);
     if (el5) el5.textContent = String(tonnes);
+    let openPipeline = 0;
+    adminAllRequests.forEach(r => {
+      const st = r.data.status || '';
+      if (st !== 'completed' && st !== 'cancelled') openPipeline++;
+    });
+    const nbOpen = document.getElementById('nb-open-requests');
+    if (nbOpen) nbOpen.textContent = String(openPipeline);
+    const pendingNote = document.getElementById('admin-kpi-pending-note');
+    if (pendingNote) pendingNote.textContent = pendingAssign ? 'Use Assignments to dispatch' : 'No paid queue';
+    renderAllAdminDerivedUi();
   }
 
   function startAdminRequestsListener(){
@@ -944,7 +1123,13 @@
       console.error('Failed to load collectors:', e);
       collectorsCache = [];
     }
+    const nbFleet = document.getElementById('nb-fleet');
+    if (nbFleet) nbFleet.textContent = String(collectorsCache.filter(isApprovedCollector).length);
     recomputeAdminAssignmentsFromCache();
+    renderPendingDrivers();
+    renderFleetTable();
+    renderOverviewTopDrivers();
+    renderPerformancePanels();
   }
 
   async function assignRequest(requestId){
@@ -953,13 +1138,21 @@
     const driverUid = sel ? sel.value : '';
     if (!driverUid) { alert('Select a driver first.'); return; }
     const driver = collectorsCache.find(c => c.uid === driverUid);
+    if (!driver || !isApprovedCollector(driver)) {
+      alert('That driver is not approved.');
+      return;
+    }
+    const ref = firebaseDb.collection('collection_requests').doc(requestId);
+    const snapPre = await ref.get();
+    const prev = snapPre.exists ? snapPre.data() : {};
+    if (!zoneMatch(prev.zone, driver.primary_zone)) {
+      alert('Zone mismatch: choose a driver registered for the same zone as this booking.');
+      return;
+    }
     const collectorName = driver ? ((driver.full_name || `${(driver.first_name || '').trim()} ${(driver.last_name || '').trim()}`).trim() || driver.email || 'Driver') : 'Driver';
     const collectorTruckPlate = (driver && driver.truck_plate) ? driver.truck_plate : null;
     const collectorCompany = (driver && driver.company) ? driver.company : null;
     try {
-      const ref = firebaseDb.collection('collection_requests').doc(requestId);
-      const before = await ref.get();
-      const prev = before.exists ? before.data() : {};
       await ref.update({
         collectorUid: driverUid,
         collectorName,
