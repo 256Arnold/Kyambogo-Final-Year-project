@@ -47,6 +47,13 @@ service cloud.firestore {
     match /notifications/{notificationId} {
       allow read, write: if request.auth != null;
     }
+
+    // Live GPS for fleet map (driver writes own doc; any signed-in user can read)
+    match /live_locations/{collectorId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == collectorId;
+      allow delete: if request.auth != null && request.auth.uid == collectorId;
+    }
   }
 }
 ```

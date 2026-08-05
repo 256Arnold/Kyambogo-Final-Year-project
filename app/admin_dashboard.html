@@ -8,6 +8,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+<link rel="stylesheet" href="map.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="itrush-map.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -90,8 +94,8 @@
   .pa-muted{font-size:11px;color:var(--muted);cursor:pointer;}
 
   /* MAP */
-  .map-wrap{margin:16px 18px 18px;border-radius:8px;overflow:hidden;height:240px;background:#0A1610;border:1px solid var(--border);}
-  .map-wrap svg{width:100%;height:100%;}
+  .map-wrap{margin:16px 18px 18px;border-radius:8px;overflow:hidden;height:260px;background:#0A1610;border:1px solid var(--border);position:relative;}
+  .map-wrap .itrush-map{height:100%;}
   .map-legend{display:flex;align-items:center;gap:16px;padding:0 18px 14px;flex-wrap:wrap;}
   .ml-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
   .ml-dot{width:8px;height:8px;border-radius:50%;}
@@ -279,29 +283,29 @@
 
         <div class="kpi-grid">
           <div class="kpi">
-            <div class="kpi-label">Requests today</div>
-            <div class="kpi-val green">1,247</div>
-            <div class="kpi-trend up">↑ 8% vs yesterday</div>
+            <div class="kpi-label">Open bookings</div>
+            <div class="kpi-val green" id="kpi-open">0</div>
+            <div class="kpi-sub">Not completed yet</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Collections done</div>
-            <div class="kpi-val">894</div>
-            <div class="kpi-sub">71.7% completion rate</div>
+            <div class="kpi-label">Ready to assign</div>
+            <div class="kpi-val amber" id="kpi-ready">0</div>
+            <div class="kpi-sub">Paid · waiting for driver</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Active trucks</div>
-            <div class="kpi-val amber">32</div>
-            <div class="kpi-sub">6 idle · 0 breakdown</div>
+            <div class="kpi-label">Assigned / active</div>
+            <div class="kpi-val" id="kpi-assigned">0</div>
+            <div class="kpi-sub">With a collector</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Open reports</div>
-            <div class="kpi-val red">7</div>
-            <div class="kpi-trend dn">↑ 3 since yesterday</div>
+            <div class="kpi-label">Completed</div>
+            <div class="kpi-val" id="kpi-done">0</div>
+            <div class="kpi-sub">All time in system</div>
           </div>
           <div class="kpi">
-            <div class="kpi-label">Tonnes collected</div>
-            <div class="kpi-val">643</div>
-            <div class="kpi-sub">of ~1,300 daily est.</div>
+            <div class="kpi-label">Registered drivers</div>
+            <div class="kpi-val" id="kpi-drivers">0</div>
+            <div class="kpi-sub">Collector accounts</div>
           </div>
         </div>
 
@@ -314,51 +318,12 @@
               <span class="pa" onclick="setView('map')">Full map →</span>
             </div>
             <div class="map-wrap">
-              <svg viewBox="0 0 560 240" preserveAspectRatio="xMidYMid slice">
-                <rect width="560" height="240" fill="#0A1610"/>
-                <line x1="0" y1="60" x2="560" y2="60" stroke="#1A3020" stroke-width="1"/>
-                <line x1="0" y1="120" x2="560" y2="120" stroke="#1A3020" stroke-width="1.5"/>
-                <line x1="0" y1="180" x2="560" y2="180" stroke="#1A3020" stroke-width="1"/>
-                <line x1="80" y1="0" x2="80" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="180" y1="0" x2="180" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="300" y1="0" x2="300" y2="240" stroke="#1A3020" stroke-width="1.5"/>
-                <line x1="420" y1="0" x2="420" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <line x1="500" y1="0" x2="500" y2="240" stroke="#1A3020" stroke-width="1"/>
-                <!-- Zone labels -->
-                <text x="30" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Rubaga</text>
-                <text x="110" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Kawempe</text>
-                <text x="215" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Central</text>
-                <text x="318" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Nakawa</text>
-                <text x="425" y="220" fill="#253d2d" font-size="9" font-family="sans-serif">Makindye</text>
-                <!-- Routes -->
-                <path d="M40 160 Q100 120 180 100 Q240 85 300 90" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
-                <path d="M300 90 Q370 75 420 100 Q470 120 510 110" stroke="#2ECC71" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.5"/>
-                <path d="M80 180 Q130 150 180 160 Q230 170 300 155" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
-                <path d="M180 60 Q240 80 300 70 Q360 60 420 65" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.35"/>
-                <!-- Active trucks (green) -->
-                <circle cx="150" cy="108" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="150" cy="108" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="260" cy="92" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="260" cy="92" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="380" cy="95" r="6" fill="#2ECC71" opacity="0.9"/>
-                <circle cx="380" cy="95" r="11" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="470" cy="115" r="6" fill="#2ECC71" opacity="0.9"/>
-                <!-- Idle truck (amber) -->
-                <circle cx="80" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
-                <circle cx="340" cy="155" r="5" fill="#F0A500" opacity="0.85"/>
-                <!-- Overflow reports (red) -->
-                <circle cx="120" cy="75" r="5" fill="#E55353" opacity="0.8"/>
-                <circle cx="120" cy="75" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-                <circle cx="430" cy="140" r="5" fill="#E55353" opacity="0.8"/>
-                <circle cx="430" cy="140" r="10" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-                <text x="126" y="68" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
-                <text x="436" y="133" fill="#E55353" font-size="9" font-family="sans-serif">!</text>
-              </svg>
+              <div id="admin-overview-map" class="itrush-map"></div>
             </div>
             <div class="map-legend">
-              <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
-              <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
-              <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow report (7)</div>
+              <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (<span id="legend-active">0</span>)</div>
+              <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (<span id="legend-idle">0</span>)</div>
+              <div class="ml-item"><div class="ml-dot" style="background:var(--blue)"></div>Pickup (<span id="legend-pickup">0</span>)</div>
             </div>
           </div>
 
@@ -443,14 +408,12 @@
           </div>
 
           <div class="panel">
-            <div class="ph"><span class="pt">Top collectors</span><span class="pa" onclick="setView('performance')">All →</span></div>
-            <div class="coll-list">
-              <div class="coll-item">
-                <div class="coll-rank">1</div>
-                <div class="coll-avatar ca-g">JM</div>
-                <div class="coll-info"><div class="coll-name">James Mukasa</div><div class="coll-zone">Nakawa · Truck #07</div></div>
-                <div class="coll-score"><div class="coll-pct">97%</div><div class="coll-trips">18 trips</div></div>
-              </div>
+            <div class="ph"><span class="pt">Live bookings</span><span class="pa" onclick="setView('assign')">Assign →</span></div>
+            <div id="overview-bookings" style="padding:8px 14px 14px;display:flex;flex-direction:column;gap:8px;max-height:320px;overflow:auto;">
+              <div style="padding:10px;color:var(--muted);font-size:12px;">Waiting for real bookings…</div>
+            </div>
+          </div>
+        </div>
               <div class="coll-item">
                 <div class="coll-rank">2</div>
                 <div class="coll-avatar ca-b">GA</div>
@@ -484,14 +447,30 @@
       <div class="view" id="view-assign">
         <div class="panel" style="margin-bottom:16px;">
           <div class="ph">
-            <span class="pt">Bookings awaiting assignment</span>
+            <span class="pt">Ready to assign (paid)</span>
             <span class="pa-muted" onclick="refreshAssignments()">Refresh</span>
           </div>
           <div style="padding:14px 18px;">
             <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
-              Assign a paid booking to a registered driver. The driver will see it in the Driver App and can confirm.
+              These bookings are paid. Pick the real driver account (name + email shown), then assign. The driver will see this job immediately.
             </div>
             <div id="assign-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="ph">
+            <span class="pt">Awaiting payment</span>
+          </div>
+          <div style="padding:14px 18px;">
+            <div id="unpaid-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+          </div>
+        </div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="ph">
+            <span class="pt">Recently assigned / in progress</span>
+          </div>
+          <div style="padding:14px 18px;">
+            <div id="assigned-list" style="display:flex;flex-direction:column;gap:10px;"></div>
           </div>
         </div>
         <div class="panel">
@@ -511,33 +490,12 @@
             <span class="pa-muted" onclick="setView('overview')">← Back to overview</span>
           </div>
           <div class="map-wrap" style="height:360px;margin:16px 18px 14px;">
-            <svg viewBox="0 0 700 360" preserveAspectRatio="xMidYMid slice">
-              <rect width="700" height="360" fill="#0A1610"/>
-              <line x1="0" y1="90" x2="700" y2="90" stroke="#1A3020" stroke-width="1"/><line x1="0" y1="180" x2="700" y2="180" stroke="#1A3020" stroke-width="1.5"/><line x1="0" y1="270" x2="700" y2="270" stroke="#1A3020" stroke-width="1"/>
-              <line x1="100" y1="0" x2="100" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="220" y1="0" x2="220" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="360" y1="0" x2="360" y2="360" stroke="#1A3020" stroke-width="1.5"/><line x1="500" y1="0" x2="500" y2="360" stroke="#1A3020" stroke-width="1"/><line x1="620" y1="0" x2="620" y2="360" stroke="#1A3020" stroke-width="1"/>
-              <path d="M40 240 Q120 180 220 160 Q300 145 360 150 Q420 155 500 140 Q560 130 640 145" stroke="#2ECC71" stroke-width="2" fill="none" stroke-dasharray="7 4" opacity="0.6"/>
-              <path d="M100 270 Q170 240 220 250 Q290 265 360 245 Q430 225 500 235" stroke="#F0A500" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.4"/>
-              <path d="M220 90 Q290 110 360 100 Q430 90 500 100 Q570 110 630 95" stroke="#60A5FA" stroke-width="1.5" fill="none" stroke-dasharray="5 4" opacity="0.3"/>
-              <circle cx="180" cy="165" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="180" cy="165" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="290" cy="148" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="290" cy="148" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="420" cy="143" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="420" cy="143" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="560" cy="138" r="8" fill="#2ECC71" opacity="0.9"/><circle cx="560" cy="138" r="15" fill="none" stroke="#2ECC71" stroke-width="0.8" opacity="0.25"/>
-              <circle cx="630" cy="148" r="8" fill="#2ECC71" opacity="0.9"/>
-              <circle cx="100" cy="248" r="7" fill="#F0A500" opacity="0.85"/>
-              <circle cx="360" cy="242" r="7" fill="#F0A500" opacity="0.85"/>
-              <circle cx="140" cy="110" r="7" fill="#E55353" opacity="0.8"/><circle cx="140" cy="110" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-              <circle cx="510" cy="200" r="7" fill="#E55353" opacity="0.8"/><circle cx="510" cy="200" r="14" fill="none" stroke="#E55353" stroke-width="0.8" opacity="0.3"/>
-              <text x="20" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Rubaga</text>
-              <text x="155" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Kawempe</text>
-              <text x="295" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Central</text>
-              <text x="415" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Nakawa</text>
-              <text x="520" y="350" fill="#253d2d" font-size="10" font-family="sans-serif">Makindye</text>
-            </svg>
+            <div id="admin-fleet-map" class="itrush-map"></div>
           </div>
           <div class="map-legend" style="padding:0 18px 16px;">
-            <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (32)</div>
-            <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (6)</div>
-            <div class="ml-item"><div class="ml-dot" style="background:var(--red)"></div>Overflow / alert (7)</div>
+            <div class="ml-item"><div class="ml-dot" style="background:var(--green)"></div>Active truck (<span id="legend-active-full">0</span>)</div>
+            <div class="ml-item"><div class="ml-dot" style="background:var(--amber)"></div>Idle truck (<span id="legend-idle-full">0</span>)</div>
+            <div class="ml-item"><div class="ml-dot" style="background:var(--blue)"></div>Pickup (<span id="legend-pickup-full">0</span>)</div>
           </div>
         </div>
       </div>
@@ -546,20 +504,13 @@
       <div class="view" id="view-fleet">
         <div class="panel">
           <div class="ph">
-            <span class="pt">Fleet management · 38 vehicles</span>
+            <span class="pt">Fleet management · <span id="fleet-count">0</span> drivers</span>
             <span class="pa-muted" onclick="setView('overview')">← Back</span>
           </div>
           <table class="fleet-full-table">
             <thead><tr><th>Truck ID</th><th>Plate</th><th>Driver</th><th>Zone</th><th>Status</th><th>Trips today</th><th>Last ping</th></tr></thead>
-            <tbody>
-              <tr><td>Truck #03</td><td>UAX 088A</td><td>Grace Atim</td><td>Kampala Central</td><td><span class="st-pill stp-g">Active</span></td><td>16</td><td>1 min ago</td></tr>
-              <tr><td>Truck #07</td><td>UAX 312B</td><td>James Mukasa</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>18</td><td>Just now</td></tr>
-              <tr><td>Truck #11</td><td>UAX 201C</td><td>Peter Ssempa</td><td>Makindye Division</td><td><span class="st-pill stp-g">Active</span></td><td>15</td><td>3 min ago</td></tr>
-              <tr><td>Truck #14</td><td>UAX 099C</td><td>Moses Lwanga</td><td>Rubaga Division</td><td><span class="st-pill stp-a">Idle</span></td><td>6</td><td>94 min ago</td></tr>
-              <tr><td>Truck #19</td><td>UAX 445D</td><td>Rose Akullo</td><td>Kawempe Division</td><td><span class="st-pill stp-g">Active</span></td><td>14</td><td>2 min ago</td></tr>
-              <tr><td>Truck #22</td><td>UAX 567E</td><td>Brian Kato</td><td>Rubaga Division</td><td><span class="st-pill stp-g">Active</span></td><td>13</td><td>5 min ago</td></tr>
-              <tr><td>Truck #27</td><td>UAX 712F</td><td>Unassigned</td><td>Kawempe Division</td><td><span class="st-pill stp-r">Idle</span></td><td>0</td><td>3h ago</td></tr>
-              <tr><td>Truck #31</td><td>UAX 834G</td><td>Alice Nambi</td><td>Nakawa Division</td><td><span class="st-pill stp-g">Active</span></td><td>11</td><td>7 min ago</td></tr>
+            <tbody id="fleet-tbody">
+              <tr><td colspan="7" style="color:var(--muted);padding:14px;">No collector accounts yet. Create a Collector account from sign-in.</td></tr>
             </tbody>
           </table>
         </div>
@@ -656,8 +607,18 @@
   let currentUser = null;
   let collectorsCache = [];
   let pendingAssignments = [];
+  let unpaidBookings = [];
+  let assignedBookings = [];
+  let allBookings = [];
+  let bookingsUnsub = null;
   let adminNotifUnsub = null;
   let adminNotifDocs = [];
+  let overviewMap = null;
+  let fleetMap = null;
+  let liveLocUnsub = null;
+  let pickupUnsub = null;
+  let fleetLiveDocs = [];
+  let fleetPickupDocs = [];
 
   function formatAdminDate(d){
     try {
@@ -719,6 +680,113 @@
     const items=document.querySelectorAll('.ni');
     if(navIdx[v]!==undefined) items[navIdx[v]].classList.add('active');
     document.getElementById('tb-title').innerHTML=titles[v]||titles.overview;
+    if (v === 'overview' || v === 'map') {
+      ensureAdminMaps();
+      renderAdminFleetMaps();
+      if (overviewMap) overviewMap.invalidate();
+      if (fleetMap) fleetMap.invalidate();
+    }
+  }
+
+  function ensureAdminMaps(){
+    if (typeof ITrushMap === 'undefined') return;
+    if (!overviewMap) overviewMap = ITrushMap.create('admin-overview-map', { zoom: 12 });
+    if (!fleetMap) fleetMap = ITrushMap.create('admin-fleet-map', { zoom: 12 });
+  }
+
+  function renderAdminFleetMaps(){
+    ensureAdminMaps();
+    const points = [];
+    let active = 0, idle = 0, pickups = 0;
+    const staleMs = 5 * 60 * 1000;
+    const now = Date.now();
+
+    fleetLiveDocs.forEach((d) => {
+      const geo = ITrushMap.parseGeo(d);
+      if (!geo) return;
+      const updated = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate().getTime() : 0;
+      const isFresh = updated && (now - updated) < staleMs;
+      const isActive = (d.status === 'active' || d.requestId) && isFresh;
+      if (isActive) active++; else idle++;
+      const name = d.displayName || d.email || d.id;
+      points.push({
+        id: 'truck-' + d.id,
+        lat: geo.lat,
+        lng: geo.lng,
+        kind: isActive ? 'truck' : 'idle',
+        title: isActive ? `Active · ${name}` : `Idle · ${name}`,
+        meta: d.requestId ? `Job #${String(d.requestId).slice(0,8).toUpperCase()}` : (isFresh ? 'Online' : 'Last ping stale')
+      });
+    });
+
+    fleetPickupDocs.forEach((r) => {
+      const geo = ITrushMap.parseGeo(r.pickupGeo);
+      if (!geo) return;
+      pickups++;
+      points.push({
+        id: 'pickup-' + r.id,
+        lat: geo.lat,
+        lng: geo.lng,
+        kind: 'pickup',
+        title: `Pickup #${r.id.slice(0,8).toUpperCase()}`,
+        meta: `${r.zone || '—'} · ${r.status || 'pending'} · ${r.pickupAddress || ''}`
+      });
+      const truck = ITrushMap.parseGeo(r.truckGeo);
+      if (truck && r.collectorUid) {
+        // Prefer request truckGeo if live_locations missing this collector
+        const already = points.some(p => p.id === 'truck-' + r.collectorUid);
+        if (!already) {
+          active++;
+          points.push({
+            id: 'truck-req-' + r.id,
+            lat: truck.lat,
+            lng: truck.lng,
+            kind: 'truck',
+            title: 'Truck on job',
+            meta: `#${r.id.slice(0,8).toUpperCase()}`
+          });
+        }
+      }
+    });
+
+    const setCount = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = String(n); };
+    setCount('legend-active', active);
+    setCount('legend-idle', idle);
+    setCount('legend-pickup', pickups);
+    setCount('legend-active-full', active);
+    setCount('legend-idle-full', idle);
+    setCount('legend-pickup-full', pickups);
+
+    if (overviewMap) overviewMap.setPoints(points);
+    if (fleetMap) fleetMap.setPoints(points);
+  }
+
+  function startAdminFleetListeners(){
+    if (!firebaseDb) return;
+    ensureAdminMaps();
+    if (liveLocUnsub) { liveLocUnsub(); liveLocUnsub = null; }
+    if (pickupUnsub) { pickupUnsub(); pickupUnsub = null; }
+
+    liveLocUnsub = firebaseDb.collection('live_locations').limit(100)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        fleetLiveDocs = rows;
+        renderAdminFleetMaps();
+      }, (err) => console.error('live_locations listener failed:', err));
+
+    pickupUnsub = firebaseDb.collection('collection_requests').limit(80)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => {
+          const data = d.data();
+          const st = data.status || '';
+          if (['completed', 'cancelled'].includes(st)) return;
+          if (data.pickupGeo || data.truckGeo) rows.push({ id: d.id, ...data });
+        });
+        fleetPickupDocs = rows;
+        renderAdminFleetMaps();
+      }, (err) => console.error('pickup map listener failed:', err));
   }
 
   function filterRep(btn){
@@ -820,6 +888,13 @@
     return out;
   }
 
+  function collectorLabel(c){
+    const name = (c.full_name || `${(c.first_name||'').trim()} ${(c.last_name||'').trim()}`.trim() || 'Collector').toString();
+    const email = c.email || c.uid;
+    const plate = c.truck_plate ? ` · ${c.truck_plate}` : '';
+    return `${name} (${email})${plate}`;
+  }
+
   function fmtReqLine(r){
     const zone = r.zone || '—';
     const type = r.type || '—';
@@ -828,41 +903,162 @@
     return `${zone} · ${type} · ${vol} · ${sched}`;
   }
 
-  function renderAssignments(){
-    const list = document.getElementById('assign-list');
-    const badge = document.getElementById('nb-assign');
-    if (badge) badge.textContent = String(pendingAssignments.length);
-    if (!list) return;
-    if (!pendingAssignments.length) {
-      list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No bookings waiting for assignment.</div>`;
-      return;
-    }
-    const driverOpts = collectorsCache.map(c => {
-      const name = (c.full_name || `${(c.first_name||'').trim()} ${(c.last_name||'').trim()}`.trim() || c.email || c.uid).toString();
-      return `<option value="${c.uid}">${name}</option>`;
-    }).join('');
-
-    list.innerHTML = pendingAssignments.map(r => {
-      const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+  function bookingCard(r, mode){
+    const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+    const resident = r.residentName || r.residentEmail || 'Resident';
+    const contact = [r.residentEmail, r.residentPhone].filter(Boolean).join(' · ');
+    const driverOpts = collectorsCache.map(c =>
+      `<option value="${c.uid}">${collectorLabel(c)}</option>`
+    ).join('');
+    if (mode === 'assign') {
       return `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
             <div style="min-width:240px;flex:1;">
               <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · UGX ${(Number(r.amountUGX||0)).toLocaleString()}</div>
-              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${fmtReqLine(r)}</div>
-              <div style="color:var(--dim);font-size:11px;margin-top:6px;">Status: ${r.status || '—'} · Payment: ${r.paymentStatus || '—'}</div>
+              <div style="color:var(--text);font-size:12px;margin-bottom:4px;"><strong>Resident:</strong> ${resident}</div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${r.pickupAddress || 'No address'} · ${fmtReqLine(r)}</div>
+              <div style="color:var(--dim);font-size:11px;margin-top:6px;">${contact || 'No contact'} · Status: ${r.status || '—'} · Payment: ${r.paymentStatus || '—'}</div>
             </div>
-            <div style="min-width:240px;display:flex;gap:8px;flex-direction:column;">
+            <div style="min-width:260px;display:flex;gap:8px;flex-direction:column;">
               <select id="assign-select-${r.id}" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;">
-                <option value="" selected disabled>Select driver…</option>
-                ${driverOpts}
+                <option value="" selected disabled>Select driver (name + email)…</option>
+                ${driverOpts || '<option disabled>No collector accounts found</option>'}
               </select>
               <button class="rf-btn active" style="width:100%;border-radius:8px;" onclick="assignRequest('${r.id}')">Assign to driver</button>
             </div>
           </div>
+        </div>`;
+    }
+    if (mode === 'unpaid') {
+      return `
+        <div style="background:var(--surface2);border:1px dashed var(--border2);border-radius:10px;padding:12px;">
+          <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${resident}</div>
+          <div style="color:var(--muted);font-size:12px;">${r.pickupAddress || '—'} · ${fmtReqLine(r)}</div>
+          <div style="color:var(--amber);font-size:11px;margin-top:6px;">Waiting for resident payment before assignment</div>
+        </div>`;
+    }
+    // assigned
+    return `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${statusLabel(r.status)}</div>
+        <div style="color:var(--muted);font-size:12px;line-height:1.5;">
+          <strong>Resident:</strong> ${resident}<br/>
+          <strong>Driver:</strong> ${r.collectorName || r.collectorEmail || r.collectorUid || '—'}<br/>
+          ${r.pickupAddress || '—'}
         </div>
-      `;
+      </div>`;
+  }
+
+  function statusLabel(st){ return String(st||'—').replace(/_/g,' '); }
+
+  function renderAssignments(){
+    const list = document.getElementById('assign-list');
+    const unpaid = document.getElementById('unpaid-list');
+    const assigned = document.getElementById('assigned-list');
+    const badge = document.getElementById('nb-assign');
+    if (badge) badge.textContent = String(pendingAssignments.length);
+
+    if (list) {
+      list.innerHTML = pendingAssignments.length
+        ? pendingAssignments.map(r => bookingCard(r, 'assign')).join('')
+        : `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No paid bookings waiting. When a resident pays, the booking appears here with their name and address.</div>`;
+    }
+    if (unpaid) {
+      unpaid.innerHTML = unpaidBookings.length
+        ? unpaidBookings.map(r => bookingCard(r, 'unpaid')).join('')
+        : `<div style="padding:12px;color:var(--muted);font-size:12px;">No unpaid bookings.</div>`;
+    }
+    if (assigned) {
+      assigned.innerHTML = assignedBookings.length
+        ? assignedBookings.map(r => bookingCard(r, 'assigned')).join('')
+        : `<div style="padding:12px;color:var(--muted);font-size:12px;">No assigned jobs yet.</div>`;
+    }
+    renderOverviewBookings();
+    renderAdminKpis();
+    renderFleetTable();
+  }
+
+  function renderOverviewBookings(){
+    const el = document.getElementById('overview-bookings');
+    if (!el) return;
+    const rows = [...allBookings].sort((a,b)=>{
+      const ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+      const tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+      return tb - ta;
+    }).slice(0, 8);
+    if (!rows.length) {
+      el.innerHTML = `<div style="padding:10px;color:var(--muted);font-size:12px;">No bookings in Firestore yet. Create one as a Resident.</div>`;
+      return;
+    }
+    el.innerHTML = rows.map(r => {
+      const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+      const who = r.residentName || r.residentEmail || 'Resident';
+      const driver = r.collectorName || (r.collectorUid ? 'Assigned' : 'Unassigned');
+      return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text);font-weight:650;">
+          <span>${shortId}</span><span style="color:var(--amber);font-weight:500;">${statusLabel(r.status)}</span>
+        </div>
+        <div style="color:var(--muted);font-size:11px;margin-top:4px;line-height:1.5;">${who} → ${driver}<br/>${r.pickupAddress || '—'}</div>
+      </div>`;
     }).join('');
+  }
+
+  function renderAdminKpis(){
+    const open = allBookings.filter(r => !['completed','cancelled'].includes(r.status||'')).length;
+    const ready = pendingAssignments.length;
+    const assigned = assignedBookings.length;
+    const done = allBookings.filter(r => r.status === 'completed').length;
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=String(v); };
+    set('kpi-open', open);
+    set('kpi-ready', ready);
+    set('kpi-assigned', assigned);
+    set('kpi-done', done);
+    set('kpi-drivers', collectorsCache.length);
+    set('fleet-count', collectorsCache.length);
+  }
+
+  function renderFleetTable(){
+    const tbody = document.getElementById('fleet-tbody');
+    if (!tbody) return;
+    if (!collectorsCache.length) {
+      tbody.innerHTML = `<tr><td colspan="7" style="color:var(--muted);padding:14px;">No collector accounts yet. Create a Collector account from sign-in.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = collectorsCache.map((c, i) => {
+      const name = c.full_name || `${c.first_name||''} ${c.last_name||''}`.trim() || c.email || c.uid;
+      const live = fleetLiveDocs.find(l => l.id === c.uid);
+      const status = live && live.status === 'active' ? 'Active' : (live ? 'Idle' : 'Offline');
+      const pill = status === 'Active' ? 'stp-g' : (status === 'Idle' ? 'stp-a' : 'stp-r');
+      const ping = live && live.updatedAt && live.updatedAt.toDate ? timeAgo(live.updatedAt) : '—';
+      const jobs = assignedBookings.filter(r => r.collectorUid === c.uid).length;
+      return `<tr>
+        <td>Driver ${i+1}</td>
+        <td>${c.truck_plate || '—'}</td>
+        <td>${name}</td>
+        <td>${c.primary_zone || '—'}</td>
+        <td><span class="st-pill ${pill}">${status}</span></td>
+        <td>${jobs}</td>
+        <td>${ping}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function classifyBookings(rows){
+    allBookings = rows;
+    pendingAssignments = rows.filter(r =>
+      r.paymentStatus === 'paid' &&
+      !r.collectorUid &&
+      !['completed','cancelled'].includes(r.status||'')
+    );
+    unpaidBookings = rows.filter(r =>
+      r.paymentStatus !== 'paid' &&
+      !['completed','cancelled'].includes(r.status||'')
+    );
+    assignedBookings = rows.filter(r =>
+      r.collectorUid &&
+      !['completed','cancelled'].includes(r.status||'')
+    );
   }
 
   async function refreshAssignments(){
@@ -873,24 +1069,32 @@
       console.error('Failed to load collectors:', e);
       collectorsCache = [];
     }
-    try {
-      const snap = await firebaseDb.collection('collection_requests')
-        .where('paymentStatus','==','paid')
-        .limit(50)
-        .get();
-      const rows = [];
-      snap.forEach(d => {
-        const data = d.data();
-        if (!data.collectorUid && (data.status === 'paid_pending_assignment' || data.status === 'pending_assignment' || !data.status)) {
-          rows.push({ id: d.id, ...data });
-        }
-      });
-      pendingAssignments = rows;
-    } catch (e) {
-      console.error('Failed to load assignments:', e);
-      pendingAssignments = [];
+    // If live listener is active, just re-render; otherwise one-shot fetch
+    if (!bookingsUnsub) {
+      try {
+        const snap = await firebaseDb.collection('collection_requests').limit(100).get();
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        classifyBookings(rows);
+      } catch (e) {
+        console.error('Failed to load assignments:', e);
+        classifyBookings([]);
+      }
     }
     renderAssignments();
+  }
+
+  function startAdminBookingsListener(){
+    if (!firebaseDb) return;
+    if (bookingsUnsub) { bookingsUnsub(); bookingsUnsub = null; }
+    bookingsUnsub = firebaseDb.collection('collection_requests').limit(100)
+      .onSnapshot(async (snap) => {
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        try { collectorsCache = await fetchCollectors(); } catch (_) {}
+        classifyBookings(rows);
+        renderAssignments();
+      }, (err) => console.error('Admin bookings listener failed:', err));
   }
 
   async function assignRequest(requestId){
@@ -898,9 +1102,19 @@
     const sel = document.getElementById(`assign-select-${requestId}`);
     const driverUid = sel ? sel.value : '';
     if (!driverUid) { alert('Select a driver first.'); return; }
+    const driver = collectorsCache.find(c => c.uid === driverUid);
+    if (!driver) { alert('Selected driver not found. Refresh and try again.'); return; }
+    const driverName = (driver.full_name || `${driver.first_name||''} ${driver.last_name||''}`.trim() || driver.email || 'Collector').toString();
     try {
-      await firebaseDb.collection('collection_requests').doc(requestId).update({
+      const reqRef = firebaseDb.collection('collection_requests').doc(requestId);
+      const reqDoc = await reqRef.get();
+      const reqData = reqDoc.exists ? reqDoc.data() : {};
+      await reqRef.update({
         collectorUid: driverUid,
+        collectorName: driverName,
+        collectorEmail: driver.email || null,
+        collectorPhone: driver.phone || null,
+        collectorPlate: driver.truck_plate || null,
         assignedByUid: currentUser.uid,
         assignedAt: firebase.firestore.FieldValue.serverTimestamp(),
         status: 'assigned'
@@ -909,16 +1123,23 @@
         toUid: driverUid,
         type: 'assigned_job',
         requestId,
-        message: 'You have been assigned a new collection job. Please confirm in Driver App.'
+        message: `New job #${requestId.slice(0,8).toUpperCase()} for ${reqData.residentName || 'a resident'} at ${reqData.pickupAddress || 'pickup location'}. Open Job List to confirm.`
       });
+      if (reqData.residentUid) {
+        await createNotification({
+          toUid: reqData.residentUid,
+          type: 'assigned_job',
+          requestId,
+          message: `Driver ${driverName} was assigned to your booking #${requestId.slice(0,8).toUpperCase()}.`
+        });
+      }
       await createNotification({
         toRole: 'kcca_officer',
         type: 'assigned_job',
         requestId,
-        message: 'A booking was assigned to a driver.'
+        message: `Assigned #${requestId.slice(0,8).toUpperCase()} to ${driverName} (${driver.email || driverUid}).`
       });
-      alert('Assigned to driver.');
-      await refreshAssignments();
+      alert(`Assigned to ${driverName} (${driver.email || driverUid}).`);
     } catch (e) {
       console.error('Assign failed:', e);
       alert(e.message || 'Assign failed.');
@@ -943,7 +1164,9 @@
       try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) {}
       try { await hydrateAdminFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
       try { await refreshAssignments(); } catch (_) {}
+      try { startAdminBookingsListener(); } catch (_) {}
       try { startAdminNotificationListener(); } catch (_) {}
+      try { startAdminFleetListeners(); } catch (_) {}
     });
   })();
 </script>
