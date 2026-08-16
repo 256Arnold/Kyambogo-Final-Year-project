@@ -25,33 +25,29 @@ You can run the app in two ways:
 3. Go to **Build** → **Firestore Database** → **Create database** → start in **test mode** (or production with rules below). Pick a region.
 4. In **Firestore** → **Rules**, use rules that allow signed-in users to read/write their own profile and allow the app to create bookings + notifications.
 
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
+The complete, production-ready rules live in **`firestore.rules`** at the project
+root. Open that file, copy its entire contents into **Firestore → Rules**, and
+click **Publish**. (If you use the Firebase CLI, `firebase deploy --only firestore:rules`
+publishes them straight from that file.)
 
-    // Prototype rules for iTRUSH (Firebase-only mode)
-    // - Resident creates a booking in `collection_requests`
-    // - Admin assigns it to a driver
-    // - Driver confirms it
-    // - App writes simple `notifications`
-    //
-    // For a quick demo, allow any signed-in user to read/write these collections.
-    // Tighten these later (role-based access, per-user reads, etc.).
-    match /collection_requests/{requestId} {
-      allow read, write: if request.auth != null;
-    }
-    match /notifications/{notificationId} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+These rules are **role-based**, not the old "any signed-in user" demo rules:
 
-Click **Publish**.
+- **users** — you can read/write only your own profile; a KCCA officer can read
+  any profile (needed to list collectors).
+- **collection_requests** — residents create and see only their own; collectors
+  see and update only jobs assigned to them; KCCA reads all and assigns.
+- **overflow_reports** — residents file and see their own; KCCA reads all and
+  resolves them.
+- **notifications** — anyone signed in can create; you read messages addressed
+  to your uid, and KCCA reads messages addressed to its role.
+
+The rules determine a caller's role by reading their own `/users/{uid}` document,
+so **every account must have a `users` doc with a `role` field** (`resident`,
+`collector`, or `kcca_officer`). The sign-up flow creates this automatically.
+
+> Note: because the rules call `get()` on the caller's user document, each
+> read/write does one extra internal lookup. That is normal and fine for a
+> project of this scale.
 
 ### 3. Add your config to the app
 

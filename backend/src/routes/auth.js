@@ -2,10 +2,21 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../db');
+const { authenticate, normalizeRole } = require('../middleware/auth');
 
 const router = express.Router();
 const SALT_ROUNDS = 10;
 const JWT_EXPIRY = '7d';
+
+router.get('/me', authenticate, (req, res) => {
+  res.json({
+    user: {
+      id: req.user.sub,
+      email: req.user.email,
+      role: normalizeRole(req.user.role)
+    }
+  });
+});
 
 // POST /api/auth/signup — create user + profile, return JWT
 router.post('/signup', async (req, res) => {
@@ -124,9 +135,10 @@ router.post('/signin', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: JWT_EXPIRY }
     );
+    const safeRole = normalizeRole(user.role);
     return res.json({
       token,
-      user: { id: user.id, email: user.email, role: user.role }
+      user: { id: user.id, email: user.email, role: safeRole }
     });
   } catch (err) {
     console.error('Signin error:', err);
