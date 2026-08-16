@@ -1,0 +1,106 @@
+rules_version = '2';
+
+// ============================================================================
+// iTRUSH / CleanGKMA — Firestore Security Rules
+// ----------------------------------------------------------------------------
+// Roles (stored on each user's own /users/{uid} document, field `role`):
+//   - resident        : books collections, pays, files overflow reports
+//   - collector        : sees assigned jobs, confirms + completes them
+//   - kcca_officer     : oversight; reads everything, assigns collectors
+//
+// Design notes:
+//   * Firestore rules cannot filter a query's results — they only allow or
+//     deny a read. The app's queries already scope reads with the correct
+//     `where` clauses (e.g. residents query residentUid == their uid), so the
+//     rules below grant exactly the access those queries need and no more.
+//   * We look up the caller's role from their own /users doc with get().
+// ============================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ----------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      // Reads the caller's own user document to find their role.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isRole(role) {
+      return signedIn() && myRole() == role;
+    }
+
+    function isKcca() {
+      return isRole('kcca_officer');
+    }
+
+    // ---- users ------------------------------------------------------------
+    // A user can read & write ONLY their own profile.
+    // KCCA may read any user profile (needed for the collectors listing and
+    // to resolve collector names on the admin dashboard).
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isKcca());
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow update, delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    // ---- collection_requests ---------------------------------------------
+    // Residents: create their own, read their own, update their own
+    //            (e.g. mark paid). Cannot touch other residents' requests.
+    // Collectors: read/update requests assigned to them (confirm, complete).
+    // KCCA: full read; update to assign a collector. No hard delete.
+    match /collection_requests/{requestId} {
+      allow read: if signedIn() && (
+        isKcca() ||
+        resource.data.residentUid == request.auth.uid ||
+        resource.data.collectorUid == request.auth.uid
+      );
+
+      allow create: if isRole('resident')
+                    && request.resource.data.residentUid == request.auth.uid;
+
+      allow update: if signedIn() && (
+        isKcca() ||
+        resource.data.residentUid == request.auth.uid ||
+        resource.data.collectorUid == request.auth.uid
+      );
+
+      allow delete: if isKcca();
+    }
+
+    // ---- overflow_reports -------------------------------------------------
+    // Residents file reports (reporterUid must be themselves) and can read
+    // their own. KCCA reads all reports and updates their status (resolve).
+    match /overflow_reports/{reportId} {
+      allow read: if signedIn() && (
+        isKcca() ||
+        resource.data.reporterUid == request.auth.uid
+      );
+
+      allow create: if isRole('resident')
+                    && request.resource.data.reporterUid == request.auth.uid;
+
+      allow update: if isKcca();
+      allow delete: if isKcca();
+    }
+
+    // ---- notifications ----------------------------------------------------
+    // A signed-in user may create notifications (the app writes both
+    // user-targeted and role-targeted messages). A user may read messages
+    // addressed to them by uid; KCCA may read messages addressed to their
+    // role. Marking a notification read is an update to its own doc.
+    match /notifications/{notificationId} {
+      allow create: if signedIn();
+
+      allow read, update: if signedIn() && (
+        resource.data.toUid == request.auth.uid ||
+        (resource.data.toRole == 'kcca_officer' && isKcca())
+      );
+
+      allow delete: if signedIn() && resource.data.toUid == request.auth.uid;
+    }
+  }
+}

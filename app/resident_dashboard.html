@@ -8,6 +8,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -17,6 +19,15 @@
     --green:#2ECC71;--green-dim:#1a7a44;--amber:#F0A500;--red:#E55353;--blue:#60A5FA;
     --text:#EDF5F0;--muted:#7A9E88;--dim:#3D5A48;
     --input-bg:#0A1410;--input-border:rgba(74,200,120,0.15);
+    --map-bg:#0A1610;--map-attr-bg:rgba(6,13,10,0.7);--shadow:rgba(0,0,0,0.4);
+  }
+  [data-theme="light"]{
+    --bg:#F4F7F5;--surface:#FFFFFF;--surface2:#EDF3EE;--surface3:#E2ECE4;
+    --border:rgba(28,100,60,0.14);--border2:rgba(28,100,60,0.26);
+    --green:#1F9E52;--green-dim:#157a3d;--amber:#C57F00;--red:#D23B3B;--blue:#2F6FD6;
+    --text:#12261A;--muted:#4E6B58;--dim:#8AA394;
+    --input-bg:#F0F4F1;--input-border:rgba(28,100,60,0.2);
+    --map-bg:#E6ECE7;--map-attr-bg:rgba(255,255,255,0.8);--shadow:rgba(20,40,26,0.12);
   }
   body{background:var(--bg);color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;}
 
@@ -137,8 +148,30 @@
   .ti-value.green{color:var(--green);}
 
   /* MAP MOCK */
-  .map-mock{margin:0 20px 20px;height:130px;background:#0A1610;border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;}
+  .map-mock{margin:0 20px 20px;height:130px;background:var(--map-bg);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;}
   .map-mock svg{width:100%;height:100%;}
+  /* Leaflet maps (booking pin picker + live tracking) */
+  .leaflet-map{width:100%;height:100%;}
+  .leaflet-container{background:var(--map-bg);font-family:'Space Grotesk',sans-serif;}
+  .leaflet-control-zoom a{background:var(--surface) !important;color:var(--green) !important;border-color:var(--border) !important;}
+  .leaflet-control-zoom a:hover{background:var(--surface2) !important;}
+  .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface);color:var(--text);border:1px solid var(--border);box-shadow:0 6px 20px var(--shadow);}
+  .leaflet-popup-content{font-size:12px;line-height:1.5;margin:10px 12px;}
+  .leaflet-popup-content b{color:var(--green);}
+  .leaflet-popup-close-button{color:var(--muted) !important;}
+  .leaflet-control-attribution{background:var(--map-attr-bg) !important;color:var(--muted) !important;}
+  .leaflet-control-attribution a{color:var(--muted) !important;}
+  .book-map-wrap{margin-top:10px;height:320px;border:1px solid var(--border2);border-radius:8px;overflow:hidden;position:relative;}
+  .book-map-search{display:flex;gap:8px;margin-top:8px;}
+  .book-map-search input{flex:1;padding:9px 11px;border-radius:7px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);font-size:13px;font-family:'Space Grotesk',sans-serif;}
+  .book-map-search button{flex-shrink:0;padding:9px 12px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+  .book-map-search button:hover{border-color:rgba(255,255,255,0.18);color:var(--text);}
+  .book-map-results{margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;overflow:hidden;display:none;}
+  .book-map-results.show{display:block;}
+  .book-map-result{padding:8px 11px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);}
+  .book-map-result:last-child{border-bottom:none;}
+  .book-map-result:hover{background:var(--surface3);}
+  .book-pin-hint{font-size:11px;color:var(--muted);margin-top:6px;}
 
   /* NOTIFICATIONS PANEL */
   .notif-list{padding:8px 0;}
@@ -149,8 +182,8 @@
   .nd-green{background:var(--green);}
   .nd-amber{background:var(--amber);}
   .nd-dim{background:var(--dim);}
-  .notif-text{flex:1;}
-  .notif-msg{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:2px;}
+  .notif-text{flex:1;min-width:0;}
+  .notif-msg{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:2px;word-break:break-word;}
   .notif-time{font-size:11px;color:var(--dim);}
 
   /* HISTORY TABLE */
@@ -170,7 +203,7 @@
   .bf-input:focus,.bf-select:focus,.bf-textarea:focus{border-color:rgba(46,204,113,0.4);}
   .bf-input::placeholder,.bf-textarea::placeholder{color:var(--dim);}
   .bf-select{color:var(--muted);}
-  .bf-select option{background:#0D1812;color:var(--text);}
+  .bf-select option{background:var(--surface);color:var(--text);}
   .bf-textarea{resize:none;height:72px;}
   .bf-loc-row{display:flex;gap:8px;align-items:center;}
   .bf-loc-btn{flex-shrink:0;padding:9px 10px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-size:12px;font-weight:650;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif;white-space:nowrap;}
@@ -192,10 +225,85 @@
   /* VIEW STATES */
   .view{display:none;}
   .view.active{display:block;}
+  /* ===== RESPONSIVE ===== */
+  /* ===== LEAFLET CONTAINMENT FIX (prevents map overflowing its panel on mobile) ===== */
+  .leaflet-pane,.leaflet-top,.leaflet-bottom,.leaflet-control{z-index:1 !important;}
+  .map-mock,.book-map-wrap{max-width:100%;}
+  .leaflet-container img.leaflet-tile{max-width:none !important;}
+  .menu-btn{display:none;background:var(--surface2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:8px;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:40;}
+  .sidebar-overlay.show{display:block;}
+  @media (max-width:1024px){
+    .quick-actions{grid-template-columns:repeat(2,1fr);}
+    .stats-row{grid-template-columns:repeat(2,1fr);}
+    .two-col{grid-template-columns:1fr;}
+  }
+  @media (max-width:768px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;z-index:50;transform:translateX(-100%);transition:transform 0.25s ease;box-shadow:2px 0 16px var(--shadow);}
+    .sidebar.open{transform:translateX(0);}
+    .menu-btn{display:flex;}
+    .content{padding:16px;}
+    .topbar{padding:14px 16px;}
+    .topbar-title{font-size:16px;}
+    .bf-row{grid-template-columns:1fr;}
+    .bf-types{grid-template-columns:1fr;}
+    .truck-info{grid-template-columns:1fr 1fr;}
+    .map-mock{height:300px !important;}
+    .book-map-wrap{height:260px !important;}
+    table{font-size:11px;}
+    .history-panel{overflow-x:auto;}
+    .history-table{min-width:520px;}
+  }
+  @media (max-width:480px){
+    .quick-actions{grid-template-columns:1fr;}
+    .stats-row{grid-template-columns:1fr;}
+    .topbar-date{display:none;}
+  }
 </style>
 </head>
 <body>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('itrush_theme');
+        var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('itrush_theme', next); } catch (e) {}
+      syncThemeIcon();
+    }
+    function syncThemeIcon() {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var dk = document.querySelector('.theme-icon-dark');
+      var lt = document.querySelector('.theme-icon-light');
+      if (dk) dk.style.display = isLight ? 'block' : 'none';
+      if (lt) lt.style.display = isLight ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', syncThemeIcon);
+    function toggleSidebar() {
+      var sb = document.querySelector('.sidebar');
+      var ov = document.getElementById('sidebar-overlay');
+      if (!sb) return;
+      var open = sb.classList.toggle('open');
+      if (ov) ov.classList.toggle('show', open);
+    }
+    function closeSidebar() {
+      var sb = document.querySelector('.sidebar');
+      var ov = document.getElementById('sidebar-overlay');
+      if (sb) sb.classList.remove('open');
+      if (ov) ov.classList.remove('show');
+    }
+  </script>
 <div class="shell">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -208,7 +316,7 @@
     <div class="sb-user">
       <div class="sb-avatar" id="sb-avatar">SN</div>
       <div class="sb-user-info">
-        <div class="sb-user-name" id="sb-user-name">Sarah Namukasa</div>
+        <div class="sb-user-name" id="sb-user-name">Resident</div>
         <div class="sb-user-zone" id="sb-user-zone">Nakawa Division</div>
       </div>
     </div>
@@ -259,9 +367,18 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title">Good morning, <em id="topbar-first">Sarah</em></div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+        <div class="topbar-title">Good morning, <em id="topbar-first">there</em></div>
+      </div>
       <div class="topbar-right">
         <span class="topbar-date" id="topbar-date">Sunday, 15 March 2026</span>
+        <div class="notif-btn" id="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark mode">
+          <svg class="theme-icon-dark" width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M12.5 8.5A5 5 0 016.5 2.5a5 5 0 100 10 5 5 0 006-4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          <svg class="theme-icon-light" width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:none;"><circle cx="7.5" cy="7.5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 1v1.5M7.5 12.5V14M14 7.5h-1.5M2.5 7.5H1M12.1 2.9l-1 1M3.9 11.1l-1 1M12.1 12.1l-1-1M3.9 3.9l-1-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </div>
         <div class="notif-btn" onclick="setView('dashboard')">
           <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M7.5 1.5a5 5 0 015 5v2.5l1 2H1.5l1-2V6.5a5 5 0 015-5z" stroke="currentColor" stroke-width="1.2"/><path d="M6 12.5a1.5 1.5 0 003 0" stroke="currentColor" stroke-width="1.2"/></svg>
           <div class="notif-dot"></div>
@@ -306,23 +423,18 @@
         <div class="stats-row">
           <div class="stat-card">
             <div class="stat-label">Total requests</div>
-            <div class="stat-value green" id="stat-total-requests">14</div>
+            <div class="stat-value green" id="stat-total-requests">0</div>
             <div class="stat-sub">This year</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Completed</div>
-            <div class="stat-value">12</div>
-            <div class="stat-sub">85% completion rate</div>
+            <div class="stat-value" id="stat-completed">0</div>
+            <div class="stat-sub" id="stat-completed-sub">No requests yet</div>
           </div>
           <div class="stat-card">
             <div class="stat-label">Next scheduled</div>
-            <div class="stat-value amber">Mon</div>
-            <div class="stat-sub">16 Mar · 8:00 AM</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Reports filed</div>
-            <div class="stat-value">2</div>
-            <div class="stat-sub">1 resolved · 1 open</div>
+            <div class="stat-value amber" id="stat-next">—</div>
+            <div class="stat-sub" id="stat-next-sub">No upcoming pickup</div>
           </div>
         </div>
 
@@ -335,71 +447,8 @@
               <span class="panel-title">Active collection request</span>
               <span class="panel-action" onclick="setView('track')">Track live →</span>
             </div>
-            <div class="tracker">
-              <div class="track-top">
-                <div class="track-id">Request <span>#REQ-2026-0312</span></div>
-                <div class="status-pill sp-active">In progress</div>
-              </div>
-              <div class="track-steps">
-                <div class="track-step">
-                  <div class="step-dot sd-done">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </div>
-                  <div class="step-body">
-                    <div class="step-title">Request confirmed</div>
-                    <div class="step-time">Today · 7:02 AM</div>
-                  </div>
-                </div>
-                <div class="track-step">
-                  <div class="step-dot sd-done">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </div>
-                  <div class="step-body">
-                    <div class="step-title">Truck dispatched</div>
-                    <div class="step-time">Today · 7:45 AM</div>
-                    <div class="step-meta">Truck #07 · UAX 312B · James Mukasa</div>
-                  </div>
-                </div>
-                <div class="track-step">
-                  <div class="step-dot sd-active"></div>
-                  <div class="step-body">
-                    <div class="step-title">En route to your location</div>
-                    <div class="step-time">Now · ~12 min away</div>
-                    <div class="step-meta">Plot 14, Ntinda Road, Nakawa</div>
-                  </div>
-                </div>
-                <div class="track-step">
-                  <div class="step-dot sd-pending"></div>
-                  <div class="step-body">
-                    <div class="step-title muted">Collection complete</div>
-                    <div class="step-time">Estimated 8:40 AM</div>
-                  </div>
-                </div>
-                <div class="track-step">
-                  <div class="step-dot sd-pending"></div>
-                  <div class="step-body" style="padding-bottom:0">
-                    <div class="step-title muted">Invoice generated</div>
-                    <div class="step-time">After completion</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="truck-card">
-              <div class="truck-header">
-                <div class="truck-icon">
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="16" height="6" rx="2" stroke="#60A5FA" stroke-width="1.4"/><path d="M1 11h2V9l2-4h7l2 4v2h2" stroke="#60A5FA" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/><circle cx="13" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/></svg>
-                </div>
-                <div>
-                  <div class="truck-name">Truck #07 · James Mukasa</div>
-                  <div class="truck-plate">UAX 312B · Kampala Waste Solutions</div>
-                </div>
-              </div>
-              <div class="truck-info">
-                <div class="ti-item"><div class="ti-label">ETA</div><div class="ti-value green">~12 min</div></div>
-                <div class="ti-item"><div class="ti-label">Distance</div><div class="ti-value">3.2 km</div></div>
-                <div class="ti-item"><div class="ti-label">Stops left</div><div class="ti-value">2</div></div>
-                <div class="ti-item"><div class="ti-label">Status</div><div class="ti-value green">Moving</div></div>
-              </div>
+            <div id="active-request-panel">
+              <div style="padding:16px 20px;color:var(--muted);font-size:13px;">Loading your latest request…</div>
             </div>
           </div>
 
@@ -422,13 +471,10 @@
             </div>
             <table class="history-table">
               <thead>
-                <tr><th>Request ID</th><th>Date</th><th>Type</th><th>Collector</th><th>Amount</th><th>Status</th></tr>
+                <tr><th>Request ID</th><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr>
               </thead>
-              <tbody>
-                <tr><td>#REQ-2026-0298</td><td>13 Mar 2026</td><td>Household</td><td>James Mukasa</td><td>UGX 8,000</td><td><span class="status-pill sp-done">Completed</span></td></tr>
-                <tr><td>#REQ-2026-0271</td><td>6 Mar 2026</td><td>Household</td><td>Grace Atim</td><td>UGX 8,000</td><td><span class="status-pill sp-done">Completed</span></td></tr>
-                <tr><td>#REQ-2026-0244</td><td>27 Feb 2026</td><td>Bulk waste</td><td>James Mukasa</td><td>UGX 18,000</td><td><span class="status-pill sp-done">Completed</span></td></tr>
-                <tr><td>#REQ-2026-0217</td><td>20 Feb 2026</td><td>Household</td><td>Peter Ssempa</td><td>UGX 8,000</td><td><span class="status-pill sp-pending">Disputed</span></td></tr>
+              <tbody id="history-tbody">
+                <tr><td colspan="5" style="color:var(--muted);padding:14px;">Loading your collections…</td></tr>
               </tbody>
             </table>
           </div>
@@ -463,19 +509,32 @@
                 </div>
               </div>
               <div class="bf-group">
-                <label class="bf-label">Pickup address</label>
-                <div class="bf-loc-row">
-                  <input class="bf-input" id="book-address" type="text" placeholder="e.g. Plot 14, Ntinda Road, Nakawa" value="Plot 14, Ntinda Road, Nakawa"/>
-                  <button class="bf-loc-btn" type="button" onclick="useCurrentLocation()">Use my location</button>
+                <label class="bf-label">Find your pickup location</label>
+                <div class="book-map-search">
+                  <input id="book-map-query" type="text" placeholder="Search e.g. Ntinda, Nakawa market, Kampala Road…"
+                         onkeydown="if(event.key==='Enter'){event.preventDefault();searchBookLocation();}"/>
+                  <button type="button" onclick="searchBookLocation()">Search</button>
                 </div>
-                <div class="bf-hint" id="book-loc-hint">Tip: Use GPS to attach your current coordinates for faster pickup.</div>
+                <div class="book-map-results" id="book-map-results"></div>
+                <div class="bf-loc-row" style="margin-top:8px;">
+                  <button class="bf-loc-btn" type="button" onclick="useCurrentLocation()" style="width:100%;justify-content:center;">📍 Use my current location (GPS)</button>
+                </div>
+                <div class="book-map-wrap">
+                  <div id="book-map" class="leaflet-map"></div>
+                </div>
+                <div class="book-pin-hint" id="book-pin-hint">Search above, tap the map, drag the pin, or use GPS to set your exact pickup point.</div>
+              </div>
+              <div class="bf-group">
+                <label class="bf-label">Pickup address <span style="color:var(--muted);font-weight:400;">(auto-filled — edit if needed)</span></label>
+                <input class="bf-input" id="book-address" type="text" placeholder="Set a location above to fill this in" value=""/>
+                <div class="bf-hint" id="book-loc-hint">This fills in automatically when you search, use GPS, or move the pin.</div>
                 <input type="hidden" id="book-lat" value=""/>
                 <input type="hidden" id="book-lng" value=""/>
               </div>
               <div class="bf-row">
                 <div class="bf-group">
                   <label class="bf-label">Preferred date</label>
-                  <input class="bf-input" id="book-date" type="date" value="2026-03-16"/>
+                  <input class="bf-input" id="book-date" type="date"/>
                 </div>
                 <div class="bf-group">
                   <label class="bf-label">Preferred time</label>
@@ -526,40 +585,17 @@
       <div class="view" id="view-track">
         <div class="panel" style="margin-bottom:16px;">
           <div class="panel-header">
-            <span class="panel-title">Live truck tracking · #REQ-2026-0312</span>
+            <span class="panel-title" id="track-title">Live pickup tracking</span>
             <span class="panel-action" onclick="setView('dashboard')">← Back</span>
           </div>
-          <div class="map-mock" style="margin:16px 20px;height:220px;">
-            <svg viewBox="0 0 600 220" preserveAspectRatio="xMidYMid slice">
-              <rect width="600" height="220" fill="#0A1610"/>
-              <line x1="0" y1="55" x2="600" y2="55" stroke="#1A3020" stroke-width="1.5"/>
-              <line x1="0" y1="110" x2="600" y2="110" stroke="#1A3020" stroke-width="2"/>
-              <line x1="0" y1="165" x2="600" y2="165" stroke="#1A3020" stroke-width="1.5"/>
-              <line x1="80" y1="0" x2="80" y2="220" stroke="#1A3020" stroke-width="1.5"/>
-              <line x1="200" y1="0" x2="200" y2="220" stroke="#1A3020" stroke-width="1.5"/>
-              <line x1="340" y1="0" x2="340" y2="220" stroke="#1A3020" stroke-width="2"/>
-              <line x1="480" y1="0" x2="480" y2="220" stroke="#1A3020" stroke-width="1.5"/>
-              <path d="M60 180 Q140 110 200 110 Q280 110 340 80 Q400 55 460 70 Q510 80 540 55" stroke="#2ECC71" stroke-width="2" fill="none" stroke-dasharray="7 4" opacity="0.7"/>
-              <circle cx="380" cy="68" r="9" fill="#2ECC71" opacity="0.95"/>
-              <circle cx="380" cy="68" r="16" fill="none" stroke="#2ECC71" stroke-width="1" opacity="0.3"/>
-              <circle cx="380" cy="68" r="24" fill="none" stroke="#2ECC71" stroke-width="0.5" opacity="0.15"/>
-              <circle cx="200" cy="110" r="5" fill="#F0A500" opacity="0.8"/>
-              <circle cx="480" cy="110" r="6" fill="#60A5FA" opacity="0.9"/>
-              <circle cx="480" cy="110" r="12" fill="none" stroke="#60A5FA" stroke-width="1" opacity="0.3"/>
-              <text x="192" y="128" fill="#7A9E88" font-size="9" font-family="sans-serif" text-anchor="middle">Prev stop</text>
-              <text x="470" y="128" fill="#EDF5F0" font-size="9" font-family="sans-serif" text-anchor="middle">Your location</text>
-              <text x="372" y="50" fill="#2ECC71" font-size="9" font-family="sans-serif" text-anchor="middle">Truck #07</text>
-              <text x="48" y="195" fill="#3D5A48" font-size="8" font-family="sans-serif">Ntinda</text>
-              <text x="165" y="195" fill="#3D5A48" font-size="8" font-family="sans-serif">Naguru</text>
-              <text x="305" y="195" fill="#3D5A48" font-size="8" font-family="sans-serif">Nakawa Mkt</text>
-              <text x="445" y="195" fill="#3D5A48" font-size="8" font-family="sans-serif">Ntinda Road</text>
-            </svg>
+          <div class="map-mock" style="margin:16px 20px;height:420px;">
+            <div id="track-map" class="leaflet-map"></div>
           </div>
           <div style="padding:0 20px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-            <div class="ti-item"><div class="ti-label">ETA</div><div class="ti-value green">~12 min</div></div>
-            <div class="ti-item"><div class="ti-label">Distance</div><div class="ti-value">3.2 km</div></div>
-            <div class="ti-item"><div class="ti-label">Speed</div><div class="ti-value">28 km/h</div></div>
-            <div class="ti-item"><div class="ti-label">Driver</div><div class="ti-value" style="font-size:11px;">James Mukasa</div></div>
+            <div class="ti-item"><div class="ti-label">Status</div><div class="ti-value green" id="track-status">—</div></div>
+            <div class="ti-item"><div class="ti-label">Type</div><div class="ti-value" id="track-type">—</div></div>
+            <div class="ti-item"><div class="ti-label">Volume</div><div class="ti-value" id="track-volume">—</div></div>
+            <div class="ti-item"><div class="ti-label">Scheduled</div><div class="ti-value" style="font-size:11px;" id="track-when">—</div></div>
           </div>
         </div>
       </div>
@@ -575,16 +611,16 @@
             <div class="book-form">
               <div class="bf-group">
                 <label class="bf-label">Report type</label>
-                <div class="bf-types">
-                  <div class="bf-type active" onclick="selectType(this)">
+                <div class="bf-types" id="report-types">
+                  <div class="bf-type active" data-report-type="missed_pickup" onclick="selectType(this)">
                     <div class="bf-type-icon">🗑️</div>
                     <div class="bf-type-label">Missed pickup</div>
                   </div>
-                  <div class="bf-type" onclick="selectType(this)">
+                  <div class="bf-type" data-report-type="overflow" onclick="selectType(this)">
                     <div class="bf-type-icon">⚠️</div>
                     <div class="bf-type-label">Overflow</div>
                   </div>
-                  <div class="bf-type" onclick="selectType(this)">
+                  <div class="bf-type" data-report-type="illegal_dump" onclick="selectType(this)">
                     <div class="bf-type-icon">🚫</div>
                     <div class="bf-type-label">Illegal dump</div>
                   </div>
@@ -592,11 +628,11 @@
               </div>
               <div class="bf-group">
                 <label class="bf-label">Location of issue</label>
-                <input class="bf-input" type="text" placeholder="e.g. Near Ntinda market junction"/>
+                <input class="bf-input" id="report-location" type="text" placeholder="e.g. Near Ntinda market junction"/>
               </div>
               <div class="bf-group">
                 <label class="bf-label">Zone / Division</label>
-                <select class="bf-select">
+                <select class="bf-select" id="report-zone">
                   <option selected>Nakawa Division</option>
                   <option>Kawempe Division</option>
                   <option>Makindye Division</option>
@@ -607,18 +643,19 @@
               </div>
               <div class="bf-group">
                 <label class="bf-label">Severity</label>
-                <select class="bf-select">
-                  <option>Low — minor accumulation</option>
-                  <option>Medium — blocked path or drain</option>
-                  <option>High — health or flood risk</option>
-                  <option>Critical — immediate action required</option>
+                <select class="bf-select" id="report-severity">
+                  <option value="low">Low — minor accumulation</option>
+                  <option value="medium">Medium — blocked path or drain</option>
+                  <option value="high">High — health or flood risk</option>
+                  <option value="critical">Critical — immediate action required</option>
                 </select>
               </div>
               <div class="bf-group">
                 <label class="bf-label">Description</label>
-                <textarea class="bf-textarea" placeholder="Describe the waste situation, approximate volume, and how long it has been there…"></textarea>
+                <textarea class="bf-textarea" id="report-description" placeholder="Describe the waste situation, approximate volume, and how long it has been there…"></textarea>
               </div>
-              <button class="btn-book" onclick="setView('dashboard')">
+              <div class="bf-hint" id="report-hint" style="margin-bottom:10px;"></div>
+              <button class="btn-book" id="report-submit" onclick="submitReport()">
                 Submit report
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10M7.5 3L12 7l-4.5 4" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </button>
@@ -674,11 +711,39 @@
 
       <!-- ===== INVOICES VIEW ===== -->
       <div class="view" id="view-invoices">
-        <div class="coming-soon">
-          <div class="cs-title">My Invoices</div>
-          <div class="cs-sub">This section will show your generated invoices once billing is connected.</div>
-          <div class="cs-card">
-            <div class="cs-row"><div class="cs-label">Status</div><div class="cs-value">Coming soon</div></div>
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">My Invoices</span>
+            <span class="panel-action" onclick="setView('dashboard')">← Back</span>
+          </div>
+          <div style="padding:14px 20px;display:flex;gap:10px;flex-wrap:wrap;">
+            <div class="stat-card" style="flex:1;min-width:140px;">
+              <div class="stat-label">Total billed</div>
+              <div class="stat-value green" id="inv-total">UGX 0</div>
+              <div class="stat-sub" id="inv-count">0 invoices</div>
+            </div>
+            <div class="stat-card" style="flex:1;min-width:140px;">
+              <div class="stat-label">Paid</div>
+              <div class="stat-value" id="inv-paid">UGX 0</div>
+              <div class="stat-sub" id="inv-paid-count">0 paid</div>
+            </div>
+            <div class="stat-card" style="flex:1;min-width:140px;">
+              <div class="stat-label">Outstanding</div>
+              <div class="stat-value amber" id="inv-due">UGX 0</div>
+              <div class="stat-sub" id="inv-due-count">0 pending</div>
+            </div>
+          </div>
+          <div class="history-panel" style="overflow-x:auto;">
+            <table class="history-table" style="width:100%;min-width:520px;border-collapse:collapse;">
+              <thead>
+                <tr>
+                  <th>Invoice</th><th>Date</th><th>Service</th><th>Amount</th><th>Payment</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-tbody">
+                <tr><td colspan="5" style="color:var(--muted);padding:14px;">Loading invoices…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -689,12 +754,41 @@
 
 <script>
   const USE_FIREBASE = window.ITRUSH_FIREBASE_CONFIG && window.ITRUSH_FIREBASE_CONFIG.apiKey && window.ITRUSH_FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+  const API_BASE = window.ITRUSH_API_URL || 'http://localhost:3000';
+  const PAGE_ROLE = 'resident';
+
   let firebaseAuth = null;
   let firebaseDb = null;
   let currentUser = null;
   let lastCreatedRequestId = null;
   let residentNotifUnsub = null;
   let residentNotifDocs = [];
+
+  async function enforcePageRole(expectedRole) {
+    const token = localStorage.getItem('itrush_token');
+    if (!token) {
+      window.location.href = 'signin.html';
+      return false;
+    }
+
+    try {
+      const response = await fetch(API_BASE + '/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Unauthorized');
+      const payload = await response.json();
+      const actualRole = payload && payload.user ? payload.user.role : null;
+      if (expectedRole && actualRole !== expectedRole) {
+        window.location.href = 'signin.html';
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.warn('Protected page check failed:', error.message || error);
+      window.location.href = 'signin.html';
+      return false;
+    }
+  }
 
   function todayISO() {
     const d = new Date();
@@ -735,24 +829,30 @@
     const lngEl = document.getElementById('book-lng');
     const addrEl = document.getElementById('book-address');
     if (!navigator.geolocation) {
-      if (hint) hint.textContent = 'Geolocation is not supported by this browser.';
+      if (hint) hint.textContent = 'Geolocation is not supported by this browser. Please search or drag the pin instead.';
       return;
     }
-    if (hint) hint.textContent = 'Getting your current location…';
+    if (hint) hint.textContent = 'Getting your current location… (allow the location prompt)';
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         if (latEl) latEl.value = String(lat);
         if (lngEl) lngEl.value = String(lng);
-        if (hint) hint.textContent = `Location attached: ${lat.toFixed(5)}, ${lng.toFixed(5)}.`;
+        if (hint) hint.textContent = `Location attached: ${lat.toFixed(5)}, ${lng.toFixed(5)}. Fetching address…`;
         if (addrEl && !addrEl.value.trim()) addrEl.value = `Current location (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+        // Drop the map pin on the detected location and reverse-geocode a readable address
+        try { moveBookPin(lat, lng, 16); reverseGeocode(lat, lng); } catch (e) { console.error(e); }
       },
       (err) => {
         console.error('Geolocation error:', err);
-        if (hint) hint.textContent = 'Could not get location. Please allow location access and try again.';
+        let msg = 'Could not get your location. Please search or drag the pin instead.';
+        if (err.code === err.PERMISSION_DENIED) msg = 'Location permission was blocked. Allow location access in your browser, then tap again — or search/drag the pin.';
+        else if (err.code === err.POSITION_UNAVAILABLE) msg = 'Your location is unavailable right now. Try again outdoors, or search/drag the pin.';
+        else if (err.code === err.TIMEOUT) msg = 'Location took too long. Try again, or search/drag the pin.';
+        if (hint) hint.textContent = msg;
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 }
     );
   }
 
@@ -902,10 +1002,13 @@
         alert('Please choose a date from today onwards.');
         return;
       }
-      if (!address) {
-        alert('Please enter a pickup address (or use your current location).');
+      if (!address && !(lat && lng)) {
+        alert('Please set your pickup location — search for a place, use GPS, or tap the map to drop a pin.');
+        setView('book');
         return;
       }
+      // If they set a pin but no text address, use the coordinates as the address
+      const finalAddress = address || `Pinned location (${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)})`;
 
       const amountUGX = estimateAmountUGX({ type, volume });
       const ref = await firebaseDb.collection('collection_requests').add({
@@ -915,7 +1018,7 @@
         type,
         volume,
         zone,
-        pickupAddress: address,
+        pickupAddress: finalAddress,
         pickupGeo: (lat && lng) ? { lat: Number(lat), lng: Number(lng) } : null,
         preferredDate,
         preferredTime,
@@ -948,11 +1051,76 @@
       if ((e && (e.code === 'permission-denied' || e.message?.toLowerCase?.().includes('missing or insufficient permissions')))) {
         alert(
           'Firestore blocked this action (Missing or insufficient permissions).\n\n' +
-          'Fix: Firebase Console → Firestore Database → Rules → Publish the iTRUSH rules from GETTING_STARTED (allow signed-in read/write for collection_requests and notifications).\n\n' +
+          'Fix: Firebase Console → Firestore Database → Rules → publish the rules from firestore.rules (see GETTING_STARTED).\n\n' +
           'Then refresh the page and try again.'
         );
       } else {
         alert(e.message || 'Booking failed. Please try again.');
+      }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function submitReport() {
+    const btn = document.getElementById('report-submit');
+    const hint = document.getElementById('report-hint');
+    const showHint = (msg, ok) => { if (hint) { hint.textContent = msg; hint.style.color = ok ? 'var(--green)' : 'var(--red)'; } };
+    if (btn) btn.disabled = true;
+    try {
+      if (!USE_FIREBASE || !firebaseAuth || !firebaseDb) {
+        showHint('Firebase is not configured. Please set app/firebase-config.js first.', false);
+        return;
+      }
+      if (!currentUser) { window.location.href = 'signin.html'; return; }
+
+      const activeType = document.querySelector('#report-types .bf-type.active');
+      const type = activeType ? activeType.dataset.reportType : 'missed_pickup';
+      const location = (document.getElementById('report-location')?.value || '').trim();
+      const zone = (document.getElementById('report-zone')?.value || '').trim();
+      const severity = (document.getElementById('report-severity')?.value || 'low').trim();
+      const description = (document.getElementById('report-description')?.value || '').trim();
+
+      if (!location) { showHint('Please enter the location of the issue.', false); return; }
+      if (!description) { showHint('Please add a short description so KCCA can act on it.', false); return; }
+
+      const typeLabel = { missed_pickup: 'Missed pickup', overflow: 'Overflow', illegal_dump: 'Illegal dump' }[type] || 'Report';
+
+      const ref = await firebaseDb.collection('overflow_reports').add({
+        reporterUid: currentUser.uid,
+        type,
+        location,
+        zone,
+        severity,
+        description,
+        status: 'open',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      await createNotification({
+        toRole: 'kcca_officer',
+        type: 'overflow_report',
+        reportId: ref.id,
+        message: `${typeLabel} reported at ${location} (${zone}) · severity: ${severity}.`
+      });
+      await createNotification({
+        toUid: currentUser.uid,
+        type: 'overflow_report',
+        reportId: ref.id,
+        message: 'Your waste report was submitted to KCCA. Thank you for helping keep GKMA clean.'
+      });
+
+      showHint('Report submitted to KCCA. Redirecting…', true);
+      // Reset the form for next time
+      const loc = document.getElementById('report-location'); if (loc) loc.value = '';
+      const desc = document.getElementById('report-description'); if (desc) desc.value = '';
+      setTimeout(() => { showHint('', true); setView('dashboard'); }, 1200);
+    } catch (e) {
+      console.error('Report submission failed:', e);
+      if (e && (e.code === 'permission-denied' || e.message?.toLowerCase?.().includes('insufficient permissions'))) {
+        showHint('Firestore blocked this (permissions). Publish the iTRUSH rules including overflow_reports, then retry.', false);
+      } else {
+        showHint(e.message || 'Could not submit report. Please try again.', false);
       }
     } finally {
       if (btn) btn.disabled = false;
@@ -996,26 +1164,222 @@
     }
   }
 
+  let residentRequests = [];
+
+  function reqStatusPill(status){
+    const map = {
+      pending_assignment: ['sp-pending', 'Pending'],
+      paid_pending_assignment: ['sp-pending', 'Paid · pending'],
+      assigned: ['sp-active', 'Assigned'],
+      driver_confirmed: ['sp-active', 'Driver confirmed'],
+      in_progress: ['sp-active', 'In progress'],
+      completed: ['sp-done', 'Completed'],
+      cancelled: ['sp-pending', 'Cancelled'],
+      disputed: ['sp-pending', 'Disputed']
+    };
+    const [cls, label] = map[status] || ['sp-pending', 'Pending'];
+    return `<span class="status-pill ${cls}">${label}</span>`;
+  }
+
+  function reqDateObj(r){
+    const ts = r.completedAt || r.assignedAt || r.createdAt;
+    if (ts && ts.toDate) return ts.toDate();
+    if (r.preferredDate){ const d = new Date(r.preferredDate); if (!isNaN(d)) return d; }
+    return null;
+  }
+
   async function refreshTotalRequests() {
     if (!firebaseDb || !currentUser) return;
-    const el = document.getElementById('stat-total-requests');
-    if (!el) return;
     try {
       const snap = await firebaseDb.collection('collection_requests')
         .where('residentUid', '==', currentUser.uid)
         .limit(500)
         .get();
-      const year = new Date().getFullYear();
-      let count = 0;
-      snap.forEach(doc => {
-        const d = doc.data();
-        const createdAt = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate() : null;
-        if (!createdAt || createdAt.getFullYear() === year) count++;
-      });
-      el.textContent = String(count);
+      const rows = [];
+      snap.forEach(doc => rows.push({ id: doc.id, ...doc.data() }));
+      residentRequests = rows;
+      renderResidentStats();
+      renderResidentHistory();
+      renderInvoices();
+      renderActiveRequestPanel();
     } catch (e) {
-      console.error('Failed to refresh stats:', e);
+      console.error('Failed to load requests:', e);
     }
+  }
+
+  function renderResidentStats(){
+    const year = new Date().getFullYear();
+    const thisYear = residentRequests.filter(r => {
+      const d = reqDateObj(r);
+      return !d || d.getFullYear() === year;
+    });
+    const completed = residentRequests.filter(r => r.status === 'completed').length;
+    const total = residentRequests.length;
+    const rate = total ? Math.round((completed / total) * 100) : 0;
+    // Next upcoming pickup (not completed/cancelled, soonest preferredDate)
+    const upcoming = residentRequests
+      .filter(r => r.status !== 'completed' && r.status !== 'cancelled' && r.preferredDate)
+      .sort((a, b) => new Date(a.preferredDate) - new Date(b.preferredDate))[0];
+
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('stat-total-requests', String(thisYear.length));
+    set('stat-completed', String(completed));
+    set('stat-completed-sub', total ? rate + '% completion rate' : 'No requests yet');
+    if (upcoming){
+      const d = new Date(upcoming.preferredDate);
+      const day = isNaN(d) ? '—' : new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(d);
+      set('stat-next', day);
+      set('stat-next-sub', `${upcoming.preferredDate}${upcoming.preferredTime ? ' · ' + upcoming.preferredTime : ''}`);
+    } else {
+      set('stat-next', '—');
+      set('stat-next-sub', 'No upcoming pickup');
+    }
+  }
+
+  function renderResidentHistory(){
+    const tbody = document.getElementById('history-tbody');
+    if (!tbody) return;
+    const rows = residentRequests.slice().sort((a, b) => {
+      const da = reqDateObj(a) || new Date(0);
+      const db = reqDateObj(b) || new Date(0);
+      return db - da;
+    });
+    if (!rows.length){
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);padding:14px;">No collection requests yet. Book your first pickup above.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const d = reqDateObj(r);
+      const dateLabel = d ? new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', year: 'numeric' }).format(d) : (r.preferredDate || '—');
+      const amount = Number(r.amountUGX || 0);
+      const type = r.type ? r.type.charAt(0).toUpperCase() + r.type.slice(1) : 'Collection';
+      return `<tr>
+        <td>#${r.id.slice(0, 8).toUpperCase()}</td>
+        <td>${dateLabel}</td>
+        <td>${type}</td>
+        <td>${amount ? 'UGX ' + amount.toLocaleString() : '—'}</td>
+        <td>${reqStatusPill(r.status)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderInvoices(){
+    const tbody = document.getElementById('invoices-tbody');
+    // Any request with an amount is an invoice; paid ones are settled
+    const invoices = residentRequests
+      .filter(r => Number(r.amountUGX || 0) > 0)
+      .sort((a, b) => (reqDateObj(b) || new Date(0)) - (reqDateObj(a) || new Date(0)));
+
+    let total = 0, paid = 0, due = 0, paidCount = 0, dueCount = 0;
+    invoices.forEach(r => {
+      const amt = Number(r.amountUGX || 0);
+      total += amt;
+      if (r.paymentStatus === 'paid') { paid += amt; paidCount++; }
+      else { due += amt; dueCount++; }
+    });
+
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('inv-total', 'UGX ' + total.toLocaleString());
+    setTxt('inv-count', invoices.length + (invoices.length === 1 ? ' invoice' : ' invoices'));
+    setTxt('inv-paid', 'UGX ' + paid.toLocaleString());
+    setTxt('inv-paid-count', paidCount + ' paid');
+    setTxt('inv-due', 'UGX ' + due.toLocaleString());
+    setTxt('inv-due-count', dueCount + ' pending');
+
+    if (!tbody) return;
+    if (!invoices.length){
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--muted);padding:14px;">No invoices yet. Invoices are generated when you book a collection.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = invoices.map(r => {
+      const d = reqDateObj(r);
+      const dateLabel = d ? new Intl.DateTimeFormat(undefined, { day: '2-digit', month: 'short', year: 'numeric' }).format(d) : (r.preferredDate || '—');
+      const amount = Number(r.amountUGX || 0);
+      const type = r.type ? r.type.charAt(0).toUpperCase() + r.type.slice(1) : 'Collection';
+      const isPaid = r.paymentStatus === 'paid';
+      const payPill = isPaid
+        ? '<span class="status-pill sp-done">Paid</span>'
+        : `<span class="status-pill sp-pending">Unpaid</span>`;
+      return `<tr>
+        <td>INV-${r.id.slice(0, 8).toUpperCase()}</td>
+        <td>${dateLabel}</td>
+        <td>${type}${r.volume ? ' · ' + r.volume : ''}</td>
+        <td>UGX ${amount.toLocaleString()}</td>
+        <td>${payPill}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Render the "Active collection request" panel from the resident's latest live request
+  function renderActiveRequestPanel(){
+    const panel = document.getElementById('active-request-panel');
+    if (!panel) return;
+    // Latest non-completed request, else most recent overall
+    const active = residentRequests
+      .filter(r => r.status !== 'completed' && r.status !== 'cancelled')
+      .sort((a, b) => (reqDateObj(b) || new Date(0)) - (reqDateObj(a) || new Date(0)))[0]
+      || residentRequests.slice().sort((a, b) => (reqDateObj(b) || new Date(0)) - (reqDateObj(a) || new Date(0)))[0];
+
+    if (!active){
+      panel.innerHTML = `<div style="padding:16px 20px;color:var(--muted);font-size:13px;">No active requests. Book a collection to track it here.</div>`;
+      return;
+    }
+
+    // Lifecycle steps derived from the request's real status
+    const order = ['created', 'assigned', 'in_progress', 'completed'];
+    const statusRank = {
+      pending_assignment: 0, paid_pending_assignment: 0,
+      assigned: 1, driver_confirmed: 1,
+      in_progress: 2, completed: 3
+    };
+    const rank = statusRank[active.status] ?? 0;
+    const steps = [
+      { key: 'created', title: 'Request submitted', done: rank >= 0 },
+      { key: 'assigned', title: 'Driver assigned', done: rank >= 1 },
+      { key: 'in_progress', title: 'Collection in progress', done: rank >= 2 },
+      { key: 'completed', title: 'Collection complete', done: rank >= 3 }
+    ];
+    const stepHtml = steps.map((s, i) => {
+      const isActive = !s.done && (i === 0 || steps[i - 1].done);
+      const dotCls = s.done ? 'sd-done' : (isActive ? 'sd-active' : 'sd-pending');
+      const dotInner = s.done ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '';
+      const titleCls = (s.done || isActive) ? '' : ' muted';
+      return `
+        <div class="track-step">
+          <div class="step-dot ${dotCls}">${dotInner}</div>
+          <div class="step-body"${i === steps.length - 1 ? ' style="padding-bottom:0"' : ''}>
+            <div class="step-title${titleCls}">${s.title}</div>
+            ${i === 0 && active.pickupAddress ? `<div class="step-meta">${active.pickupAddress}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    const amount = Number(active.amountUGX || 0);
+    panel.innerHTML = `
+      <div class="tracker">
+        <div class="track-top">
+          <div class="track-id">Request <span>#${active.id.slice(0, 8).toUpperCase()}</span></div>
+          ${reqStatusPill(active.status)}
+        </div>
+        <div class="track-steps">${stepHtml}</div>
+      </div>
+      <div class="truck-card">
+        <div class="truck-header">
+          <div class="truck-icon">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="9" width="16" height="6" rx="2" stroke="#60A5FA" stroke-width="1.4"/><path d="M1 11h2V9l2-4h7l2 4v2h2" stroke="#60A5FA" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/><circle cx="13" cy="15" r="1.5" stroke="#60A5FA" stroke-width="1.2"/></svg>
+          </div>
+          <div>
+            <div class="truck-name">${active.pickupAddress || 'Pickup location'}</div>
+            <div class="truck-plate">${active.zone || 'Zone —'}${active.preferredDate ? ' · ' + active.preferredDate : ''}</div>
+          </div>
+        </div>
+        <div class="truck-info">
+          <div class="ti-item"><div class="ti-label">Type</div><div class="ti-value" style="font-size:12px;">${active.type ? active.type.charAt(0).toUpperCase() + active.type.slice(1) : 'Collection'}</div></div>
+          <div class="ti-item"><div class="ti-label">Volume</div><div class="ti-value" style="font-size:12px;">${active.volume || '—'}</div></div>
+          <div class="ti-item"><div class="ti-label">Amount</div><div class="ti-value green" style="font-size:12px;">${amount ? amount.toLocaleString() : '—'}</div></div>
+          <div class="ti-item"><div class="ti-label">Payment</div><div class="ti-value" style="font-size:12px;">${active.paymentStatus === 'paid' ? 'Paid' : 'Pending'}</div></div>
+        </div>
+      </div>`;
   }
 
   function formatTopDate(d) {
@@ -1042,12 +1406,16 @@
   }
 
   function setView(v) {
+    if (typeof closeSidebar === 'function') closeSidebar();
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
     document.getElementById('view-' + v).classList.add('active');
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     const map = {dashboard:0, book:1, track:2, report:3, profile:4, payments:5, help:6};
     const items = document.querySelectorAll('.nav-item');
     if (map[v] !== undefined) items[map[v]].classList.add('active');
+    // Initialise Leaflet maps once their view is visible
+    if (v === 'book') { try { setupBookingDateConstraints(); initBookMap(); } catch (e) { console.error(e); } }
+    if (v === 'track') { try { initTrackMap(); } catch (e) { console.error(e); } }
   }
   function selectType(el) {
     el.closest('.bf-types').querySelectorAll('.bf-type').forEach(t => t.classList.remove('active'));
@@ -1087,18 +1455,247 @@
     if (profileZone) profileZone.textContent = zone;
   }
 
+  /* ============================================================
+     MAPS MODULE (Leaflet + OpenStreetMap)
+     1) Booking pin picker  — draggable pin + address search
+     2) Live tracking map   — shows the resident's pickup location
+     ============================================================ */
+  const KAMPALA = { center: [0.3163, 32.5822], zoom: 13 };
+  const R_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  const R_TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+  const rMaps = { book: { map: null, marker: null }, track: { map: null } };
+
+  // Robustly re-measure a Leaflet map after its view becomes visible.
+  // Runs several times to catch the CSS view-transition and mobile layout settle.
+  function kickMap(map) {
+    if (!map) return;
+    [60, 200, 450, 800].forEach(t => setTimeout(() => { try { map.invalidateSize(false); } catch (e) {} }, t));
+  }
+
+  function greenPin() {
+    return L.divIcon({
+      className: '',
+      html: '<span style="display:block;width:20px;height:20px;background:#2ECC71;border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,0.5);"></span>',
+      iconSize: [20, 20],
+      iconAnchor: [10, 20],
+      popupAnchor: [0, -18]
+    });
+  }
+  function truckPin() {
+    return L.divIcon({
+      className: '',
+      html: '<span style="display:block;width:16px;height:16px;background:#F0A500;border:2px solid #fff;border-radius:50%;box-shadow:0 0 0 6px rgba(240,165,0,0.25);"></span>',
+      iconSize: [16, 16], iconAnchor: [8, 8], popupAnchor: [0, -10]
+    });
+  }
+
+  // Sync the hidden lat/lng inputs + hint text from the pin position
+  function setBookLatLng(lat, lng) {
+    const latEl = document.getElementById('book-lat');
+    const lngEl = document.getElementById('book-lng');
+    if (latEl) latEl.value = String(lat);
+    if (lngEl) lngEl.value = String(lng);
+    const hint = document.getElementById('book-loc-hint');
+    if (hint) hint.textContent = `Pickup point set: ${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}.`;
+  }
+
+  // Lazily build the booking pin-picker map
+  function initBookMap() {
+    if (rMaps.book.map) { kickMap(rMaps.book.map); return; }
+    const el = document.getElementById('book-map');
+    if (!el || typeof L === 'undefined') return;
+
+    // Start from any already-captured coords, else Kampala centre
+    const lat0 = Number(document.getElementById('book-lat')?.value) || KAMPALA.center[0];
+    const lng0 = Number(document.getElementById('book-lng')?.value) || KAMPALA.center[1];
+    const hasCoords = !!document.getElementById('book-lat')?.value;
+
+    const map = L.map(el, { center: [lat0, lng0], zoom: hasCoords ? 16 : KAMPALA.zoom, scrollWheelZoom: true });
+    L.tileLayer(R_DARK_TILES, { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
+
+    const marker = L.marker([lat0, lng0], { icon: greenPin(), draggable: true }).addTo(map);
+    marker.on('dragend', () => {
+      const p = marker.getLatLng();
+      setBookLatLng(p.lat, p.lng);
+      reverseGeocode(p.lat, p.lng);
+    });
+    // Click the map to move the pin
+    map.on('click', (e) => {
+      marker.setLatLng(e.latlng);
+      setBookLatLng(e.latlng.lat, e.latlng.lng);
+      reverseGeocode(e.latlng.lat, e.latlng.lng);
+    });
+
+    rMaps.book.map = map;
+    rMaps.book.marker = marker;
+    if (hasCoords) setBookLatLng(lat0, lng0);
+    kickMap(map);
+  }
+
+  // Move the booking pin programmatically (from GPS or search)
+  function moveBookPin(lat, lng, zoom) {
+    initBookMap();
+    if (!rMaps.book.map) return;
+    rMaps.book.marker.setLatLng([lat, lng]);
+    rMaps.book.map.setView([lat, lng], zoom || 16);
+    setBookLatLng(lat, lng);
+  }
+
+  // Forward geocode via OpenStreetMap Nominatim (free, no key). Biased to Uganda.
+  async function searchBookLocation() {
+    const q = (document.getElementById('book-map-query')?.value || '').trim();
+    const results = document.getElementById('book-map-results');
+    if (!q) {
+      if (results) { results.innerHTML = '<div class="book-map-result" style="cursor:default;color:var(--muted);">Type a place name, then press Search.</div>'; results.classList.add('show'); }
+      return;
+    }
+    if (results) { results.innerHTML = '<div class="book-map-result" style="cursor:default;color:var(--muted);">Searching…</div>'; results.classList.add('show'); }
+    try {
+      // Bias to Uganda; addressdetails gives us cleaner short labels
+      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&countrycodes=ug&q=${encodeURIComponent(q)}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const data = await res.json();
+      if (!results) return;
+      if (!Array.isArray(data) || !data.length) {
+        results.innerHTML = '<div class="book-map-result" style="cursor:default;color:var(--muted);">No matches found. Try a nearby landmark or road name.</div>';
+        return;
+      }
+      results.innerHTML = '';
+      data.forEach(item => {
+        const a = item.address || {};
+        // Build a short, readable label
+        const primary = a.road || a.suburb || a.neighbourhood || a.village || a.town || a.city_district || (item.display_name.split(',')[0]);
+        const area = a.suburb || a.city || a.town || a.county || a.state || '';
+        const shortLabel = [primary, area].filter(Boolean).filter((v, i, arr) => arr.indexOf(v) === i).join(', ');
+        const div = document.createElement('div');
+        div.className = 'book-map-result';
+        div.innerHTML = `<div style="font-weight:600;">${shortLabel || primary}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${item.display_name}</div>`;
+        div.onclick = () => {
+          const lat = Number(item.lat), lng = Number(item.lon);
+          moveBookPin(lat, lng, 16);
+          setBookLatLng(lat, lng);
+          const addr = document.getElementById('book-address');
+          if (addr) addr.value = shortLabel || item.display_name.split(',').slice(0, 3).join(', ');
+          results.classList.remove('show');
+          results.innerHTML = '';
+          const q2 = document.getElementById('book-map-query'); if (q2) q2.value = '';
+        };
+        results.appendChild(div);
+      });
+    } catch (e) {
+      console.error('Geocode search failed:', e);
+      if (results) results.innerHTML = '<div class="book-map-result" style="cursor:default;color:var(--muted);">Search unavailable right now. Tap the map or drag the pin instead.</div>';
+    }
+  }
+
+  // Reverse geocode: fill the address field when the pin moves (best-effort)
+  let reverseTimer = null;
+  function reverseGeocode(lat, lng) {
+    clearTimeout(reverseTimer);
+    reverseTimer = setTimeout(async () => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        const addr = document.getElementById('book-address');
+        if (addr && data && data.display_name) {
+          addr.value = data.display_name.split(',').slice(0, 3).join(', ');
+        }
+      } catch (_) { /* silent — pin coords are what matter */ }
+    }, 600);
+  }
+
+  // Build the live tracking map from the resident's most recent request
+  async function initTrackMap() {
+    const el = document.getElementById('track-map');
+    if (!el || typeof L === 'undefined') return;
+
+    // Resolve a pickup location for the tracked request
+    let pickup = null, addr = '', reqId = '', reqData = null;
+    try {
+      const id = lastCreatedRequestId || localStorage.getItem('itrush_last_request_id');
+      if (id && firebaseDb) {
+        const doc = await firebaseDb.collection('collection_requests').doc(id).get();
+        if (doc.exists) {
+          const d = doc.data();
+          reqData = d;
+          reqId = id;
+          addr = d.pickupAddress || '';
+          if (d.pickupGeo && Number.isFinite(Number(d.pickupGeo.lat))) {
+            pickup = [Number(d.pickupGeo.lat), Number(d.pickupGeo.lng)];
+          }
+        }
+      }
+    } catch (e) { console.warn('Track lookup failed:', e); }
+
+    // Populate the track panel header + info fields from the real request
+    const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    if (reqData) {
+      setT('track-title', `Tracking · #${reqId.slice(0, 8).toUpperCase()}`);
+      const statusText = ({
+        pending_assignment: 'Pending', paid_pending_assignment: 'Paid · pending',
+        assigned: 'Assigned', driver_confirmed: 'Confirmed', in_progress: 'In progress',
+        completed: 'Completed', cancelled: 'Cancelled', disputed: 'Disputed'
+      })[reqData.status] || 'Pending';
+      setT('track-status', statusText);
+      setT('track-type', reqData.type ? reqData.type.charAt(0).toUpperCase() + reqData.type.slice(1) : 'Collection');
+      setT('track-volume', reqData.volume || '—');
+      setT('track-when', reqData.preferredDate ? `${reqData.preferredDate}${reqData.preferredTime ? ' · ' + reqData.preferredTime : ''}` : 'Flexible');
+    } else {
+      setT('track-title', 'Live pickup tracking');
+      setT('track-status', '—'); setT('track-type', '—'); setT('track-volume', '—'); setT('track-when', '—');
+    }
+
+    const center = pickup || KAMPALA.center;
+
+    if (rMaps.track.map) {
+      kickMap(rMaps.track.map);
+      rMaps.track.map.setView(center, pickup ? 15 : KAMPALA.zoom);
+    } else {
+      const map = L.map(el, { center, zoom: pickup ? 15 : KAMPALA.zoom, scrollWheelZoom: true });
+      L.tileLayer(R_DARK_TILES, { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
+      rMaps.track.map = map;
+      kickMap(map);
+    }
+
+    // Refresh the pickup marker
+    if (rMaps.track.markerLayer) rMaps.track.markerLayer.clearLayers();
+    else rMaps.track.markerLayer = L.layerGroup().addTo(rMaps.track.map);
+
+    if (pickup) {
+      L.marker(pickup, { icon: greenPin() })
+        .bindPopup(`<b>Your pickup</b><br>${addr || (pickup[0].toFixed(5) + ', ' + pickup[1].toFixed(5))}`)
+        .addTo(rMaps.track.markerLayer)
+        .openPopup();
+    } else {
+      let note = el.parentElement.querySelector('.map-empty-note');
+      if (!note) {
+        note = document.createElement('div');
+        note.className = 'map-empty-note';
+        note.style.cssText = 'position:absolute;z-index:500;bottom:10px;left:10px;background:rgba(15,29,20,0.9);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:6px 10px;border-radius:6px;pointer-events:none;';
+        el.parentElement.appendChild(note);
+      }
+      note.textContent = 'Book a collection with a map pin to see it tracked here.';
+    }
+  }
+
   (function init() {
     setTopDateNow();
     setInterval(setTopDateNow, 60 * 1000);
     setupBookingDateConstraints();
 
-    if (!USE_FIREBASE || typeof firebase === 'undefined') return;
+    if (!USE_FIREBASE || typeof firebase === 'undefined') {
+      enforcePageRole(PAGE_ROLE);
+      return;
+    }
     try {
       firebase.initializeApp(window.ITRUSH_FIREBASE_CONFIG);
       firebaseAuth = firebase.auth();
       firebaseDb = firebase.firestore();
     } catch (e) {
       console.error('Firebase init failed:', e);
+      enforcePageRole(PAGE_ROLE);
       return;
     }
 
@@ -1112,6 +1709,18 @@
         const token = await user.getIdToken();
         localStorage.setItem('itrush_token', token);
       } catch (_) {}
+      try {
+        const snap = await firebaseDb.collection('users').doc(user.uid).get();
+        const role = snap && snap.data ? (snap.data().role || 'resident') : 'resident';
+        if (role !== PAGE_ROLE) {
+          window.location.href = 'signin.html';
+          return;
+        }
+      } catch (e) {
+        console.warn('Role guard failed for resident dashboard:', e);
+        window.location.href = 'signin.html';
+        return;
+      }
       try {
         await hydrateUserFromFirebase(user);
         await refreshTotalRequests();

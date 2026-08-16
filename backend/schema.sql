@@ -56,11 +56,47 @@ CREATE TABLE IF NOT EXISTS collection_requests (
   collector_id      UUID REFERENCES collectors(id),
   waste_type        TEXT,
   volume            TEXT,
-  status            TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'dispatched', 'in_progress', 'completed', 'disputed')),
+  zone              TEXT,
+  pickup_address    TEXT,
+  latitude          NUMERIC(9,6),
+  longitude         NUMERIC(9,6),
+  preferred_date    DATE,
+  preferred_time    TEXT,
+  notes             TEXT,
+  amount_ugx        NUMERIC(12,2) DEFAULT 0,
+  payment_status    TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
+  status            TEXT NOT NULL DEFAULT 'pending_assignment' CHECK (status IN ('pending_assignment', 'paid_pending_assignment', 'assigned', 'in_progress', 'completed', 'disputed', 'cancelled')),
   scheduled_at      TIMESTAMPTZ,
+  assigned_at       TIMESTAMPTZ,
   completed_at      TIMESTAMPTZ,
-  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE collection_requests
+  ADD COLUMN IF NOT EXISTS zone TEXT,
+  ADD COLUMN IF NOT EXISTS pickup_address TEXT,
+  ADD COLUMN IF NOT EXISTS latitude NUMERIC(9,6),
+  ADD COLUMN IF NOT EXISTS longitude NUMERIC(9,6),
+  ADD COLUMN IF NOT EXISTS preferred_date DATE,
+  ADD COLUMN IF NOT EXISTS preferred_time TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS amount_ugx NUMERIC(12,2) DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS assigned_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
+
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns WHERE table_name = 'collection_requests' AND column_name = 'status'
+  ) THEN
+    ALTER TABLE collection_requests DROP CONSTRAINT IF EXISTS collection_requests_status_check;
+    ALTER TABLE collection_requests
+      ADD CONSTRAINT collection_requests_status_check
+      CHECK (status IN ('pending_assignment', 'paid_pending_assignment', 'assigned', 'in_progress', 'completed', 'disputed', 'cancelled'));
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS gps_logs (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -72,11 +108,15 @@ CREATE TABLE IF NOT EXISTS gps_logs (
 CREATE TABLE IF NOT EXISTS notifications (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID NOT NULL REFERENCES users(id),
+  request_id        UUID REFERENCES collection_requests(id),
   type              TEXT,
   message           TEXT,
   read_at           TIMESTAMPTZ,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE notifications
+  ADD COLUMN IF NOT EXISTS request_id UUID REFERENCES collection_requests(id);
 
 CREATE TABLE IF NOT EXISTS invoices (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),

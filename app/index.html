@@ -21,6 +21,27 @@
     --text: #EDF5F0;
     --muted: #7A9E88;
     --dim: #3D5A48;
+    --nav-bg: rgba(6,13,10,0.9);
+    --map-bg: #0A1610;
+    --shadow: rgba(0,0,0,0.4);
+  }
+
+  [data-theme="light"] {
+    --bg: #F4F7F5;
+    --surface: #FFFFFF;
+    --surface2: #EDF3EE;
+    --border: rgba(28,100,60,0.14);
+    --border2: rgba(28,100,60,0.24);
+    --green: #1F9E52;
+    --green-dim: #157a3d;
+    --green-glow: rgba(31,158,82,0.1);
+    --amber: #C57F00;
+    --text: #12261A;
+    --muted: #4E6B58;
+    --dim: #8AA394;
+    --nav-bg: rgba(255,255,255,0.92);
+    --map-bg: #E6ECE7;
+    --shadow: rgba(20,40,26,0.1);
   }
 
   body {
@@ -42,7 +63,7 @@
     border-bottom: 1px solid var(--border);
     position: sticky;
     top: 0;
-    background: rgba(6,13,10,0.9);
+    background: var(--nav-bg);
     backdrop-filter: blur(16px);
     z-index: 100;
   }
@@ -258,7 +279,7 @@
   .mock-map {
     flex: 1;
     height: 130px;
-    background: #0A1610;
+    background: var(--map-bg, #0A1610);
     border: 1px solid var(--border);
     border-radius: 8px;
     position: relative;
@@ -507,6 +528,32 @@
 </style>
 </head>
 <body>
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('itrush_theme');
+        var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+    function toggleTheme() {
+      var cur = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+      var next = cur === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('itrush_theme', next); } catch (e) {}
+      syncThemeIcon();
+    }
+    function syncThemeIcon() {
+      var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      var dk = document.querySelector('.theme-icon-dark');
+      var lt = document.querySelector('.theme-icon-light');
+      if (dk) dk.style.display = isLight ? 'block' : 'none';
+      if (lt) lt.style.display = isLight ? 'none' : 'block';
+    }
+    document.addEventListener('DOMContentLoaded', syncThemeIcon);
+  </script>
 
 <!-- NAV -->
 <nav>
@@ -522,7 +569,13 @@
     <li><a href="#">Research</a></li>
     <li><a href="#">About</a></li>
   </ul>
-  <a href="signin.html" class="nav-cta">Request Collection</a>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light / dark mode" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+      <svg class="theme-icon-dark" width="16" height="16" viewBox="0 0 15 15" fill="none"><path d="M12.5 8.5A5 5 0 016.5 2.5a5 5 0 100 10 5 5 0 006-4z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      <svg class="theme-icon-light" width="16" height="16" viewBox="0 0 15 15" fill="none" style="display:none;"><circle cx="7.5" cy="7.5" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M7.5 1v1.5M7.5 12.5V14M14 7.5h-1.5M2.5 7.5H1M12.1 2.9l-1 1M3.9 11.1l-1 1M12.1 12.1l-1-1M3.9 3.9l-1-1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </button>
+    <a href="signin.html" class="nav-cta">Request Collection</a>
+  </div>
 </nav>
 
 <!-- HERO -->
