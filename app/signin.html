@@ -907,8 +907,9 @@
   }
 
   function redirectByRole(role) {
+    const normalized = role === 'kcca' ? 'kcca_officer' : role;
     const pages = { resident: 'resident_dashboard.html', kcca_officer: 'admin_dashboard.html', collector: 'driver_app.html' };
-    const url = pages[role] || 'index.html';
+    const url = pages[normalized] || 'index.html';
     window.location.href = url;
   }
 
@@ -1055,7 +1056,7 @@
       if (USE_FIREBASE && firebaseAuth && firebaseDb) {
         const cred = await firebaseAuth.createUserWithEmailAndPassword(payload.email, payload.password);
         const profile = {
-          role: role,
+          role: currentRole === 'kcca' ? 'kcca_officer' : currentRole,
           email: payload.email,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
@@ -1110,7 +1111,7 @@
 
         const token = await cred.user.getIdToken();
         localStorage.setItem('itrush_token', token);
-        redirectByRole(role);
+        redirectByRole(profile.role);
         return;
       }
       const res = await fetch(API_BASE + '/api/auth/signup', {

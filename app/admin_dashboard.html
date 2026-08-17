@@ -1869,14 +1869,32 @@
               <div style="color:var(--muted);font-size:12px;line-height:1.5;">${fmtReqLine(r)}</div>
               <div style="color:var(--dim);font-size:11px;margin-top:6px;">Status: ${r.status || '—'} · Payment: ${r.paymentStatus || '—'}</div>
             </div>
-            <div style="min-width:240px;display:flex;gap:8px;flex-direction:column;">
+            <div style="min-width:260px;display:flex;gap:8px;flex-direction:column;">
               <select id="assign-select-${r.id}" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--text);padding:8px 10px;font-size:12px;">
-                <option value="" selected disabled>Select driver…</option>
-                ${driverOpts}
+                <option value="" selected disabled>Select driver (name + email)…</option>
+                ${driverOpts || '<option disabled>No collector accounts found</option>'}
               </select>
               <button class="rf-btn active" style="width:100%;border-radius:8px;" onclick="assignRequest('${r.id}')">Assign to driver</button>
             </div>
           </div>
+        </div>`;
+    }
+    if (mode === 'unpaid') {
+      return `
+        <div style="background:var(--surface2);border:1px dashed var(--border2);border-radius:10px;padding:12px;">
+          <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${resident}</div>
+          <div style="color:var(--muted);font-size:12px;">${r.pickupAddress || '—'} · ${fmtReqLine(r)}</div>
+          <div style="color:var(--amber);font-size:11px;margin-top:6px;">Waiting for resident payment before assignment</div>
+        </div>`;
+    }
+    // assigned
+    return `
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+        <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${statusLabel(r.status)}</div>
+        <div style="color:var(--muted);font-size:12px;line-height:1.5;">
+          <strong>Resident:</strong> ${resident}<br/>
+          <strong>Driver:</strong> ${r.collectorName || r.collectorEmail || r.collectorUid || '—'}<br/>
+          ${r.pickupAddress || '—'}
         </div>
       `;
       }).join('');
