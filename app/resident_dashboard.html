@@ -4,6 +4,36 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Resident Dashboard · iTRUSH</title>
+<meta name="description" content="Book waste collection, track pickup status, and manage notifications from your iTRUSH resident dashboard."/>
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png"/>
+<link rel="shortcut icon" href="/assets/favicon.ico"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"/>
+<link rel="manifest" href="/assets/site.webmanifest"/>
+<meta name="theme-color" content="#060D0A"/>
+
+<!-- Open Graph / Facebook, WhatsApp, LinkedIn, Telegram -->
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="iTRUSH"/>
+<meta property="og:locale" content="en_UG"/>
+<meta property="og:url" content="https://itrush-9a273.web.app/resident_dashboard"/>
+<meta property="og:title" content="Resident Dashboard · iTRUSH"/>
+<meta property="og:description" content="Book waste collection, track pickup status, and manage notifications from your iTRUSH resident dashboard."/>
+<meta property="og:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
+<meta property="og:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Resident Dashboard · iTRUSH"/>
+<meta name="twitter:description" content="Book waste collection, track pickup status, and manage notifications from your iTRUSH resident dashboard."/>
+<meta name="twitter:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -60,15 +90,28 @@
 
   /* MAIN */
   .main{background:var(--bg);display:flex;flex-direction:column;}
-  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);}
-  .topbar-title{font-family:'Instrument Serif',serif;font-size:20px;font-weight:400;color:var(--text);}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;border-bottom:1px solid var(--border);background:var(--surface);gap:12px;}
+  .topbar-title{font-family:'Instrument Serif',serif;font-size:20px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
   .topbar-title em{font-style:italic;color:var(--green);}
-  .topbar-right{display:flex;align-items:center;gap:12px;}
+  .topbar-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1;}
+  .topbar-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
   .topbar-date{font-size:12px;color:var(--muted);}
   .notif-btn{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color 0.15s;}
   .notif-btn:hover{border-color:var(--border2);}
   .notif-dot{position:absolute;top:7px;right:7px;width:7px;height:7px;background:var(--amber);border-radius:50%;border:1.5px solid var(--surface);}
   .content{padding:24px 28px;flex:1;}
+
+  /* EMAIL VERIFICATION BANNER */
+  .verify-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:rgba(240,165,0,0.08);border:1px solid rgba(240,165,0,0.25);border-radius:10px;padding:12px 16px;margin-bottom:20px;}
+  .verify-banner.hidden{display:none;}
+  .verify-banner-text{font-size:12px;color:var(--text);line-height:1.6;flex:1;min-width:220px;}
+  .verify-banner-text strong{color:var(--amber);font-weight:600;margin-right:4px;}
+  .verify-banner-actions{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .verify-resend-btn{padding:7px 14px;background:var(--amber);color:#1a0f00;border:none;border-radius:7px;font-size:12px;font-weight:650;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:opacity 0.15s;white-space:nowrap;}
+  .verify-resend-btn:hover{opacity:0.88;}
+  .verify-resend-btn:disabled{opacity:0.6;cursor:default;}
+  .verify-banner-close{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:pointer;flex-shrink:0;transition:color 0.15s;}
+  .verify-banner-close:hover{color:var(--text);}
 
   /* SIMPLE PAGES */
   .coming-soon{max-width:720px;}
@@ -238,6 +281,10 @@
     .stats-row{grid-template-columns:repeat(2,1fr);}
     .two-col{grid-template-columns:1fr;}
   }
+  @media (max-width:900px){
+    .history-panel{overflow-x:auto;}
+    .history-table{min-width:520px;}
+  }
   @media (max-width:768px){
     .shell{grid-template-columns:1fr;}
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;z-index:50;transform:translateX(-100%);transition:transform 0.25s ease;box-shadow:2px 0 16px var(--shadow);}
@@ -279,6 +326,12 @@
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('itrush_theme', next); } catch (e) {}
       syncThemeIcon();
+      try { refreshMapTilesForTheme(); } catch (e) {}
+    }
+    function refreshMapTilesForTheme() {
+      if (typeof rMaps === 'undefined' || typeof rCurrentTileUrl !== 'function') return;
+      const url = rCurrentTileUrl();
+      Object.values(rMaps).forEach(slot => { if (slot && slot.tiles) slot.tiles.setUrl(url); });
     }
     function syncThemeIcon() {
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -367,7 +420,7 @@
   <!-- MAIN -->
   <div class="main">
     <div class="topbar">
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div class="topbar-left">
         <button class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
@@ -387,6 +440,20 @@
     </div>
 
     <div class="content">
+
+      <!-- EMAIL VERIFICATION REMINDER -->
+      <div class="verify-banner hidden" id="verify-banner">
+        <div class="verify-banner-text">
+          <strong>Please verify your email.</strong>
+          We sent a verification link to <span id="verify-banner-email">your email</span>. Check your inbox (and spam folder) to activate your account.
+        </div>
+        <div class="verify-banner-actions">
+          <button type="button" class="verify-resend-btn" id="verify-resend-btn" onclick="resendVerificationEmail()">Resend email</button>
+          <div class="verify-banner-close" onclick="dismissVerifyBanner()" title="Dismiss">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+      </div>
 
       <!-- ===== DASHBOARD VIEW ===== -->
       <div class="view active" id="view-dashboard">
@@ -530,6 +597,7 @@
                 <div class="bf-hint" id="book-loc-hint">This fills in automatically when you search, use GPS, or move the pin.</div>
                 <input type="hidden" id="book-lat" value=""/>
                 <input type="hidden" id="book-lng" value=""/>
+                <div id="book-map-preview" class="book-map-preview"><div id="resident-book-map" class="itrush-map"></div></div>
               </div>
               <div class="bf-row">
                 <div class="bf-group">
@@ -763,6 +831,166 @@
   let lastCreatedRequestId = null;
   let residentNotifUnsub = null;
   let residentNotifDocs = [];
+  let trackMap = null;
+  let bookMap = null;
+  let trackUnsub = null;
+  let activeTrackRequestId = null;
+  let residentProfile = {};
+  let residentRequests = [];
+  let requestsUnsub = null;
+
+  function statusLabel(st) {
+    return String(st || 'unknown').replace(/_/g, ' ');
+  }
+
+  function isOpenStatus(st) {
+    return !['completed', 'cancelled'].includes(st || '');
+  }
+
+  function getActiveRequest() {
+    const open = residentRequests.filter(r => isOpenStatus(r.status));
+    if (!open.length) return null;
+    open.sort((a, b) => {
+      const ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+      const tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+      return tb - ta;
+    });
+    return open[0];
+  }
+
+  function stepDot(state) {
+    if (state === 'done') {
+      return `<div class="step-dot sd-done"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.2 2.2L8 3" stroke="#060D0A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`;
+    }
+    if (state === 'active') return `<div class="step-dot sd-active"></div>`;
+    return `<div class="step-dot sd-pending"></div>`;
+  }
+
+  function renderActiveRequestPanel(req) {
+    const empty = document.getElementById('active-request-empty');
+    const tracker = document.getElementById('active-request-tracker');
+    const driverCard = document.getElementById('active-driver-card');
+    if (!req) {
+      if (empty) empty.style.display = '';
+      if (tracker) tracker.style.display = 'none';
+      if (driverCard) driverCard.style.display = 'none';
+      return;
+    }
+    if (empty) empty.style.display = 'none';
+    if (tracker) tracker.style.display = '';
+    if (driverCard) driverCard.style.display = '';
+
+    const st = req.status || '';
+    const paid = req.paymentStatus === 'paid';
+    const assigned = !!req.collectorUid;
+    const confirmed = ['driver_confirmed', 'in_progress', 'completed'].includes(st);
+    const enRoute = ['in_progress', 'driver_confirmed'].includes(st) && !!req.truckGeo;
+    const done = st === 'completed';
+
+    const steps = [
+      { title: 'Booking submitted', time: req.preferredDate ? `${req.preferredDate} · ${req.preferredTime || ''}` : 'Submitted', meta: req.pickupAddress || '', state: 'done' },
+      { title: paid ? 'Payment received' : 'Awaiting payment', time: paid ? 'Paid' : 'Complete payment to get assigned', meta: `UGX ${Number(req.amountUGX || 0).toLocaleString()}`, state: paid ? 'done' : 'active' },
+      { title: assigned ? 'Driver assigned' : 'Waiting for KCCA assignment', time: assigned ? (req.collectorName || 'Collector assigned') : 'Admin will assign a driver', meta: assigned ? (req.collectorEmail || req.collectorPlate || '') : '', state: !paid ? 'pending' : (assigned ? 'done' : 'active') },
+      { title: confirmed ? 'Driver confirmed' : 'Driver confirmation', time: confirmed ? 'Confirmed' : 'Pending', meta: '', state: !assigned ? 'pending' : (confirmed ? 'done' : 'active') },
+      { title: done ? 'Collection complete' : 'En route / pickup', time: done ? 'Completed' : (enRoute ? 'Truck is live on map' : 'Waiting'), meta: '', state: !confirmed ? 'pending' : (done ? 'done' : 'active') }
+    ];
+
+    const stepsEl = document.getElementById('dash-track-steps');
+    if (stepsEl) {
+      stepsEl.innerHTML = steps.map(s => `
+        <div class="track-step">
+          ${stepDot(s.state)}
+          <div class="step-body">
+            <div class="step-title${s.state === 'pending' ? ' muted' : ''}">${s.title}</div>
+            <div class="step-time">${s.time}</div>
+            ${s.meta ? `<div class="step-meta">${s.meta}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('dash-req-id', `#${req.id.slice(0, 8).toUpperCase()}`);
+    set('dash-req-status', statusLabel(st));
+    set('dash-driver-name', req.collectorName || (assigned ? 'Driver assigned' : 'Driver not assigned yet'));
+    set('dash-driver-meta', assigned
+      ? [req.collectorPlate, req.collectorEmail, req.collectorPhone].filter(Boolean).join(' · ') || 'Assigned collector'
+      : 'Waiting for KCCA assignment');
+    set('dash-address', req.pickupAddress || '—');
+    set('dash-payment', paid ? 'Paid' : 'Pending');
+    updateTrackMetrics(req);
+  }
+
+  function renderHistoryTable() {
+    const tbody = document.getElementById('history-tbody');
+    if (!tbody) return;
+    if (!residentRequests.length) {
+      tbody.innerHTML = `<tr id="history-empty-row"><td colspan="6" style="color:var(--muted);padding:16px;">No bookings yet. Your collection requests will appear here.</td></tr>`;
+      return;
+    }
+    const rows = [...residentRequests].sort((a, b) => {
+      const ta = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+      const tb = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+      return tb - ta;
+    });
+    tbody.innerHTML = rows.map(r => {
+      const date = r.preferredDate || (r.createdAt && r.createdAt.toDate ? r.createdAt.toDate().toLocaleDateString() : '—');
+      const pill = r.status === 'completed' ? 'sp-done' : (isOpenStatus(r.status) ? 'sp-active' : 'sp-pending');
+      return `<tr>
+        <td>#${r.id.slice(0,8).toUpperCase()}</td>
+        <td>${date}</td>
+        <td>${r.type || '—'}</td>
+        <td>${r.collectorName || (r.collectorUid ? 'Assigned' : '—')}</td>
+        <td>UGX ${Number(r.amountUGX||0).toLocaleString()}</td>
+        <td><span class="status-pill ${pill}">${statusLabel(r.status)}</span></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function refreshResidentStats() {
+    const total = residentRequests.length;
+    const completed = residentRequests.filter(r => r.status === 'completed').length;
+    const open = residentRequests.filter(r => isOpenStatus(r.status)).length;
+    const unpaid = residentRequests.filter(r => r.paymentStatus !== 'paid' && isOpenStatus(r.status)).length;
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('stat-total-requests', String(total));
+    set('stat-completed', String(completed));
+    set('stat-completed-sub', total ? `${Math.round((completed / total) * 100)}% completion rate` : 'No completed pickups yet');
+    set('stat-open', String(open));
+    set('stat-open-sub', open ? 'Awaiting pickup / assignment' : 'No open bookings');
+    set('stat-unpaid', String(unpaid));
+  }
+
+  function onResidentRequestsUpdated() {
+    renderHistoryTable();
+    refreshResidentStats();
+    const active = getActiveRequest();
+    renderActiveRequestPanel(active);
+    if (active) {
+      activeTrackRequestId = active.id;
+      lastCreatedRequestId = active.id;
+      localStorage.setItem('itrush_last_request_id', active.id);
+      renderTrackMap(active);
+    } else {
+      activeTrackRequestId = null;
+      renderTrackMap(null);
+      renderActiveRequestPanel(null);
+    }
+  }
+
+  function startResidentRequestsListener() {
+    if (!firebaseDb || !currentUser) return;
+    if (requestsUnsub) { requestsUnsub(); requestsUnsub = null; }
+    requestsUnsub = firebaseDb.collection('collection_requests')
+      .where('residentUid', '==', currentUser.uid)
+      .limit(100)
+      .onSnapshot((snap) => {
+        const rows = [];
+        snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+        residentRequests = rows;
+        onResidentRequestsUpdated();
+      }, (err) => console.error('Resident requests listener failed:', err));
+  }
 
   async function enforcePageRole(expectedRole) {
     const token = localStorage.getItem('itrush_token');
@@ -856,6 +1084,123 @@
     );
   }
 
+  function showBookMapPreview(lat, lng) {
+    const wrap = document.getElementById('book-map-preview');
+    if (!wrap || typeof ITrushMap === 'undefined') return;
+    wrap.classList.add('is-visible');
+    if (!bookMap) bookMap = ITrushMap.create('resident-book-map', { zoom: 15, zoomControl: false });
+    if (!bookMap) return;
+    bookMap.setPoints([{
+      id: 'pickup',
+      lat, lng,
+      kind: 'pickup',
+      title: 'Pickup point',
+      meta: `${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)}`
+    }]);
+    bookMap.invalidate();
+  }
+
+  function ensureTrackMap() {
+    if (trackMap || typeof ITrushMap === 'undefined') return trackMap;
+    trackMap = ITrushMap.create('resident-track-map', { zoom: 13 });
+    return trackMap;
+  }
+
+  function updateTrackMetrics(req) {
+    const pickup = ITrushMap.parseGeo(req && req.pickupGeo);
+    const truck = ITrushMap.parseGeo(req && req.truckGeo);
+    const km = (pickup && truck) ? ITrushMap.haversineKm(truck, pickup) : null;
+    const eta = ITrushMap.etaMinutes(km);
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    set('track-eta', eta != null ? `~${eta} min` : '—');
+    set('track-distance', km != null ? `${km.toFixed(1)} km` : '—');
+    set('track-status', (req && req.status) ? String(req.status).replace(/_/g, ' ') : 'Waiting');
+    set('track-req-id', req && req.id ? `#${req.id.slice(0, 8).toUpperCase()}` : '—');
+    set('dash-eta', eta != null ? `~${eta} min` : '—');
+    set('dash-distance', km != null ? `${km.toFixed(1)} km` : '—');
+    set('dash-req-id', req && req.id ? `#${req.id.slice(0, 8).toUpperCase()}` : '—');
+    set('dash-req-status', (req && req.status) ? String(req.status).replace(/_/g, ' ') : 'No active job');
+    const title = document.getElementById('track-panel-title');
+    if (title) title.textContent = req && req.id
+      ? `Live truck tracking · #${req.id.slice(0, 8).toUpperCase()}`
+      : 'Live truck tracking';
+  }
+
+  function renderTrackMap(req) {
+    const map = ensureTrackMap();
+    if (!map) return;
+    const points = [];
+    const pickup = ITrushMap.parseGeo(req && req.pickupGeo);
+    const truck = ITrushMap.parseGeo(req && req.truckGeo);
+    if (pickup) {
+      points.push({
+        id: 'pickup',
+        lat: pickup.lat, lng: pickup.lng,
+        kind: 'pickup',
+        title: 'Your pickup',
+        meta: (req && req.pickupAddress) || 'Booking location'
+      });
+    }
+    if (truck) {
+      points.push({
+        id: 'truck',
+        lat: truck.lat, lng: truck.lng,
+        kind: 'truck',
+        title: 'Collection truck',
+        meta: (req && req.status) ? String(req.status).replace(/_/g, ' ') : 'En route'
+      });
+    }
+    map.setPoints(points);
+    if (pickup && truck) map.setRoute(truck, pickup);
+    else map.setRoute(null, null);
+    if (!points.length) {
+      map.setHint('<strong>No active tracking yet</strong><br/>Book a collection and attach GPS, then wait for a driver to go live.');
+    }
+    map.invalidate();
+    updateTrackMetrics(req ? { ...req, id: req.id || activeTrackRequestId } : null);
+  }
+
+  async function resolveActiveRequestId() {
+    const cached = lastCreatedRequestId || localStorage.getItem('itrush_last_request_id');
+    if (cached) return cached;
+    if (!firebaseDb || !currentUser) return null;
+    try {
+      const snap = await firebaseDb.collection('collection_requests')
+        .where('residentUid', '==', currentUser.uid)
+        .limit(30)
+        .get();
+      let best = null;
+      snap.forEach(d => {
+        const data = d.data();
+        const st = data.status || '';
+        if (['assigned', 'driver_confirmed', 'in_progress', 'paid_pending_assignment', 'pending_assignment'].includes(st)) {
+          const created = data.createdAt && data.createdAt.toDate ? data.createdAt.toDate().getTime() : 0;
+          if (!best || created > best.created) best = { id: d.id, created };
+        }
+      });
+      return best ? best.id : null;
+    } catch (e) {
+      console.error('resolveActiveRequestId failed:', e);
+      return null;
+    }
+  }
+
+  async function startResidentTracking() {
+    if (!firebaseDb || !currentUser) return;
+    const requestId = await resolveActiveRequestId();
+    activeTrackRequestId = requestId;
+    if (trackUnsub) { trackUnsub(); trackUnsub = null; }
+    if (!requestId) {
+      renderTrackMap(null);
+      return;
+    }
+    trackUnsub = firebaseDb.collection('collection_requests').doc(requestId)
+      .onSnapshot((doc) => {
+        if (!doc.exists) { renderTrackMap(null); return; }
+        renderTrackMap({ id: doc.id, ...doc.data() });
+      }, (err) => console.error('Track listener failed:', err));
+  }
+
   async function createNotification(payload) {
     if (!firebaseDb) return;
     try {
@@ -894,6 +1239,9 @@
         n.type === 'booking_created' ? 'nd-amber' :
         n.type === 'payment_completed' ? 'nd-green' :
         n.type === 'driver_confirmed' ? 'nd-green' :
+        n.type === 'collector_assigned' ? 'nd-amber' :
+        n.type === 'collection_in_progress' ? 'nd-amber' :
+        n.type === 'collection_completed' ? 'nd-green' :
         'nd-dim';
       const msg = n.message || 'Notification';
       const time = timeAgo(n.createdAt);
@@ -921,7 +1269,11 @@
         snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
         residentNotifDocs = rows;
         renderResidentNotifications();
-      }, (err) => console.error('Resident notif listener failed:', err));
+      }, (err) => {
+        console.error('Resident notif listener failed:', err);
+        const list = document.getElementById('resident-notif-list');
+        if (list) list.innerHTML = `<div class="notif-item" style="cursor:default;"><div class="notif-dot2 nd-dim"></div><div class="notif-text"><div class="notif-msg">Couldn't load notifications right now.</div><div class="notif-time">Try refreshing the page.</div></div></div>`;
+      });
   }
 
   async function markResidentNotificationRead(id){
@@ -1011,9 +1363,16 @@
       const finalAddress = address || `Pinned location (${Number(lat).toFixed(5)}, ${Number(lng).toFixed(5)})`;
 
       const amountUGX = estimateAmountUGX({ type, volume });
+      const fullName = `${(residentProfile.first_name || '').trim()} ${(residentProfile.last_name || '').trim()}`.trim()
+        || residentProfile.full_name
+        || currentUser.email
+        || 'Resident';
       const ref = await firebaseDb.collection('collection_requests').add({
         residentUid: currentUser.uid,
-        status: 'pending_assignment',
+        residentName: fullName,
+        residentEmail: currentUser.email || residentProfile.email || null,
+        residentPhone: residentProfile.phone || null,
+        status: 'pending_payment',
         paymentStatus: 'pending',
         type,
         volume,
@@ -1034,18 +1393,18 @@
         toRole: 'kcca_officer',
         type: 'new_booking',
         requestId: ref.id,
-        message: `New booking in ${zone || 'zone'} · ${type} · ${volume}`
+        message: `New booking from ${fullName} · ${zone || 'zone'} · ${address}`
       });
       await createNotification({
         toUid: currentUser.uid,
         type: 'booking_created',
         requestId: ref.id,
-        message: 'Booking created. Complete payment to confirm your pickup.'
+        message: `Booking #${ref.id.slice(0,8).toUpperCase()} created. Complete payment so KCCA can assign a driver.`
       });
 
-      await refreshTotalRequests();
       setView('payments');
       await loadPaymentForRequest(ref.id);
+      alert(`Booking #${ref.id.slice(0,8).toUpperCase()} created. Pay now so admin can assign your driver.`);
     } catch (e) {
       console.error('Booking failed:', e);
       if ((e && (e.code === 'permission-denied' || e.message?.toLowerCase?.().includes('missing or insufficient permissions')))) {
@@ -1146,16 +1505,16 @@
         toRole: 'kcca_officer',
         type: 'payment_completed',
         requestId,
-        message: 'A resident completed payment for a booking.'
+        message: `Payment received for #${requestId.slice(0,8).toUpperCase()} · ready to assign a driver`
       });
       await createNotification({
         toUid: currentUser?.uid,
         type: 'payment_completed',
         requestId,
-        message: 'Payment received. Waiting for assignment to a driver.'
+        message: 'Payment received. Waiting for KCCA to assign a driver.'
       });
       await loadPaymentForRequest(requestId);
-      alert('Payment recorded (demo). Admin can now assign a driver.');
+      alert('Payment recorded. KCCA can now assign a driver to your booking.');
     } catch (e) {
       console.error('Payment update failed:', e);
       alert(e.message || 'Payment failed.');
@@ -1425,6 +1784,7 @@
   async function hydrateUserFromFirebase(user) {
     const doc = await firebaseDb.collection('users').doc(user.uid).get();
     const data = (doc && doc.exists && doc.data()) ? doc.data() : {};
+    residentProfile = data;
 
     const first = (data.first_name || '').trim();
     const last = (data.last_name || '').trim();
@@ -1455,16 +1815,62 @@
     if (profileZone) profileZone.textContent = zone;
   }
 
+  /* EMAIL VERIFICATION REMINDER */
+  let verifyBannerDismissed = false;
+
+  async function checkEmailVerification(user) {
+    if (!user) return;
+    try { await user.reload(); } catch (_) {}
+    const freshUser = (firebaseAuth && firebaseAuth.currentUser) || user;
+    if (freshUser.emailVerified || verifyBannerDismissed) return;
+    const banner = document.getElementById('verify-banner');
+    const emailEl = document.getElementById('verify-banner-email');
+    if (emailEl) emailEl.textContent = freshUser.email || 'your email';
+    if (banner) banner.classList.remove('hidden');
+  }
+
+  function dismissVerifyBanner() {
+    verifyBannerDismissed = true;
+    const banner = document.getElementById('verify-banner');
+    if (banner) banner.classList.add('hidden');
+  }
+
+  async function resendVerificationEmail() {
+    const btn = document.getElementById('verify-resend-btn');
+    if (!firebaseAuth || !firebaseAuth.currentUser) return;
+    const original = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      await firebaseAuth.currentUser.sendEmailVerification();
+      if (btn) btn.textContent = 'Sent!';
+    } catch (e) {
+      if (btn) btn.textContent = (e && e.code === 'auth/too-many-requests') ? 'Try again later' : 'Couldn\'t send — retry';
+      console.warn('Resend verification failed:', e);
+    } finally {
+      setTimeout(() => { if (btn) { btn.textContent = original || 'Resend email'; btn.disabled = false; } }, 4000);
+    }
+  }
+
   /* ============================================================
      MAPS MODULE (Leaflet + OpenStreetMap)
      1) Booking pin picker  — draggable pin + address search
      2) Live tracking map   — shows the resident's pickup location
      ============================================================ */
   const KAMPALA = { center: [0.3163, 32.5822], zoom: 13 };
-  const R_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  // NOTE: previously named "DARK_TILES" but pointed at CARTO's "voyager" style,
+  // a light, highly-saturated basemap (bright blue water, yellow/orange roads)
+  // — that mismatch is what showed up as large blue/yellow blocks clashing with
+  // the app's dark theme. dark_all / light_all are CARTO's actual muted
+  // dark/light basemaps, matched to the current data-theme.
+  const R_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png';
+  const R_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
   const R_TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-  const rMaps = { book: { map: null, marker: null }, track: { map: null } };
+  function rCurrentTileUrl() {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? R_LIGHT_TILES : R_DARK_TILES;
+  }
+
+  const rMaps = { book: { map: null, marker: null, tiles: null }, track: { map: null, tiles: null } };
 
   // Robustly re-measure a Leaflet map after its view becomes visible.
   // Runs several times to catch the CSS view-transition and mobile layout settle.
@@ -1512,7 +1918,7 @@
     const hasCoords = !!document.getElementById('book-lat')?.value;
 
     const map = L.map(el, { center: [lat0, lng0], zoom: hasCoords ? 16 : KAMPALA.zoom, scrollWheelZoom: true });
-    L.tileLayer(R_DARK_TILES, { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
+    rMaps.book.tiles = L.tileLayer(rCurrentTileUrl(), { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
 
     const marker = L.marker([lat0, lng0], { icon: greenPin(), draggable: true }).addTo(map);
     marker.on('dragend', () => {
@@ -1654,7 +2060,7 @@
       rMaps.track.map.setView(center, pickup ? 15 : KAMPALA.zoom);
     } else {
       const map = L.map(el, { center, zoom: pickup ? 15 : KAMPALA.zoom, scrollWheelZoom: true });
-      L.tileLayer(R_DARK_TILES, { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
+      rMaps.track.tiles = L.tileLayer(rCurrentTileUrl(), { attribution: R_TILE_ATTR, maxZoom: 19 }).addTo(map);
       rMaps.track.map = map;
       kickMap(map);
     }
@@ -1723,10 +2129,10 @@
       }
       try {
         await hydrateUserFromFirebase(user);
-        await refreshTotalRequests();
       } catch (e) {
         console.error('Failed to load user profile:', e);
       }
+      try { checkEmailVerification(user); } catch (_) {}
       try { startResidentNotificationListener(); } catch (_) {}
     });
   })();

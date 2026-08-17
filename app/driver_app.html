@@ -4,6 +4,36 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Driver App · iTRUSH</title>
+<meta name="description" content="View assigned pickups and confirm waste collection jobs on the go with the iTRUSH collector app."/>
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png"/>
+<link rel="shortcut icon" href="/assets/favicon.ico"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"/>
+<link rel="manifest" href="/assets/site.webmanifest"/>
+<meta name="theme-color" content="#060D0A"/>
+
+<!-- Open Graph / Facebook, WhatsApp, LinkedIn, Telegram -->
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="iTRUSH"/>
+<meta property="og:locale" content="en_UG"/>
+<meta property="og:url" content="https://itrush-9a273.web.app/driver_app"/>
+<meta property="og:title" content="Collector Dashboard · iTRUSH"/>
+<meta property="og:description" content="View assigned pickups and confirm waste collection jobs on the go with the iTRUSH collector app."/>
+<meta property="og:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
+<meta property="og:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Collector Dashboard · iTRUSH"/>
+<meta name="twitter:description" content="View assigned pickups and confirm waste collection jobs on the go with the iTRUSH collector app."/>
+<meta name="twitter:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -68,13 +98,13 @@
   /* MAIN */
   .main{background:var(--bg);display:flex;flex-direction:column;min-width:0;}
   .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-bottom:1px solid var(--border);background:var(--surface);}
-  .tb-left{display:flex;align-items:center;gap:12px;}
-  .tb-title{font-family:'Instrument Serif',serif;font-size:19px;font-weight:400;color:var(--text);}
+  .tb-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1;}
+  .tb-title{font-family:'Instrument Serif',serif;font-size:19px;font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
   .tb-title em{font-style:italic;color:var(--blue);}
-  .on-duty-pill{display:flex;align-items:center;gap:5px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:var(--green);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:100px;}
+  .on-duty-pill{display:flex;align-items:center;gap:5px;background:rgba(46,204,113,0.1);border:1px solid rgba(46,204,113,0.2);color:var(--green);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;padding:3px 9px;border-radius:100px;flex-shrink:0;}
   .on-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.5s ease-in-out infinite;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-  .tb-right{display:flex;align-items:center;gap:10px;}
+  .tb-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
   .tb-date{font-size:12px;color:var(--muted);}
   .icon-btn{width:32px;height:32px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color 0.15s;}
   .icon-btn:hover{border-color:var(--border2);}
@@ -122,6 +152,14 @@
   .stop-num-pin{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.5);font-weight:700;font-size:11px;color:#062012;}
   .stop-num-pin span{transform:rotate(45deg);}
   .map-empty-note{position:absolute;z-index:500;bottom:10px;left:10px;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-size:11px;padding:6px 10px;border-radius:6px;pointer-events:none;max-width:80%;}
+  .gps-badge{position:absolute;z-index:500;top:10px;left:10px;right:10px;display:flex;align-items:flex-start;gap:6px;background:rgba(10,22,16,0.82);backdrop-filter:blur(3px);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:600;line-height:1.4;padding:6px 10px;border-radius:10px;pointer-events:none;width:fit-content;max-width:calc(100% - 20px);box-shadow:0 2px 8px rgba(0,0,0,0.25);}
+  [data-theme="light"] .gps-badge{background:rgba(255,255,255,0.88);}
+  .gps-badge.hidden{display:none;}
+  .gps-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;margin-top:3px;}
+  .gps-badge-dot.live{background:var(--green);animation:blink 1.5s ease-in-out infinite;}
+  .gps-badge-dot.warn{background:var(--amber);}
+  .gps-badge-dot.error{background:var(--red);}
+  #gps-badge-text{min-width:0;word-break:break-word;}
 
   /* JOB CARDS */
   .job-list{padding:6px 0;}
@@ -235,6 +273,10 @@
     .two-col{grid-template-columns:1fr;}
     .two-col-eq{grid-template-columns:1fr;}
   }
+  @media (max-width:900px){
+    .fleet-full-table,.earn-table,.hist-table{min-width:520px;}
+    .panel{overflow-x:auto;}
+  }
   @media (max-width:768px){
     .shell{grid-template-columns:1fr;}
     .sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;z-index:50;transform:translateX(-100%);transition:transform 0.25s ease;box-shadow:2px 0 16px var(--shadow);overflow-y:auto;}
@@ -253,6 +295,8 @@
   @media (max-width:480px){
     .kpi-strip{grid-template-columns:1fr;}
     .tb-date{display:none;}
+    .tb-title{font-size:15px;}
+    .on-duty-pill{display:none;}
   }
 </style>
 </head>
@@ -273,6 +317,12 @@
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('itrush_theme', next); } catch (e) {}
       syncThemeIcon();
+      try { refreshMapTilesForTheme(); } catch (e) {}
+    }
+    function refreshMapTilesForTheme() {
+      if (typeof dMaps === 'undefined' || typeof dCurrentTileUrl !== 'function') return;
+      const url = dCurrentTileUrl();
+      Object.values(dMaps).forEach(slot => { if (slot && slot.tiles) slot.tiles.setUrl(url); });
     }
     function syncThemeIcon() {
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -526,6 +576,15 @@
             </div>
             <div class="map-wrap" style="height:440px;">
               <div id="active-map" class="leaflet-map"></div>
+              <div class="gps-badge hidden" id="gps-badge">
+                <span class="gps-badge-dot" id="gps-badge-dot"></span>
+                <span id="gps-badge-text">Getting your location…</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;padding:10px 18px 14px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber)"></div>Your location</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:8px;height:8px;border-radius:50% 50% 50% 0;background:var(--green)"></div>Pickup location</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:14px;height:2px;background:#60A5FA;"></div>Route to pickup</div>
             </div>
           </div>
 
@@ -695,6 +754,17 @@
   let activeJob = null;    // the job currently opened in the Active Job view
   let driverNotifUnsub = null;
   let driverNotifDocs = [];
+  let jobsUnsub = null;
+  let dashMap = null;
+  let routeMap = null;
+  let activeMap = null;
+  let geoWatchId = null;
+  let lastDriverGeo = null;
+  let activeJobId = null;
+  let gpsStatus = 'idle';
+  let driverDisplayName = '';
+  let driverPlate = '';
+  let lastGpsWriteAt = 0;
 
   // Estimate the fee for a job the same way residents do (mirrors resident_dashboard pricing)
   function estimateJobUGX(job){
@@ -811,7 +881,11 @@
     }
     list.innerHTML = driverNotifDocs.slice(0, 15).map(n => {
       const unread = !n.readAt;
-      const color = n.type === 'assigned_job' ? 'var(--amber)' : (n.type === 'driver_confirmed' ? 'var(--green)' : 'var(--blue)');
+      const color = n.type === 'assigned_job' ? 'var(--amber)' :
+        n.type === 'driver_confirmed' ? 'var(--green)' :
+        n.type === 'account_approved' ? 'var(--green)' :
+        n.type === 'account_rejected' ? 'var(--red)' :
+        'var(--blue)';
       return `
         <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start;">
           <div style="width:8px;height:8px;border-radius:50%;margin-top:5px;background:${color};opacity:${unread ? '1' : '0.45'};flex-shrink:0;"></div>
@@ -837,7 +911,11 @@
         snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
         driverNotifDocs = rows;
         renderDriverNotifications();
-      }, (err) => console.error('Driver notif listener failed:', err));
+      }, (err) => {
+        console.error('Driver notif listener failed:', err);
+        const list = document.getElementById('driver-notif-list');
+        if (list) list.innerHTML = `<div style="padding:10px;color:var(--muted);font-size:12px;">Couldn't load notifications right now. Try refreshing the page.</div>`;
+      });
   }
 
   async function markDriverNotificationRead(id){
@@ -868,7 +946,57 @@
     const list = document.getElementById('driver-assigned-list');
     if (!list) return;
     if (!assignedJobs.length) {
-      list.innerHTML = `<div style="padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No jobs assigned to you yet.</div>`;
+      list.innerHTML = `<div style="padding:10px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No jobs assigned to you yet. When KCCA assigns a paid booking to your account, it appears here.</div>`;
+    } else {
+      list.innerHTML = assignedJobs.map(r => {
+        const shortId = `#${r.id.slice(0,8).toUpperCase()}`;
+        const addr = (r.pickupAddress || '—');
+        const resident = r.residentName || r.residentEmail || 'Resident';
+        const meta = `${r.zone || '—'} · ${r.type || '—'} · ${r.volume || '—'}`;
+        const sched = `${r.preferredDate || '—'} · ${r.preferredTime || ''}`.trim();
+        const isActive = activeJobId === r.id;
+        return `
+          <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;${isActive ? 'outline:1px solid var(--green);' : ''}">
+            <div style="flex:1;min-width:240px;">
+              <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${shortId} · ${sched}</div>
+              <div style="color:var(--text);font-size:12px;margin-bottom:2px;"><strong>Resident:</strong> ${resident}</div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${addr}</div>
+              <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta} · Status: ${r.status || 'assigned'} · ${r.residentEmail || r.residentPhone || ''}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-direction:column;min-width:200px;">
+              ${r.status === 'assigned' ? `<button class="btn-confirm" style="width:100%;" onclick="confirmAssignedJob('${r.id}')">Confirm job</button>` : ''}
+              <button class="btn-skip" style="width:100%;" onclick="openActiveJob('${r.id}')">${isActive ? 'Tracking…' : 'Navigate / Track'}</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    const jobList = document.getElementById('driver-job-list');
+    if (jobList) {
+      jobList.innerHTML = assignedJobs.length
+        ? assignedJobs.map(r => `
+            <div class="job-item" onclick="openActiveJob('${r.id}')">
+              <div class="job-top"><span class="job-id">#${r.id.slice(0,8).toUpperCase()}</span><span class="job-time">${r.status || 'assigned'}</span></div>
+              <div class="job-addr">${r.pickupAddress || '—'} · ${r.residentName || r.residentEmail || 'Resident'}</div>
+              <div class="job-bottom"><span class="job-type">${r.type || '—'} · ${r.volume || '—'}</span><span class="st-pill stp-b">${r.status || 'assigned'}</span></div>
+            </div>`).join('')
+        : `<div style="color:var(--muted);font-size:12px;padding:8px 0;">No open assigned jobs.</div>`;
+    }
+    renderDriverRouteList();
+    renderDriverHistory();
+    renderDriverKpis();
+    updateNextPickupCard();
+    renderDriverMaps();
+    updateActiveJobPanel();
+  }
+
+  function renderDriverRouteList(){
+    const el = document.getElementById('driver-route-list');
+    const title = document.getElementById('route-title');
+    if (title) title.textContent = `My assigned stops · ${assignedJobs.length}`;
+    if (!el) return;
+    if (!assignedJobs.length) {
+      el.innerHTML = `<div style="color:var(--muted);font-size:12px;">No assigned stops yet.</div>`;
       return;
     }
     list.innerHTML = assignedJobs.map(r => {
@@ -888,7 +1016,7 @@
             <button class="btn-skip" style="width:100%;" onclick="openActiveJob('${r.id}')">Open active view</button>
           </div>
         </div>
-      `;
+      </div>`;
     }).join('');
     // Keep the route maps in sync with the latest assigned jobs
     if (typeof refreshDriverMaps === 'function') { try { refreshDriverMaps(); } catch (e) { console.error(e); } }
@@ -914,6 +1042,282 @@
           <div class="job-bottom"><span class="job-type">${cap(r.type || 'Collection')} · ${r.volume || '—'}</span><span class="st-pill ${pill}">${statusText(r.status)}</span></div>
         </div>`;
     }).join('');
+  }
+
+  function renderDriverHistory(){
+    const tbody = document.getElementById('driver-history-tbody');
+    if (!tbody) return;
+    if (!completedJobs.length) {
+      tbody.innerHTML = `<tr><td colspan="6" style="color:var(--muted);padding:14px;">Completed jobs assigned to you will appear here.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = completedJobs.map(r => `<tr>
+      <td>#${r.id.slice(0,8).toUpperCase()}</td>
+      <td>${r.preferredDate || '—'}</td>
+      <td>${r.pickupAddress || '—'}</td>
+      <td>${r.type || '—'}</td>
+      <td>${r.residentName || r.residentEmail || '—'}</td>
+      <td><span class="st-pill stp-g">Collected</span></td>
+    </tr>`).join('');
+  }
+
+  function renderDriverKpis(){
+    const active = assignedJobs.filter(r => ['driver_confirmed','in_progress'].includes(r.status)).length;
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=String(v); };
+    set('kpi-assigned', assignedJobs.length);
+    set('kpi-active', active);
+    set('kpi-done', completedJobs.length);
+    set('kpi-gps', lastDriverGeo ? 'On' : 'Off');
+    set('progress-done', completedJobs.length);
+    set('progress-left', assignedJobs.length);
+    set('progress-active', active);
+    const total = completedJobs.length + assignedJobs.length;
+    const pct = total ? Math.round((completedJobs.length / total) * 100) : 0;
+    set('progress-label', `${completedJobs.length} of ${total} jobs`);
+    set('progress-pct', `${pct}%`);
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.width = `${pct}%`;
+  }
+
+  function updateNextPickupCard(){
+    const job = assignedJobs.find(j => j.id === activeJobId) || assignedJobs[0] || null;
+    const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
+    if (!job) {
+      set('next-address', 'No assigned jobs yet');
+      set('next-sub', 'Jobs assigned to you by KCCA appear here');
+      set('next-eta', '—'); set('next-distance', '—'); set('next-type', '—'); set('next-resident', '—');
+      return;
+    }
+    set('next-address', job.pickupAddress || '—');
+    set('next-sub', `${job.zone || '—'} · #${job.id.slice(0,8).toUpperCase()} · ${job.status || ''}`);
+    set('next-type', job.type || '—');
+    set('next-resident', job.residentName || job.residentEmail || '—');
+    const pickup = typeof ITrushMap !== 'undefined' ? ITrushMap.parseGeo(job.pickupGeo) : null;
+    const km = (pickup && lastDriverGeo) ? ITrushMap.haversineKm(lastDriverGeo, pickup) : null;
+    const eta = typeof ITrushMap !== 'undefined' ? ITrushMap.etaMinutes(km) : null;
+    set('next-eta', eta != null ? `~${eta} min` : '—');
+    set('next-distance', km != null ? `${km.toFixed(1)} km` : '—');
+  }
+
+  function openFirstAssignedJob(){
+    const job = assignedJobs[0];
+    if (!job) { alert('No job assigned to you yet.'); return; }
+    openActiveJob(job.id);
+  }
+
+  async function refreshAssignedJobs(){
+    if (!firebaseDb || !currentUser) return;
+    // Prefer live listener; this is a manual refresh fallback
+    try {
+      const snap = await firebaseDb.collection('collection_requests')
+        .where('collectorUid','==', currentUser.uid)
+        .limit(50)
+        .get();
+      const open = [];
+      const done = [];
+      snap.forEach(d => {
+        const data = { id: d.id, ...d.data() };
+        if (['completed','cancelled'].includes(data.status || '')) done.push(data);
+        else open.push(data);
+      });
+      assignedJobs = open;
+      completedJobs = done;
+    } catch (e) {
+      console.error('Failed to load assigned jobs:', e);
+      assignedJobs = [];
+      completedJobs = [];
+    }
+    renderAssignedJobs();
+  }
+
+  function startDriverJobsListener(){
+    if (!firebaseDb || !currentUser) return;
+    if (jobsUnsub) { jobsUnsub(); jobsUnsub = null; }
+    jobsUnsub = firebaseDb.collection('collection_requests')
+      .where('collectorUid','==', currentUser.uid)
+      .limit(50)
+      .onSnapshot((snap) => {
+        const open = [];
+        const done = [];
+        snap.forEach(d => {
+          const data = { id: d.id, ...d.data() };
+          if (['completed','cancelled'].includes(data.status || '')) done.push(data);
+          else open.push(data);
+        });
+        assignedJobs = open;
+        completedJobs = done;
+        renderAssignedJobs();
+      }, (err) => console.error('Driver jobs listener failed:', err));
+  }
+    if (typeof ITrushMap === 'undefined') return;
+    if (!dashMap) dashMap = ITrushMap.create('driver-dash-map', { zoom: 13 });
+    if (!routeMap) routeMap = ITrushMap.create('driver-route-map', { zoom: 13 });
+    if (!activeMap) activeMap = ITrushMap.create('driver-active-map', { zoom: 14 });
+  }
+
+  function buildDriverMapPoints(){
+    const points = [];
+    if (lastDriverGeo) {
+      points.push({
+        id: 'you',
+        lat: lastDriverGeo.lat,
+        lng: lastDriverGeo.lng,
+        kind: 'you',
+        title: 'You (collector)',
+        meta: gpsStatus === 'active' ? 'Sharing live GPS' : 'GPS online'
+      });
+    }
+    assignedJobs.forEach((r) => {
+      const geo = ITrushMap.parseGeo(r.pickupGeo);
+      if (!geo) return;
+      points.push({
+        id: 'job-' + r.id,
+        lat: geo.lat,
+        lng: geo.lng,
+        kind: 'pickup',
+        title: `Pickup #${r.id.slice(0,8).toUpperCase()}`,
+        meta: r.pickupAddress || r.zone || 'Assigned stop'
+      });
+    });
+    const legend = document.getElementById('driver-legend-pickups');
+    if (legend) legend.textContent = String(assignedJobs.filter(j => ITrushMap.parseGeo(j.pickupGeo)).length);
+    return points;
+  }
+
+  function renderDriverMaps(){
+    ensureDriverMaps();
+    const points = buildDriverMapPoints();
+    if (dashMap) dashMap.setPoints(points);
+    if (routeMap) routeMap.setPoints(points);
+
+    const active = assignedJobs.find(j => j.id === activeJobId) || assignedJobs[0];
+    if (activeMap) {
+      const activePoints = [];
+      if (lastDriverGeo) {
+        activePoints.push({
+          id: 'you',
+          lat: lastDriverGeo.lat,
+          lng: lastDriverGeo.lng,
+          kind: 'you',
+          title: 'You',
+          meta: 'Current position'
+        });
+      }
+      const pickup = active ? ITrushMap.parseGeo(active.pickupGeo) : null;
+      if (pickup) {
+        activePoints.push({
+          id: 'pickup',
+          lat: pickup.lat,
+          lng: pickup.lng,
+          kind: 'pickup',
+          title: 'Pickup',
+          meta: active.pickupAddress || 'Stop'
+        });
+      }
+      activeMap.setPoints(activePoints);
+      if (lastDriverGeo && pickup) activeMap.setRoute(lastDriverGeo, pickup);
+      else activeMap.setRoute(null, null);
+    }
+  }
+
+  function updateActiveJobPanel(){
+    const job = assignedJobs.find(j => j.id === activeJobId) || assignedJobs[0] || null;
+    if (job && !activeJobId) activeJobId = job.id;
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    if (!job) {
+      set('active-address', 'No active job selected');
+      set('active-sub', 'Confirm a job from Job List to start live tracking');
+      set('active-eta', '—');
+      set('active-distance', '—');
+      set('active-type', '—');
+      set('active-volume', '—');
+      set('active-job-title', 'Active job');
+      return;
+    }
+    set('active-address', job.pickupAddress || '—');
+    set('active-sub', `${job.zone || '—'} · ${job.status || 'assigned'} · #${job.id.slice(0,8).toUpperCase()}`);
+    set('active-type', job.type || '—');
+    set('active-volume', job.volume || '—');
+    set('active-job-title', `Active job · #${job.id.slice(0,8).toUpperCase()}`);
+    const pickup = ITrushMap.parseGeo(job.pickupGeo);
+    const km = (pickup && lastDriverGeo) ? ITrushMap.haversineKm(lastDriverGeo, pickup) : null;
+    const eta = ITrushMap.etaMinutes(km);
+    set('active-eta', eta != null ? `~${eta} min` : '—');
+    set('active-distance', km != null ? `${km.toFixed(1)} km` : '—');
+
+    // Next pickup card on dashboard
+    const nextAddr = document.querySelector('#view-dashboard .jd-value');
+    const nextSub = document.querySelector('#view-dashboard .jd-sub');
+    if (nextAddr) nextAddr.textContent = job.pickupAddress || '—';
+    if (nextSub) nextSub.textContent = `${job.zone || '—'} · #${job.id.slice(0,8).toUpperCase()}`;
+  }
+
+  async function publishLiveLocation(lat, lng){
+    if (!firebaseDb || !currentUser) return;
+    const now = Date.now();
+    if (now - lastGpsWriteAt < 4000) return; // throttle writes
+    lastGpsWriteAt = now;
+    const payload = {
+      lat,
+      lng,
+      status: gpsStatus,
+      requestId: activeJobId || null,
+      displayName: driverDisplayName || currentUser.email || 'Collector',
+      email: currentUser.email || null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    try {
+      await firebaseDb.collection('live_locations').doc(currentUser.uid).set(payload, { merge: true });
+    } catch (e) {
+      console.error('live_locations write failed:', e);
+    }
+    if (activeJobId) {
+      try {
+        const updates = {
+          truckGeo: { lat, lng },
+          truckGeoUpdatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (gpsStatus === 'active') updates.status = 'in_progress';
+        await firebaseDb.collection('collection_requests').doc(activeJobId).update(updates);
+      } catch (e) {
+        console.error('truckGeo update failed:', e);
+      }
+    }
+  }
+
+  function startDriverGps(){
+    if (!navigator.geolocation) {
+      console.warn('Geolocation not available');
+      return;
+    }
+    if (geoWatchId != null) return;
+    geoWatchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        lastDriverGeo = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        renderDriverMaps();
+        updateActiveJobPanel();
+        publishLiveLocation(lastDriverGeo.lat, lastDriverGeo.lng);
+      },
+      (err) => console.error('Driver GPS error:', err),
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
+    );
+  }
+
+  function stopDriverGps(){
+    if (geoWatchId != null) {
+      navigator.geolocation.clearWatch(geoWatchId);
+      geoWatchId = null;
+    }
+  }
+
+  function openActiveJob(requestId){
+    activeJobId = requestId;
+    gpsStatus = 'active';
+    localStorage.setItem('itrush_active_job', requestId || '');
+    updateActiveJobPanel();
+    renderDriverMaps();
+    setView('active');
+    if (lastDriverGeo) publishLiveLocation(lastDriverGeo.lat, lastDriverGeo.lng);
   }
 
   async function refreshAssignedJobs(){
@@ -1189,6 +1593,7 @@
       if (st) st.textContent = `${job.pickupAddress || 'Pickup'} marked complete. The resident has been notified.`;
       document.getElementById('confirm-panel').classList.add('hidden');
       document.getElementById('success-panel').classList.remove('hidden');
+      try { stopTrackingMe(); } catch (e) { console.error('Failed to stop GPS tracking:', e); }
       activeJob = null;
       await refreshAssignedJobs();
     } catch (e) {
@@ -1208,8 +1613,17 @@
         status: 'in_progress',
         assignedAt: job.assignedAt || firebase.firestore.FieldValue.serverTimestamp()
       });
+      if (job.residentUid) {
+        await createNotification({
+          toUid: job.residentUid,
+          type: 'collection_in_progress',
+          requestId: job.id,
+          message: 'Your collector is on the way — collection in progress.'
+        });
+      }
       await refreshAssignedJobs();
       renderActiveJobPanel();
+      try { startTrackingMe(); } catch (e) { console.error('Failed to start GPS tracking:', e); }
     } catch (e) {
       console.error('Start job failed:', e);
     }
@@ -1240,8 +1654,9 @@
         requestId,
         message: 'Driver confirmed an assigned booking.'
       });
-      alert('Job confirmed.');
+      alert('Job confirmed. Live GPS sharing started.');
       await refreshAssignedJobs();
+      openActiveJob(requestId);
     } catch (e) {
       console.error('Confirm job failed:', e);
       alert(e.message || 'Could not confirm job.');
@@ -1266,10 +1681,22 @@
       document.getElementById('job-panel').classList.remove('hidden');
       document.getElementById('confirm-panel').classList.add('hidden');
       document.getElementById('success-panel').classList.add('hidden');
+      updateActiveJobPanel();
     }
+    ensureDriverMaps();
+    renderDriverMaps();
+    if (dashMap) dashMap.invalidate();
+    if (routeMap) routeMap.invalidate();
+    if (activeMap) activeMap.invalidate();
   }
 
   function showConfirm(){
+    const job = assignedJobs.find(j => j.id === activeJobId) || assignedJobs[0];
+    const sub = document.getElementById('confirm-sub');
+    if (sub) {
+      const addr = (job && job.pickupAddress) ? job.pickupAddress : 'this pickup';
+      sub.innerHTML = `Mark <strong>${addr}</strong> as collected. The resident and KCCA will be notified.`;
+    }
     document.getElementById('job-panel').classList.add('hidden');
     document.getElementById('confirm-panel').classList.remove('hidden');
   }
@@ -1283,10 +1710,20 @@
      Plots the driver's real assigned pickups as numbered stops.
      ============================================================ */
   const D_KAMPALA = { center: [0.3163, 32.5822], zoom: 12 };
-  const D_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+  // NOTE: previously both named "DARK_TILES" pointed at CARTO's "voyager" style,
+  // which is a light, highly-saturated basemap (bright blue water, yellow/orange
+  // roads) — that mismatch is what showed up as large blue/yellow blocks clashing
+  // with the app's dark theme. dark_all / light_all are CARTO's actual muted
+  // dark/light basemaps, matched to the current data-theme.
+  const D_DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png';
+  const D_LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
   const D_TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
 
-  const dMaps = { driver: { map: null, layer: null }, route: { map: null, layer: null } };
+  function dCurrentTileUrl() {
+    return document.documentElement.getAttribute('data-theme') === 'light' ? D_LIGHT_TILES : D_DARK_TILES;
+  }
+
+  const dMaps = { driver: { map: null, layer: null, tiles: null }, route: { map: null, layer: null, tiles: null } };
 
   function kickMap(map) {
     if (!map) return;
@@ -1313,7 +1750,7 @@
     const el = document.getElementById(elId);
     if (!el || typeof L === 'undefined') return null;
     const map = L.map(el, { center: D_KAMPALA.center, zoom: D_KAMPALA.zoom, scrollWheelZoom: true });
-    L.tileLayer(D_DARK_TILES, { attribution: D_TILE_ATTR, maxZoom: 19 }).addTo(map);
+    slot.tiles = L.tileLayer(dCurrentTileUrl(), { attribution: D_TILE_ATTR, maxZoom: 19 }).addTo(map);
     slot.layer = L.layerGroup().addTo(map);
     slot.map = map;
     kickMap(map);
@@ -1389,7 +1826,7 @@
   }
 
   // Active-job map: shows the current pickup + the driver's live location
-  dMaps.active = { map: null, layer: null, watchId: null, meMarker: null };
+  dMaps.active = { map: null, layer: null, tiles: null, watchId: null, meMarker: null };
 
   function initActiveMap() {
     const slot = dMaps.active;
@@ -1397,7 +1834,7 @@
     if (!el || typeof L === 'undefined') return;
     if (!slot.map) {
       const map = L.map(el, { center: D_KAMPALA.center, zoom: 14, scrollWheelZoom: true });
-      L.tileLayer(D_DARK_TILES, { attribution: D_TILE_ATTR, maxZoom: 19 }).addTo(map);
+      slot.tiles = L.tileLayer(dCurrentTileUrl(), { attribution: D_TILE_ATTR, maxZoom: 19 }).addTo(map);
       slot.layer = L.layerGroup().addTo(map);
       slot.map = map;
       kickMap(map);
@@ -1459,22 +1896,89 @@
     });
   }
 
-  // Watch the driver's GPS position and show it on the active map
+  // Great-circle distance between two [lat,lng] points, in kilometres.
+  function haversineKm(a, b) {
+    const R = 6371;
+    const dLat = (b[0] - a[0]) * Math.PI / 180;
+    const dLng = (b[1] - a[1]) * Math.PI / 180;
+    const lat1 = a[0] * Math.PI / 180, lat2 = b[0] * Math.PI / 180;
+    const x = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  }
+
+  function fmtDistance(km) {
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+  }
+
+  // Small floating status badge on the active-job map — shows tracking state
+  // without ever covering the map itself (small, top-left, semi-transparent).
+  function setGpsBadge(state, text) {
+    const badge = document.getElementById('gps-badge');
+    const dot = document.getElementById('gps-badge-dot');
+    const label = document.getElementById('gps-badge-text');
+    if (!badge) return;
+    if (!state) { badge.classList.add('hidden'); return; }
+    badge.classList.remove('hidden');
+    if (dot) dot.className = 'gps-badge-dot ' + state;
+    if (label) label.textContent = text;
+  }
+
+  // Watch the driver's GPS position and show it on the active map.
+  // Only tracks while the opened job is actually in_progress — i.e. from the
+  // moment the driver taps "Start / en route" until the job is completed
+  // (stopTrackingMe) or they leave for a different job.
   function startTrackingMe() {
     const slot = dMaps.active;
-    if (slot.watchId !== null || !navigator.geolocation) return;
+    const job = getActivePickup();
+    if (!job || job.status !== 'in_progress') { setGpsBadge(null); return; }
+    if (slot.watchId !== null) return; // already tracking
+
+    if (!navigator.geolocation) {
+      setGpsBadge('error', 'GPS is not available on this device or browser.');
+      return;
+    }
+
+    setGpsBadge('warn', 'Getting your location…');
+
     slot.watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const lat = pos.coords.latitude, lng = pos.coords.longitude;
         slot.me = [lat, lng];
-        if (!slot.map) return;
-        if (slot.meMarker) slot.meMarker.setLatLng([lat, lng]);
-        else slot.meMarker = L.marker([lat, lng], { icon: meIcon() }).bindPopup('<b>You are here</b>').addTo(slot.map);
-        drawMeToPickup();
+        if (slot.map) {
+          if (slot.meMarker) slot.meMarker.setLatLng([lat, lng]);
+          else slot.meMarker = L.marker([lat, lng], { icon: meIcon() }).bindPopup('<b>You are here</b>').addTo(slot.map);
+          drawMeToPickup();
+        }
+        const pickupJob = getActivePickup();
+        if (pickupJob && pickupJob.pickupGeo) {
+          const km = haversineKm(slot.me, [Number(pickupJob.pickupGeo.lat), Number(pickupJob.pickupGeo.lng)]);
+          setGpsBadge('live', `Tracking · ${fmtDistance(km)} to pickup`);
+        } else {
+          setGpsBadge('live', 'Tracking your location');
+        }
       },
-      (err) => { console.warn('GPS watch error:', err); },
+      (err) => {
+        console.warn('GPS watch error:', err);
+        if (err.code === 1) setGpsBadge('error', 'Location permission denied — enable it in your browser settings to track this job.');
+        else if (err.code === 2) setGpsBadge('error', "Couldn't determine your location. Check your device's GPS/location settings.");
+        else setGpsBadge('error', 'Location temporarily unavailable — retrying…');
+      },
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 20000 }
     );
+  }
+
+  // Stop watching the driver's GPS and clear the live-tracking layers —
+  // called when the job is marked collected/completed.
+  function stopTrackingMe() {
+    const slot = dMaps.active;
+    if (slot.watchId !== null && navigator.geolocation) {
+      try { navigator.geolocation.clearWatch(slot.watchId); } catch (_) {}
+    }
+    slot.watchId = null;
+    if (slot.meMarker) { try { slot.map && slot.map.removeLayer(slot.meMarker); } catch (_) {} slot.meMarker = null; }
+    if (slot.routeLine) { try { slot.map && slot.map.removeLayer(slot.routeLine); } catch (_) {} slot.routeLine = null; }
+    slot.me = null;
+    setGpsBadge(null);
   }
 
   // Draw a dashed line from the driver to the active pickup
@@ -1511,8 +2015,16 @@
       try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) {}
       try {
         const snap = await firebaseDb.collection('users').doc(user.uid).get();
-        const role = snap && snap.data ? (snap.data().role || 'resident') : 'resident';
+        const data = snap && snap.data ? (snap.data() || {}) : {};
+        const role = data.role || 'resident';
         if (role !== PAGE_ROLE) {
+          window.location.href = 'signin.html';
+          return;
+        }
+        if (data.status !== 'approved') {
+          // Not yet approved (or rejected) — do not grant job access.
+          try { await firebaseAuth.signOut(); } catch (_) {}
+          localStorage.removeItem('itrush_token');
           window.location.href = 'signin.html';
           return;
         }
@@ -1525,6 +2037,11 @@
       try { ensureDriverMap('driver','driver-map'); } catch (e) { console.error('Driver map init failed:', e); }
       try { await refreshAssignedJobs(); } catch (_) {}
       try { startDriverNotificationListener(); } catch (_) {}
+      try {
+        ensureDriverMaps();
+        startDriverGps();
+        renderDriverMaps();
+      } catch (e) { console.error('Driver map/GPS init failed:', e); }
     });
   })();
 </script>

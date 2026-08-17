@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#34D67C"/>
+      <stop offset="1" stop-color="#1F9E52"/>
+    </linearGradient>
+  </defs>
+  <!-- rounded square base, matches existing .logo-icon treatment -->
+  <rect x="0" y="0" width="100" height="100" rx="22" fill="url(#g1)"/>
+  <!-- outer hex (civic / trust shield language, matches existing icon) -->
+  <path d="M50 14 L79 30 V70 L50 86 L21 70 V30 Z" fill="none" stroke="#060D0A" stroke-width="4.2" stroke-linejoin="round"/>
+  <!-- inner leaf / facet (matches existing inner-path language) -->
+  <path d="M50 30 L64 38.5 V57.5 L50 66 L36 57.5 V38.5 Z" fill="#060D0A"/>
+  <!-- accent dot: GPS / location-pin nod to the app's live tracking -->
+  <circle cx="50" cy="50" r="7.5" fill="#34D67C"/>
+</svg>
