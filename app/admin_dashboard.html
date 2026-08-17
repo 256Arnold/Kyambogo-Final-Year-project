@@ -5,6 +5,36 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard · iTRUSH</title>
+  <meta name="description" content="Assign collectors, monitor requests, and manage citywide waste collection operations from the iTRUSH KCCA dashboard." />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png" />
+  <link rel="shortcut icon" href="/assets/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
+  <link rel="manifest" href="/assets/site.webmanifest" />
+  <meta name="theme-color" content="#060D0A" />
+
+  <!-- Open Graph / Facebook, WhatsApp, LinkedIn, Telegram -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="iTRUSH" />
+  <meta property="og:locale" content="en_UG" />
+  <meta property="og:url" content="https://itrush-9a273.web.app/admin_dashboard" />
+  <meta property="og:title" content="Admin Dashboard · iTRUSH" />
+  <meta property="og:description" content="Assign collectors, monitor requests, and manage citywide waste collection operations from the iTRUSH KCCA dashboard." />
+  <meta property="og:image" content="https://itrush-9a273.web.app/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala" />
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Admin Dashboard · iTRUSH" />
+  <meta name="twitter:description" content="Assign collectors, monitor requests, and manage citywide waste collection operations from the iTRUSH KCCA dashboard." />
+  <meta name="twitter:image" content="https://itrush-9a273.web.app/assets/og-image.png" />
+  <meta name="twitter:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala" />
   <script src="firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -267,6 +297,8 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
+      flex: 1;
     }
 
     .tb-title {
@@ -274,6 +306,10 @@
       font-size: 19px;
       font-weight: 400;
       color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
     }
 
     .tb-title em {
@@ -304,6 +340,10 @@
       animation: blink 1.5s ease-in-out infinite;
     }
 
+    .live-pill {
+      flex-shrink: 0;
+    }
+
     @keyframes blink {
 
       0%,
@@ -320,6 +360,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      flex-shrink: 0;
     }
 
     .tb-date {
@@ -1099,6 +1140,10 @@
       .two-col{grid-template-columns:1fr;}
       .panel[style*="span 2"]{grid-column:auto !important;}
     }
+    @media (max-width:900px){
+      .muni-table,.fleet-full-table,.rep-table,.coll-list{min-width:520px;}
+      .panel{overflow-x:auto;}
+    }
     @media (max-width:768px){
       .shell{grid-template-columns:1fr;}
       .sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;z-index:50;transform:translateX(-100%);transition:transform 0.25s ease;box-shadow:2px 0 16px var(--shadow);overflow-y:auto;}
@@ -1115,6 +1160,8 @@
     @media (max-width:480px){
       .kpi-grid{grid-template-columns:1fr;}
       .tb-date{display:none;}
+      .tb-title{font-size:15px;}
+      .live-pill{display:none;}
     }
   </style>
 </head>
@@ -1137,6 +1184,12 @@
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('itrush_theme', next); } catch (e) {}
       syncThemeIcon();
+      try { refreshMapTilesForTheme(); } catch (e) {}
+    }
+    function refreshMapTilesForTheme() {
+      if (typeof mapState === 'undefined' || typeof currentTileUrl !== 'function') return;
+      const url = currentTileUrl();
+      Object.values(mapState).forEach(slot => { if (slot && slot.tiles) slot.tiles.setUrl(url); });
     }
     function syncThemeIcon() {
       var isLight = document.documentElement.getAttribute('data-theme') === 'light';
@@ -1236,6 +1289,15 @@
             <rect x="1" y="1" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.3" />
           </svg>
           Performance
+        </div>
+        <div class="ni" id="ni-approvals" onclick="setView('approvals')">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <circle cx="7.5" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3" />
+            <path d="M2.5 13c0-2.5 2.2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M11.5 4l1 1 2-2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          Account Approvals
+          <span class="nb nb-amber" id="nb-approvals" style="display:none;">0</span>
         </div>
         <div class="sb-sec">Settings</div>
         <div class="ni">
@@ -1532,6 +1594,35 @@
           </div>
         </div>
 
+        <!-- ===== ACCOUNT APPROVALS (super-admin only) ===== -->
+        <div class="view" id="view-approvals">
+          <div class="panel" style="margin-bottom:16px;">
+            <div class="ph">
+              <span class="pt">Pending collector accounts</span>
+              <span class="pa-muted" onclick="refreshPendingCollectors()">Refresh</span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+                New collector signups wait here until an approved KCCA officer approves or rejects them. Rejected or unapproved collectors cannot access or perform collection jobs.
+              </div>
+              <div id="pending-collectors-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+          </div>
+
+          <div class="panel" id="panel-kcca-approvals" style="margin-bottom:16px;display:none;">
+            <div class="ph">
+              <span class="pt">Pending KCCA account requests</span>
+              <span class="pa-muted" onclick="refreshPendingApprovals()">Refresh</span>
+            </div>
+            <div style="padding:14px 18px;">
+              <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+                New KCCA / Municipal Authority signups wait here until a super-admin approves or rejects them. Rejected or unapproved accounts cannot sign in to this dashboard.
+              </div>
+              <div id="approvals-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -1570,10 +1661,14 @@
       }
     }
     let currentUser = null;
+    let isSuperAdmin = false;
+    let isKccaApproved = false;
     let collectorsCache = [];
     let pendingAssignments = [];
     let adminNotifUnsub = null;
     let adminNotifDocs = [];
+    let pendingKccaAccounts = [];
+    let pendingCollectors = [];
 
     function formatAdminDate(d) {
       try {
@@ -1624,9 +1719,10 @@
       map: 'Live <em>Fleet Map</em>',
       fleet: 'Fleet <em>Management</em>',
       reports: 'Overflow <em>Reports</em>',
-      performance: 'Performance <em>Analytics</em>'
+      performance: 'Performance <em>Analytics</em>',
+      approvals: 'Account <em>Approvals</em>'
     };
-    const navIdx = { overview: 0, assign: 1, map: 2, fleet: 3, reports: 4, performance: 5 };
+    const navIdx = { overview: 0, assign: 1, map: 2, fleet: 3, reports: 4, performance: 5, approvals: 6 };
 
     function setView(v) {
       if (typeof closeSidebar === 'function') closeSidebar();
@@ -1706,6 +1802,8 @@
           renderAdminNotifications();
         }, (err) => {
           console.error('Notification listener failed:', err);
+          const list = document.getElementById('admin-notif-list');
+          if (list) list.innerHTML = `<div style="padding:12px 18px;color:var(--muted);font-size:12px;">Couldn't load notifications right now. Try refreshing the page.</div>`;
         });
     }
 
@@ -1812,13 +1910,193 @@
       renderAssignments();
     }
 
+    /* ============================================================
+       ACCOUNT APPROVALS
+       - Pending collectors: reviewable by any approved KCCA officer.
+       - Pending KCCA accounts: reviewable by a super-admin only.
+       ============================================================ */
+    function setupApprovalsUI() {
+      const kccaPanel = document.getElementById('panel-kcca-approvals');
+      if (kccaPanel) kccaPanel.style.display = isSuperAdmin ? 'block' : 'none';
+      refreshPendingCollectors();
+      if (isSuperAdmin) refreshPendingApprovals();
+    }
+
+    function updateApprovalsBadge() {
+      const badge = document.getElementById('nb-approvals');
+      const total = pendingCollectors.length + (isSuperAdmin ? pendingKccaAccounts.length : 0);
+      if (badge) {
+        badge.textContent = String(total);
+        badge.style.display = total ? 'inline-block' : 'none';
+      }
+    }
+
+    function renderPendingCollectors() {
+      const list = document.getElementById('pending-collectors-list');
+      updateApprovalsBadge();
+      if (!list) return;
+      if (!pendingCollectors.length) {
+        list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No collector accounts waiting for review.</div>`;
+        return;
+      }
+      list.innerHTML = pendingCollectors.map(u => {
+        const name = (u.full_name || '').trim() || u.email || u.uid;
+        const company = (u.company || '').trim();
+        const zone = (u.primary_zone || '').trim();
+        const plate = (u.truck_plate || '').trim();
+        const meta = [company, zone, plate ? `Plate: ${plate}` : ''].filter(Boolean).join(' · ');
+        return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="min-width:240px;flex:1;">
+              <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${name}</div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${u.email || '—'} ${u.phone ? '· ' + u.phone : ''}</div>
+              <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta || 'No company/zone/plate provided'}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button class="rf-btn" style="border-radius:8px;color:var(--green);border-color:rgba(46,204,113,0.3);background:rgba(46,204,113,0.08);" onclick="approveCollector('${u.uid}')">Approve</button>
+              <button class="rf-btn" style="border-radius:8px;color:var(--red);border-color:rgba(229,83,83,0.3);" onclick="rejectCollector('${u.uid}')">Reject</button>
+            </div>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    async function refreshPendingCollectors() {
+      if (!firebaseDb || !isKccaApproved) return;
+      try {
+        const snap = await firebaseDb.collection('users')
+          .where('role', '==', 'collector')
+          .where('status', '==', 'pending')
+          .limit(50)
+          .get();
+        const rows = [];
+        snap.forEach(d => rows.push({ uid: d.id, ...d.data() }));
+        pendingCollectors = rows;
+      } catch (e) {
+        console.error('Failed to load pending collectors:', e);
+        pendingCollectors = [];
+      }
+      renderPendingCollectors();
+    }
+
+    async function reviewCollectorAccount(uid, decision) {
+      if (!firebaseDb || !currentUser || !isKccaApproved) return;
+      try {
+        await firebaseDb.collection('users').doc(uid).update({
+          status: decision,
+          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          reviewedBy: currentUser.uid
+        });
+        try {
+          await createNotification({
+            toUid: uid,
+            message: decision === 'approved'
+              ? 'Your collector account has been approved. You can now sign in and receive collection jobs.'
+              : 'Your collector account request was not approved. Contact KCCA for details.',
+            type: 'account_' + decision
+          });
+        } catch (e) { console.warn('Failed to notify collector account:', e); }
+        pendingCollectors = pendingCollectors.filter(u => u.uid !== uid);
+        renderPendingCollectors();
+      } catch (e) {
+        console.error('Failed to review collector account:', e);
+        alert('Could not update this account. Please try again.');
+      }
+    }
+
+    function approveCollector(uid) { reviewCollectorAccount(uid, 'approved'); }
+    function rejectCollector(uid) { reviewCollectorAccount(uid, 'rejected'); }
+
+    function renderPendingApprovals() {
+      const list = document.getElementById('approvals-list');
+      updateApprovalsBadge();
+      if (!list) return;
+      if (!pendingKccaAccounts.length) {
+        list.innerHTML = `<div style="padding:12px;border:1px dashed var(--border2);border-radius:10px;color:var(--muted);font-size:12px;">No KCCA accounts waiting for review.</div>`;
+        return;
+      }
+      list.innerHTML = pendingKccaAccounts.map(u => {
+        const name = `${(u.first_name || '').trim()} ${(u.last_name || '').trim()}`.trim() || u.email || u.uid;
+        const dept = (u.department || '').trim();
+        const juris = (u.jurisdiction || '').trim();
+        const staffId = (u.staff_id || '').trim();
+        const meta = [dept, juris, staffId ? `Staff ID: ${staffId}` : ''].filter(Boolean).join(' · ');
+        return `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="min-width:240px;flex:1;">
+              <div style="font-weight:650;color:var(--text);font-size:13px;margin-bottom:4px;">${name}</div>
+              <div style="color:var(--muted);font-size:12px;line-height:1.5;">${u.email || '—'}</div>
+              <div style="color:var(--dim);font-size:11px;margin-top:6px;">${meta || 'No department/jurisdiction provided'}</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0;">
+              <button class="rf-btn" style="border-radius:8px;color:var(--green);border-color:rgba(46,204,113,0.3);background:rgba(46,204,113,0.08);" onclick="approveKcca('${u.uid}')">Approve</button>
+              <button class="rf-btn" style="border-radius:8px;color:var(--red);border-color:rgba(229,83,83,0.3);" onclick="rejectKcca('${u.uid}')">Reject</button>
+            </div>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    async function refreshPendingApprovals() {
+      if (!firebaseDb || !isSuperAdmin) return;
+      try {
+        const snap = await firebaseDb.collection('users')
+          .where('role', '==', 'kcca_officer')
+          .where('status', '==', 'pending')
+          .limit(50)
+          .get();
+        const rows = [];
+        snap.forEach(d => rows.push({ uid: d.id, ...d.data() }));
+        pendingKccaAccounts = rows;
+      } catch (e) {
+        console.error('Failed to load pending KCCA accounts:', e);
+        pendingKccaAccounts = [];
+      }
+      renderPendingApprovals();
+    }
+
+    async function reviewKccaAccount(uid, decision) {
+      if (!firebaseDb || !currentUser || !isSuperAdmin) return;
+      try {
+        await firebaseDb.collection('users').doc(uid).update({
+          status: decision,
+          reviewedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          reviewedBy: currentUser.uid
+        });
+        try {
+          await createNotification({
+            toUid: uid,
+            message: decision === 'approved'
+              ? 'Your KCCA account has been approved. You can now sign in to the dashboard.'
+              : 'Your KCCA account request was not approved. Contact the system administrator for details.',
+            type: 'account_' + decision
+          });
+        } catch (e) { console.warn('Failed to notify KCCA account:', e); }
+        pendingKccaAccounts = pendingKccaAccounts.filter(u => u.uid !== uid);
+        renderPendingApprovals();
+      } catch (e) {
+        console.error('Failed to review KCCA account:', e);
+        alert('Could not update this account. Please try again.');
+      }
+    }
+
+    function approveKcca(uid) { reviewKccaAccount(uid, 'approved'); }
+    function rejectKcca(uid) { reviewKccaAccount(uid, 'rejected'); }
+
     async function assignRequest(requestId) {
       if (!firebaseDb || !currentUser) return;
       const sel = document.getElementById(`assign-select-${requestId}`);
       const driverUid = sel ? sel.value : '';
       if (!driverUid) { alert('Select a driver first.'); return; }
       try {
-        await firebaseDb.collection('collection_requests').doc(requestId).update({
+        const reqRef = firebaseDb.collection('collection_requests').doc(requestId);
+        const reqSnap = await reqRef.get();
+        const reqData = (reqSnap && reqSnap.exists) ? reqSnap.data() : {};
+        await reqRef.update({
           collectorUid: driverUid,
           assignedByUid: currentUser.uid,
           assignedAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -1830,6 +2108,14 @@
           requestId,
           message: 'You have been assigned a new collection job. Please confirm in Driver App.'
         });
+        if (reqData.residentUid) {
+          await createNotification({
+            toUid: reqData.residentUid,
+            type: 'collector_assigned',
+            requestId,
+            message: 'A collector has been assigned to your pickup and will be in touch soon.'
+          });
+        }
         await createNotification({
           toRole: 'kcca_officer',
           type: 'assigned_job',
@@ -1862,8 +2148,18 @@
       ]
     };
 
-    const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+    // NOTE: previously named "DARK_TILES" but pointed at CARTO's "voyager" style,
+    // a light, highly-saturated basemap (bright blue water, yellow/orange roads)
+    // — that mismatch is what showed up as large blue/yellow blocks clashing with
+    // the app's dark theme. dark_all / light_all are CARTO's actual muted
+    // dark/light basemaps, matched to the current data-theme.
+    const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png';
+    const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
     const TILE_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>';
+
+    function currentTileUrl() {
+      return document.documentElement.getAttribute('data-theme') === 'light' ? LIGHT_TILES : DARK_TILES;
+    }
 
     // Colour a request marker by its lifecycle status
     function statusColor(status) {
@@ -1915,8 +2211,8 @@
 
     // Holds the Leaflet map instances + their marker layers, created lazily
     const mapState = {
-      overview: { map: null, layer: null },
-      full: { map: null, layer: null }
+      overview: { map: null, layer: null, tiles: null },
+      full: { map: null, layer: null, tiles: null }
     };
 
     function kickMap(map) {
@@ -1936,7 +2232,7 @@
         scrollWheelZoom: !!(opts && opts.scroll),
         attributionControl: true
       });
-      L.tileLayer(DARK_TILES, { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
+      slot.tiles = L.tileLayer(currentTileUrl(), { attribution: TILE_ATTR, maxZoom: 19 }).addTo(map);
       // Division reference markers
       GKMA.divisions.forEach(d => {
         L.marker([d.lat, d.lng], { icon: divisionIcon(), interactive: true })
@@ -2378,6 +2674,13 @@
         if (typeof refreshAssignments === 'function') {
           try { refreshAssignments(); } catch (e) { console.error('Assign refresh failed:', e); }
         }
+      } else if (v === 'approvals') {
+        if (typeof refreshPendingCollectors === 'function') {
+          try { refreshPendingCollectors(); } catch (e) { console.error('Collector approvals refresh failed:', e); }
+        }
+        if (isSuperAdmin && typeof refreshPendingApprovals === 'function') {
+          try { refreshPendingApprovals(); } catch (e) { console.error('KCCA approvals refresh failed:', e); }
+        }
       }
     }
 
@@ -2403,17 +2706,28 @@
         try { localStorage.setItem('itrush_token', await user.getIdToken()); } catch (_) { }
         try {
           const snap = await firebaseDb.collection('users').doc(user.uid).get();
-          const role = snap && snap.data ? (snap.data().role || 'resident') : 'resident';
+          const data = snap && snap.data ? (snap.data() || {}) : {};
+          const role = data.role || 'resident';
           if (role !== PAGE_ROLE) {
             window.location.href = 'signin.html';
             return;
           }
+          if (data.status !== 'approved') {
+            // Not yet approved (or rejected) — do not grant dashboard access.
+            try { await firebaseAuth.signOut(); } catch (_) {}
+            localStorage.removeItem('itrush_token');
+            window.location.href = 'signin.html';
+            return;
+          }
+          isSuperAdmin = data.isSuperAdmin === true;
+          isKccaApproved = true;
         } catch (e) {
           console.warn('Role guard failed for admin dashboard:', e);
           window.location.href = 'signin.html';
           return;
         }
         try { await hydrateAdminFromFirebase(user); } catch (e) { console.error('Failed to load profile:', e); }
+        try { setupApprovalsUI(); } catch (e) { console.error('Approvals UI setup failed:', e); }
         try { await refreshAssignments(); } catch (_) { }
         try { startAdminNotificationListener(); } catch (_) { }
         // Initialise the live map on the overview and keep it synced with bookings

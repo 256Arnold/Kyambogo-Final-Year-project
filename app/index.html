@@ -3,6 +3,37 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>iTRUSH — Smart Waste Collection for Greater Kampala</title>
+<meta name="description" content="iTRUSH connects residents, KCCA, and collection crews across the Greater Kampala Metropolitan Area — book pickups, assign collectors, and track waste collection requests in real time."/>
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png"/>
+<link rel="shortcut icon" href="/assets/favicon.ico"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"/>
+<link rel="manifest" href="/assets/site.webmanifest"/>
+<meta name="theme-color" content="#060D0A"/>
+
+<!-- Open Graph / Facebook, WhatsApp, LinkedIn, Telegram -->
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="iTRUSH"/>
+<meta property="og:locale" content="en_UG"/>
+<meta property="og:url" content="https://itrush-9a273.web.app/"/>
+<meta property="og:title" content="iTRUSH — Smart Waste Collection for Greater Kampala"/>
+<meta property="og:description" content="Book pickups, assign collectors, and track waste collection requests in real time — built for residents, KCCA, and collection crews."/>
+<meta property="og:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
+<meta property="og:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="iTRUSH — Smart Waste Collection for Greater Kampala"/>
+<meta name="twitter:description" content="Book pickups, assign collectors, and track waste collection requests in real time — built for residents, KCCA, and collection crews."/>
+<meta name="twitter:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
 
@@ -524,6 +555,22 @@
     .stat-block { min-width: 50%; border-right: none; border-bottom: 1px solid var(--border); }
     .map-area { flex-direction: column; }
     .requests-list { width: 100%; }
+  }
+
+  @media (max-width: 520px) {
+    footer {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+      padding: 24px 20px;
+    }
+    .dashboard-grid { grid-template-columns: 1fr; }
+    .cta-box { padding: 40px 22px; }
+    .cta-box h2 { font-size: 28px; }
+    nav { padding: 14px 16px; gap: 8px; }
+    .logo-text { font-size: 14px; }
+    .nav-cta { padding: 9px 14px; font-size: 12.5px; }
   }
 </style>
 </head>

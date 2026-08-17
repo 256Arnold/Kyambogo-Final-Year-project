@@ -3,6 +3,37 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign In · iTRUSH</title>
+<meta name="description" content="Sign in or create a resident, KCCA, or collector account on iTRUSH to start booking and managing waste collection across Greater Kampala."/>
+
+<!-- Favicons -->
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16.png"/>
+<link rel="shortcut icon" href="/assets/favicon.ico"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png"/>
+<link rel="manifest" href="/assets/site.webmanifest"/>
+<meta name="theme-color" content="#060D0A"/>
+
+<!-- Open Graph / Facebook, WhatsApp, LinkedIn, Telegram -->
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="iTRUSH"/>
+<meta property="og:locale" content="en_UG"/>
+<meta property="og:url" content="https://itrush-9a273.web.app/signin"/>
+<meta property="og:title" content="Sign In · iTRUSH"/>
+<meta property="og:description" content="Sign in or create a resident, KCCA, or collector account on iTRUSH to start booking and managing waste collection across Greater Kampala."/>
+<meta property="og:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:image:type" content="image/png"/>
+<meta property="og:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
+
+<!-- Twitter / X Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="Sign In · iTRUSH"/>
+<meta name="twitter:description" content="Sign in or create a resident, KCCA, or collector account on iTRUSH to start booking and managing waste collection across Greater Kampala."/>
+<meta name="twitter:image" content="https://itrush-9a273.web.app/assets/og-image.png"/>
+<meta name="twitter:image:alt" content="iTRUSH — Smart waste collection for Greater Kampala"/>
 <script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -290,6 +321,7 @@
 
   /* INPUTS */
   .form-group { margin-bottom: 18px; }
+  .field-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   label {
     display: block;
@@ -414,6 +446,17 @@
     .auth-layout { grid-template-columns: 1fr; }
     .left-panel { display: none; }
     .right-panel { padding: 40px 24px; }
+  }
+
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    nav { padding: 14px 16px; }
+    .logo-text { font-size: 14px; }
+    .nav-back { font-size: 12px; gap: 4px; }
+    .right-panel { padding: 32px 18px; }
   }
 </style>
 </head>
@@ -576,8 +619,10 @@
         <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M3 7.5h9M8 3.5l4 4-4 4" stroke="#060D0A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
 
+      <div class="field-hint" style="text-align:center;margin-top:14px;">Residents must verify their email, and KCCA accounts must be approved by a super-admin, before full access is granted.</div>
+
       <div class="divider">or continue with</div>
-      <button class="btn-google">
+      <button type="button" class="btn-google" id="btn-google-login">
         <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
         Sign in with Google
       </button>
@@ -622,6 +667,7 @@
         <div class="form-group">
           <label>Email address</label>
           <input type="email" name="email" placeholder="you@example.com"/>
+          <div class="field-hint">We'll send a verification link to this address after you sign up — verifying keeps your account secure.</div>
         </div>
         <div class="form-group">
           <label>Phone number</label>
@@ -656,6 +702,7 @@
             <input type="text" name="last_name" placeholder="e.g. Ochieng"/>
           </div>
         </div>
+        <div class="field-hint" style="margin-top:-4px;">KCCA accounts are reviewed manually — a super-admin must approve your request before you can sign in.</div>
         <div class="form-group">
           <label>Official email</label>
           <input type="email" name="email" placeholder="name@kcca.go.ug"/>
@@ -696,6 +743,7 @@
 
       <!-- COLLECTOR FIELDS -->
       <div id="signup-collector-fields" class="hidden">
+        <div class="input-hint" style="margin-top:0;margin-bottom:14px;">Collector accounts are reviewed by KCCA — you'll be able to sign in once your account is approved.</div>
         <div class="form-row">
           <div class="form-group">
             <label>Full name</label>
@@ -754,7 +802,7 @@
       </button>
 
       <div class="divider">or</div>
-      <button class="btn-google">
+      <button type="button" class="btn-google" id="btn-google-signup">
         <svg width="16" height="16" viewBox="0 0 16 16"><path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z" fill="#4285F4"/></svg>
         Sign up with Google
       </button>
@@ -864,19 +912,35 @@
     window.location.href = url;
   }
 
-  function showAuthError(msg) {
+  function showAuthMessage(msg, type) {
+    type = type || 'error';
+    const palette = {
+      error: { color: '#E55353', bg: 'rgba(229,83,83,0.1)' },
+      info: { color: '#60A5FA', bg: 'rgba(96,165,250,0.1)' }
+    };
+    const s = palette[type] || palette.error;
     const el = document.getElementById('auth-error');
-    if (el) { el.textContent = msg; el.classList.remove('hidden'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    if (el) {
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      el.style.color = s.color;
+      el.style.background = s.bg;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
     const panel = currentTab === 'login' ? document.getElementById('panel-login') : document.getElementById('panel-signup');
     if (!panel) return;
-    const errDiv = document.createElement('div');
-    errDiv.id = 'auth-error';
-    errDiv.className = 'auth-error-msg';
-    errDiv.style.cssText = 'color:#E55353;font-size:13px;margin-bottom:16px;padding:10px;background:rgba(229,83,83,0.1);border-radius:8px;';
-    errDiv.textContent = msg;
-    panel.insertBefore(errDiv, panel.firstChild);
-    errDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    const div = document.createElement('div');
+    div.id = 'auth-error';
+    div.className = 'auth-error-msg';
+    div.style.cssText = `color:${s.color};font-size:13px;margin-bottom:16px;padding:10px;background:${s.bg};border-radius:8px;line-height:1.6;`;
+    div.textContent = msg;
+    panel.insertBefore(div, panel.firstChild);
+    div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
+
+  function showAuthError(msg) { showAuthMessage(msg, 'error'); }
+  function showAuthInfo(msg) { showAuthMessage(msg, 'info'); }
 
   function clearAuthError() {
     const el = document.getElementById('auth-error');
@@ -892,11 +956,36 @@
     try {
       if (USE_FIREBASE && firebaseAuth) {
         const cred = await firebaseAuth.signInWithEmailAndPassword(email, password);
+        const snap = await firebaseDb.collection('users').doc(cred.user.uid).get();
+        const data = (snap && snap.data()) || {};
+        const role = data.role || 'resident';
+        const normalizedRole = role === 'kcca' ? 'kcca_officer' : role;
+
+        if (normalizedRole === 'kcca_officer' && data.status !== 'approved') {
+          const status = data.status || 'pending';
+          await firebaseAuth.signOut();
+          if (status === 'rejected') {
+            showAuthInfo('Your KCCA account request was not approved. Contact the system administrator if you believe this is a mistake.');
+          } else {
+            showAuthInfo('Your KCCA account is awaiting approval from a super-admin. You\'ll be able to sign in as soon as it\'s approved.');
+          }
+          return;
+        }
+
+        if (normalizedRole === 'collector' && data.status !== 'approved') {
+          const status = data.status || 'pending';
+          await firebaseAuth.signOut();
+          if (status === 'rejected') {
+            showAuthInfo('Your collector account request was not approved. Contact KCCA if you believe this is a mistake.');
+          } else {
+            showAuthInfo('Your collector account is awaiting approval from KCCA. You\'ll be able to sign in as soon as it\'s approved.');
+          }
+          return;
+        }
+
         const token = await cred.user.getIdToken();
         localStorage.setItem('itrush_token', token);
-        const snap = await firebaseDb.collection('users').doc(cred.user.uid).get();
-        const role = (snap && snap.data() && snap.data().role) || 'resident';
-        redirectByRole(role === 'kcca' ? 'kcca_officer' : role);
+        redirectByRole(normalizedRole);
         return;
       }
       const res = await fetch(API_BASE + '/api/auth/signin', {
@@ -981,14 +1070,44 @@
           profile.department = payload.department || null;
           profile.jurisdiction = payload.jurisdiction || null;
           profile.staff_id = payload.staff_id || null;
+          // KCCA accounts require super-admin approval before they can access the dashboard.
+          profile.status = 'pending';
+          profile.isSuperAdmin = false;
         } else if (currentRole === 'collector') {
           profile.full_name = payload.full_name || '';
           profile.phone = payload.phone || null;
           profile.company = payload.company || null;
           profile.truck_plate = payload.truck_plate || null;
           profile.primary_zone = payload.primary_zone || null;
+          // Collector accounts require KCCA approval before they can access jobs.
+          profile.status = 'pending';
         }
         await firebaseDb.collection('users').doc(cred.user.uid).set(profile);
+
+        if (currentRole === 'kcca') {
+          // Not signed in until a super-admin approves this account.
+          try { await firebaseAuth.signOut(); } catch (_) {}
+          switchTab('login');
+          showAuthInfo('Account created! Your KCCA account is pending approval from a super-admin. We\'ll let you know as soon as it\'s reviewed — you can try signing in again after that.');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          return;
+        }
+
+        if (currentRole === 'collector') {
+          // Not signed in until a KCCA officer approves this account.
+          try { await firebaseAuth.signOut(); } catch (_) {}
+          switchTab('login');
+          showAuthInfo('Account created! Your collector account is pending approval from KCCA. We\'ll let you know as soon as it\'s reviewed — you can try signing in again after that.');
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          return;
+        }
+
+        if (currentRole === 'resident') {
+          try { await cred.user.sendEmailVerification(); } catch (e) { console.warn('Could not send verification email:', e); }
+        }
+
         const token = await cred.user.getIdToken();
         localStorage.setItem('itrush_token', token);
         redirectByRole(role);
@@ -1018,6 +1137,126 @@
       btn.disabled = false;
     }
   });
+
+  /* ============================================================
+     GOOGLE SIGN-IN
+     Reuses the existing role tabs/cards: whichever role is selected
+     when the user clicks "Continue with Google" is the role a brand
+     new account is created with. Existing accounts are looked up by
+     uid and go through the exact same approval/verification gating
+     as the email/password flow.
+     ============================================================ */
+  async function handleGoogleAuth() {
+    if (!USE_FIREBASE || !firebaseAuth || !firebaseDb) {
+      showAuthError('Google Sign-In requires Firebase to be configured.');
+      return;
+    }
+    clearAuthError();
+    const loginBtn = document.getElementById('btn-google-login');
+    const signupBtn = document.getElementById('btn-google-signup');
+    if (loginBtn) loginBtn.disabled = true;
+    if (signupBtn) signupBtn.disabled = true;
+
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await firebaseAuth.signInWithPopup(provider);
+      const user = result.user;
+
+      const userRef = firebaseDb.collection('users').doc(user.uid);
+      let snap = await userRef.get();
+
+      if (!snap.exists) {
+        // First time we've seen this Google account — create a profile
+        // using whichever role tab is currently selected.
+        const role = currentRole === 'kcca' ? 'kcca_officer' : currentRole;
+        const nameParts = (user.displayName || '').trim().split(/\s+/);
+        const profile = {
+          role,
+          email: user.email,
+          authProvider: 'google',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if (currentRole === 'resident') {
+          profile.first_name = nameParts[0] || 'Resident';
+          profile.last_name = nameParts.slice(1).join(' ') || 'User';
+          profile.phone = null;
+          profile.zone = null;
+        } else if (currentRole === 'kcca') {
+          profile.first_name = nameParts[0] || '';
+          profile.last_name = nameParts.slice(1).join(' ') || '';
+          profile.department = null;
+          profile.jurisdiction = null;
+          profile.staff_id = null;
+          // KCCA accounts require super-admin approval regardless of sign-in method.
+          profile.status = 'pending';
+          profile.isSuperAdmin = false;
+        } else if (currentRole === 'collector') {
+          profile.full_name = user.displayName || '';
+          profile.phone = null;
+          profile.company = null;
+          profile.truck_plate = null;
+          profile.primary_zone = null;
+          // Collector accounts require KCCA approval regardless of sign-in method.
+          profile.status = 'pending';
+        }
+        await userRef.set(profile);
+        snap = await userRef.get();
+      }
+
+      const data = snap.data() || {};
+      const role = data.role || 'resident';
+      const normalizedRole = role === 'kcca' ? 'kcca_officer' : role;
+
+      if (normalizedRole === 'kcca_officer' && data.status !== 'approved') {
+        const status = data.status || 'pending';
+        await firebaseAuth.signOut();
+        switchTab('login');
+        if (status === 'rejected') {
+          showAuthInfo('Your KCCA account request was not approved. Contact the system administrator if you believe this is a mistake.');
+        } else {
+          showAuthInfo('Your KCCA account is awaiting approval from a super-admin. You\'ll be able to sign in as soon as it\'s approved.');
+        }
+        return;
+      }
+
+      if (normalizedRole === 'collector' && data.status !== 'approved') {
+        const status = data.status || 'pending';
+        await firebaseAuth.signOut();
+        switchTab('login');
+        if (status === 'rejected') {
+          showAuthInfo('Your collector account request was not approved. Contact KCCA if you believe this is a mistake.');
+        } else {
+          showAuthInfo('Your collector account is awaiting approval from KCCA. You\'ll be able to sign in as soon as it\'s approved.');
+        }
+        return;
+      }
+
+      const token = await user.getIdToken();
+      localStorage.setItem('itrush_token', token);
+      redirectByRole(normalizedRole);
+    } catch (e) {
+      console.error('Google sign-in failed:', e);
+      if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+        // User dismissed the popup themselves — not a real error, no message needed.
+      } else if (e.code === 'auth/popup-blocked') {
+        showAuthError('Your browser blocked the Google sign-in pop-up. Please allow pop-ups for this site and try again.');
+      } else if (e.code === 'auth/account-exists-with-different-credential') {
+        showAuthError('An account already exists with this email using a different sign-in method. Try signing in with your password instead.');
+      } else if (e.code === 'auth/network-request-failed') {
+        showAuthError('Network error. Check your connection and try again.');
+      } else {
+        showAuthError(e.message || 'Google sign-in failed. Please try again.');
+      }
+    } finally {
+      if (loginBtn) loginBtn.disabled = false;
+      if (signupBtn) signupBtn.disabled = false;
+    }
+  }
+
+  const googleLoginBtn = document.getElementById('btn-google-login');
+  const googleSignupBtn = document.getElementById('btn-google-signup');
+  if (googleLoginBtn) googleLoginBtn.addEventListener('click', handleGoogleAuth);
+  if (googleSignupBtn) googleSignupBtn.addEventListener('click', handleGoogleAuth);
 
   if (!USE_FIREBASE) {
     console.info('iTRUSH: Using backend API for auth. To use Firebase instead, edit app/firebase-config.js with your Firebase project config.');

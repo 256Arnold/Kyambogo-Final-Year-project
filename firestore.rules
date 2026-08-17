@@ -5,8 +5,47 @@ rules_version = '2';
 // ----------------------------------------------------------------------------
 // Roles (stored on each user's own /users/{uid} document, field `role`):
 //   - resident        : books collections, pays, files overflow reports
-//   - collector        : sees assigned jobs, confirms + completes them
-//   - kcca_officer     : oversight; reads everything, assigns collectors
+//   - collector        : sees assigned jobs, confirms + completes them.
+//                        Requires `status == 'approved'` before any job
+//                        access is granted (see collector approval workflow
+//                        below).
+//   - kcca_officer     : oversight; reads everything, assigns collectors.
+//                        Requires `status == 'approved'` before any KCCA-only
+//                        access is granted (see account approval workflow
+//                        below). A kcca_officer doc may also carry
+//                        `isSuperAdmin: true`, which lets that user review
+//                        (approve/reject) other pending KCCA accounts.
+//
+// KCCA account approval workflow:
+//   * On signup, a kcca_officer doc is created with status: 'pending' and
+//     isSuperAdmin: false — enforced below, not just by the client.
+//   * A user can NEVER change their own `status` or `isSuperAdmin` field
+//     (self-approval / self-escalation is blocked at the rules layer).
+//   * Only an existing super-admin can flip another kcca_officer's `status`
+//     to 'approved' or 'rejected' (and only those fields — see the
+//     `hasOnly` check below).
+//   * isKcca() (used everywhere else in these rules) requires
+//     status == 'approved', so a pending/rejected KCCA account cannot read
+//     or write KCCA-only data even if they call Firestore directly,
+//     regardless of what the app's UI does.
+//   * Bootstrapping the very first super-admin cannot happen through the
+//     app (by design — no one should be able to grant it to themselves).
+//     Sign up a normal KCCA account, then in the Firebase Console go to
+//     Firestore → users/{uid} and manually set `isSuperAdmin: true` and
+//     `status: 'approved'`. From then on that account can approve others
+//     from the dashboard.
+//
+// Collector approval workflow:
+//   * On signup, a collector doc is created with status: 'pending' —
+//     enforced below, not just by the client.
+//   * A collector can never self-approve (same self-escalation guard as
+//     KCCA accounts, above).
+//   * Any APPROVED KCCA officer (not just a super-admin) may approve/reject
+//     a pending collector — again, only the status/reviewedAt/reviewedBy
+//     fields, nothing else on that profile.
+//   * isApprovedCollector() requires status == 'approved', so a pending or
+//     rejected collector cannot read or update a collection_requests doc
+//     even if collectorUid happens to point at them.
 //
 // Design notes:
 //   * Firestore rules cannot filter a query's results — they only allow or
@@ -24,27 +63,81 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function myData() {
+      // Reads the caller's own user document.
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function myRole() {
-      // Reads the caller's own user document to find their role.
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      return myData().role;
     }
 
     function isRole(role) {
       return signedIn() && myRole() == role;
     }
 
+    function isSuperAdmin() {
+      return signedIn() && myData().role == 'kcca_officer' && myData().isSuperAdmin == true;
+    }
+
     function isKcca() {
-      return isRole('kcca_officer');
+      // Approved KCCA officers only — a pending or rejected account must
+      // not get KCCA-level access just because role == 'kcca_officer'.
+      return signedIn() && myData().role == 'kcca_officer' && myData().status == 'approved';
+    }
+
+    function isApprovedCollector() {
+      // Approved collectors only — a pending or rejected collector must not
+      // be able to read or act on a job even if collectorUid points to them.
+      return signedIn() && myData().role == 'collector' && myData().status == 'approved';
     }
 
     // ---- users ------------------------------------------------------------
     // A user can read & write ONLY their own profile.
-    // KCCA may read any user profile (needed for the collectors listing and
-    // to resolve collector names on the admin dashboard).
+    // KCCA (approved) may read any user profile (needed for the collectors
+    // listing and to resolve collector names on the admin dashboard).
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isKcca());
-      allow create: if signedIn() && request.auth.uid == userId;
-      allow update, delete: if signedIn() && request.auth.uid == userId;
+
+      // A new account may never create itself as already-approved/super-admin.
+      // KCCA and collector signups must start out pending; residents are
+      // unaffected (they have no status field at all).
+      // IMPORTANT: use .get('isSuperAdmin', false) here, not direct dot
+      // access — resident and collector signups never set this field, and
+      // direct dot-access on a missing map key throws in Firestore Rules
+      // (unlike plain JS), which was silently denying every resident and
+      // collector signup with "missing or insufficient permissions."
+      allow create: if signedIn() && request.auth.uid == userId
+                    && request.resource.data.get('isSuperAdmin', false) != true
+                    && (request.resource.data.role != 'kcca_officer'
+                        || request.resource.data.status == 'pending')
+                    && (request.resource.data.role != 'collector'
+                        || request.resource.data.status == 'pending');
+
+      // A user may update their own profile, but never their own role,
+      // status, or isSuperAdmin flag — that would be self-escalation.
+      // .get(field, default) is used because resident/collector docs never
+      // had a status/isSuperAdmin field to begin with.
+      allow update: if signedIn() && request.auth.uid == userId
+                    && request.resource.data.get('role', null) == resource.data.get('role', null)
+                    && request.resource.data.get('status', null) == resource.data.get('status', null)
+                    && request.resource.data.get('isSuperAdmin', null) == resource.data.get('isSuperAdmin', null);
+
+      // A super-admin may approve/reject a pending KCCA account — but ONLY
+      // by touching the review fields, nothing else on that person's profile.
+      allow update: if isSuperAdmin()
+                    && resource.data.role == 'kcca_officer'
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'reviewedAt', 'reviewedBy']);
+
+      // Any approved KCCA officer may approve/reject a pending collector —
+      // again, only the review fields, nothing else on that profile.
+      allow update: if isKcca()
+                    && resource.data.role == 'collector'
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'reviewedAt', 'reviewedBy']);
+
+      allow delete: if signedIn() && request.auth.uid == userId;
     }
 
     // ---- collection_requests ---------------------------------------------
@@ -53,10 +146,13 @@ service cloud.firestore {
     // Collectors: read/update requests assigned to them (confirm, complete).
     // KCCA: full read; update to assign a collector. No hard delete.
     match /collection_requests/{requestId} {
+      // collectorUid is absent on a request until KCCA assigns it, so we use
+      // .get('collectorUid', null) rather than direct dot-access — the same
+      // class of bug as the isSuperAdmin fix above.
       allow read: if signedIn() && (
         isKcca() ||
         resource.data.residentUid == request.auth.uid ||
-        resource.data.collectorUid == request.auth.uid
+        (resource.data.get('collectorUid', null) == request.auth.uid && isApprovedCollector())
       );
 
       allow create: if isRole('resident')
@@ -65,7 +161,7 @@ service cloud.firestore {
       allow update: if signedIn() && (
         isKcca() ||
         resource.data.residentUid == request.auth.uid ||
-        resource.data.collectorUid == request.auth.uid
+        (resource.data.get('collectorUid', null) == request.auth.uid && isApprovedCollector())
       );
 
       allow delete: if isKcca();
@@ -89,18 +185,22 @@ service cloud.firestore {
 
     // ---- notifications ----------------------------------------------------
     // A signed-in user may create notifications (the app writes both
-    // user-targeted and role-targeted messages). A user may read messages
-    // addressed to them by uid; KCCA may read messages addressed to their
-    // role. Marking a notification read is an update to its own doc.
+    // user-targeted and role-targeted messages, including account
+    // approval/rejection notices sent by a super-admin). A user may read
+    // messages addressed to them by uid; KCCA may read messages addressed
+    // to their role. Marking a notification read is an update to its own doc.
     match /notifications/{notificationId} {
       allow create: if signedIn();
 
+      // Every notification sets either toUid or toRole, never both — so
+      // both are read with .get(field, null) rather than direct dot-access,
+      // the same class of bug as the isSuperAdmin fix above.
       allow read, update: if signedIn() && (
-        resource.data.toUid == request.auth.uid ||
-        (resource.data.toRole == 'kcca_officer' && isKcca())
+        resource.data.get('toUid', null) == request.auth.uid ||
+        (resource.data.get('toRole', null) == 'kcca_officer' && isKcca())
       );
 
-      allow delete: if signedIn() && resource.data.toUid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.get('toUid', null) == request.auth.uid;
     }
   }
 }
